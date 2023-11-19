@@ -20,7 +20,7 @@ Y = apply(y, c(1,2), sum) # Matrix with survey x no. deer
 area = tapply(UseData$Area, list(UseData$Survey, UseData$Site), sum)/10000 # Area in hectare
 mean_field_dist = tapply(UseData$mean_field_dist, list(UseData$Survey, UseData$Site), sum)
 
-# Making standardize function
+# Making standardize function (may just as well use scale())
 standardize = function(x) (x-mean(x, na.rm=TRUE))/sd(x, na.rm=TRUE)
 
 # Making index for study area and month
@@ -114,6 +114,7 @@ DoubleObsMultisiteModel <- nimbleModel(
   inits = Inits()
 )
 
+# Sjekk: Den første her er ikke brukt noe sted
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel)
 DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("median_lambda", "mean_lambda" , "p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
