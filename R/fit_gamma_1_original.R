@@ -69,7 +69,7 @@ cat("Compilation time:")
 t2-t1
 
 t3 <- Sys.time()
-posterior_lognormal <- runMCMC(
+posterior_gamma_1 <- runMCMC(
   CDoubleObsMultisiteMCMC,
   niter=50000,
   nburnin=10000,
@@ -83,14 +83,14 @@ t4 <- Sys.time()
 cat("Run time:")
 t4-t3
 
-# plot(posterior_lognormal$samples)
-summary(posterior_lognormal$samples)
-posterior_lognormal$WAIC
+# plot(posterior_gamma_1$samples)
+summary(posterior_gamma_1$samples)
+posterior_gamma_1$WAIC
 
 # nimbleList object of type waicNimbleList
 # Field "WAIC":
 #   [1] 117.1246
 
-gelman.diag(posterior_lognormal$samples)
+gelman.diag(posterior_gamma_1$samples)
 
-#save(posterior_lognormal, file = "data/posterior_samples/gamma_1.RData")
+#save(posterior_gamma_1, file = "data/posterior_samples/gamma_1.RData")
