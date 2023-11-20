@@ -60,23 +60,35 @@ DoubleObsMultisiteModel <- nimbleModel(
   inits = Inits()
 )
 
+t1 <- Sys.time()
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be compiled for the last step
 DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("median_lambda", "mean_lambda" , "p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
 CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
+t2 <- Sys.time()
 
+cat("Compilation time:")
+t2-t1
+
+t3 <- Sys.time()
 posterior_lognormal <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter=5000,#00,
-  nburnin=1000,#00,
+  niter=50000,
+  nburnin=10000,
   nchain=3,
-  thin=2,
+  thin=4,
   inits = Inits,
   samplesAsCodaMCMC = TRUE,
   WAIC = TRUE)
+t4 <- Sys.time()
 
-plot(posterior_lognormal$samples)
+cat("Run time:")
+t4-t3
+
+# plot(posterior_lognormal$samples)
 summary(posterior_lognormal$samples)
 posterior_lognormal$WAIC
 
-#save(posterior_lognormal, file = "Manuscript_models/posterior_lognormal.RData")
+gelman.diag(posterior_lognormal$samples)
+
+#save(posterior_lognormal, file = "data/posterior_samples/posterior_lognormal_1.RData")
