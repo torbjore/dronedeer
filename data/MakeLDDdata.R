@@ -30,7 +30,8 @@ LDDdata <- list(
   const = list(
     N_sites = N_sites,
     area = area,
-    mean_field_dist = mean_field_dist
+    mean_field_dist = mean_field_dist,
+    sam = sam # study area and month
   )
 )
 

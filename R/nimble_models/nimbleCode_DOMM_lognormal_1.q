@@ -1,7 +1,7 @@
 # Double observer multi-site model with lognormal lambda and first order covariate effect
 
 # DEFINING THE MODEL
-DoubleObsMultisiteCode <- nimbleCode({
+nimbleCode_DOMM_lognormal_1 <- nimbleCode({
   # Model
   Psum <- 1-(1-p1)*(1-p2)
   pi[1] <- p1*(1-p2)/Psum

@@ -1,18 +1,17 @@
-setwd("C:/Users/Bruker/Dropbox (UiO)/Deer/Analysis/Model")
+#setwd("C:/Users/Bruker/Dropbox (UiO)/Deer/Analysis/Model")
 
 # R-packages used: 
 library(nimble)
 library(coda)
 
-
 # LOADING MODIFIED PRIORS AND DATA
-load(file = "Manuscript_models/mu_logit_p.RData")
-load(file = "Manuscript_models/sigma_logit_p.RData")
+load(file = "original/mu_logit_p.RData")
+load(file = "original/sigma_logit_p.RData")
 
-load(file = "Manuscript_models/UseData.RData")
+load(file = "data/derived/UseData.rda")
 N_sites = table(UseData$Survey)
 
-load(file = "Manuscript_models/Counts.RData")
+load(file = "data/derived/Counts.rda")
 
 # Making y, Y, area and mean_field_dist 
 y = tapply(Counts$Count, list(Counts$Survey, Counts$Site, Counts$Cat), sum) # 3D array rekke = survey, colonne = site (bilde), lag = Cat
@@ -122,8 +121,8 @@ CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
 
 posterior_lognormal <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter=500000,
-  nburnin=100000,
+  niter=5000, #00,
+  nburnin=1000, #00,
   nchain=3,
   thin=2,
   inits = Inits,
@@ -134,4 +133,4 @@ plot(posterior_lognormal$samples)
 summary(posterior_lognormal$samples)
 posterior_lognormal$WAIC
 
-save(posterior_lognormal, file = "Manuscript_models/posterior_lognormal.RData")
+#save(posterior_lognormal, file = "Manuscript_models/posterior_lognormal.RData")
