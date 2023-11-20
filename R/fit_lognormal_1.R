@@ -91,4 +91,4 @@ posterior_lognormal$WAIC
 
 gelman.diag(posterior_lognormal$samples)
 
-#save(posterior_lognormal, file = "data/posterior_samples/posterior_lognormal_1.RData")
+save(posterior_lognormal, file = "data/posterior_samples/posterior_lognormal_1.RData")
