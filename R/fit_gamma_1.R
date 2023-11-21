@@ -12,7 +12,7 @@ load(file = "data/prior_parameters_for_p.rda")
 load(file = "data/LDDdata.rda")
 
 # READING THE MODEL CODE
-source("R/nimble_models/nimbleCode_DOMM_lognormal_1.q")
+source("R/nimble_models/nimbleCode_DOMM_gamma_1.q")
 
 # CONSTANTS USED FOR INITIAL INITUAL VALUES AND FOR PRIORS
 colsumy <- apply(LDDdata$data$y, 3, sum, na.rm=TRUE)
@@ -26,25 +26,25 @@ N[is.na(N)] <- 0
 nrowY <- nrow(LDDdata$data$Y)
 ncolY <- ncol(LDDdata$data$Y)
 
-# FUNCTION FOR INITIAL VALUES
-Inits <- function(){
-  sigma <- runif(1, 0, 0.1)
-  p1 <- exp(log(p1hat)*runif(1, 0.9, 1.1))
-  p2 <- exp(log(p2hat)*runif(1, 0.9, 1.1))
+# MERK: Ser at vi ikke har noen starting values for lambda
+
+Inits = function(){
+  rate = runif(1, 0.5, 5)
+  p1 = exp(log(p1hat)*runif(1, 0.9, 1.1))
+  p2 = exp(log(p2hat)*runif(1, 0.9, 1.1))
   list(
     mu0 = log(lambdahat*runif(length(lambdahat), 0.9, 1.1)),
-    epsilon = matrix(rnorm(nrowY*ncolY, 0, sigma) , nrow = nrowY, ncol = ncolY),
     logit_p1 = rnorm(prior_parameters_for_p$mu_logit_p, prior_parameters_for_p$sigma_logit_p/5),
     logit_p2 = rnorm(prior_parameters_for_p$mu_logit_p, prior_parameters_for_p$sigma_logit_p/5),
     N = N,
-    sigma = sigma,
+    rate = rate,
     beta = runif(1, -0.5, 0.5)
   )
 }
 
 # SETTING UP THE MCMC
 DoubleObsMultisiteModel <- nimbleModel(
-  nimbleCode_DOMM_lognormal_1,
+  nimbleCode_DOMM_gamma_1,
   constants = list(lamblow = 0.1*lambdahat,  # 0.1 to 10 times point estimate
                    lambupp = 10*lambdahat,
                    N_surv = length(LDDdata$const$N_sites),
@@ -62,19 +62,25 @@ DoubleObsMultisiteModel <- nimbleModel(
 
 t1 <- Sys.time()
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be compiled for the last step
-DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("median_lambda", "mean_lambda" , "p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
+DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("mean_lambda" , "p1", "p2", "mu0", "rate", "beta"), enableWAIC = TRUE)
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
 CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
-t2 <- Sys.time()
 
+# Trying to set up a block sampler for 'rate', 'mu0[1:8]' nodes
+nn <- DoubleObsMultisiteModel$expandNodeNames(c('rate', 'beta', 'mu0'))
+DoubleObsMultisiteConf$removeSamplers(nn)
+DoubleObsMultisiteConf$addSampler(nn, 'RW_block', control = list(adaptScaleOnly=FALSE))
+#DoubleObsMultisiteConf$addSampler(nn, 'AF_slice', control = list(adaptScaleOnly=FALSE))
+
+t2 <- Sys.time()
 cat("Compilation time:")
 t2-t1
 
 t3 <- Sys.time()
-posterior_lognormal <- runMCMC(
+posterior_gamma_1 <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter=50000,
-  nburnin=10000,
+  niter=5000, #0,
+  nburnin=1000, #0,
   nchain=3,
   thin=4,
   inits = Inits,
@@ -85,12 +91,17 @@ t4 <- Sys.time()
 cat("Run time:")
 t4-t3
 
-#load(file = "data/posterior_samples/posterior_lognormal_1.RData")
+plot(posterior_gamma_1$samples)
+summary(posterior_gamma_1$samples)
+posterior_gamma_1$WAIC
 
-# plot(posterior_lognormal$samples)
-summary(posterior_lognormal$samples)
-posterior_lognormal$WAIC
+# nimbleList object of type waicNimbleList
+# Field "WAIC":
+# ORIGINAL  [1] 117.1246
+#   Field "WAIC":
+# [1] 117.1465
+#   
 
-gelman.diag(posterior_lognormal$samples)
+gelman.diag(posterior_gamma_1$samples)
 
-#save(posterior_lognormal, file = "data/posterior_samples/posterior_lognormal_1.RData")
+#save(posterior_gamma_1, file = "data/posterior_samples/gamma_1.RData")
