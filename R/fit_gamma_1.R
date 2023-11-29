@@ -81,7 +81,11 @@ t2-t1
 t3 <- Sys.time()
 posterior_gamma_1 <- runMCMC(
   CDoubleObsMultisiteMCMC,
+<<<<<<< HEAD
   niter= 6000, #0,
+=======
+  niter=6000, #0,
+>>>>>>> ad6ada01fc6019ea3c6cdcea574af7737ef0db3b
   nburnin= 5000,
   nchain=3,
   thin=4,
@@ -95,6 +99,7 @@ t4-t3
 
 plot(posterior_gamma_1$samples)
 summary(posterior_gamma_1$samples)
+
 lapply(posterior_gamma_1$samples, function(i) apply(i, 2, mean)[c("rate", "beta")])
 # # Run 1:
 # $chain1
@@ -107,7 +112,7 @@ lapply(posterior_gamma_1$samples, function(i) apply(i, 2, mean)[c("rate", "beta"
 # 
 # $chain3
 # rate       beta 
-# 0.05897441 0.42049683 
+# 0.05897441 0.42049683
 
 
 posterior_gamma_1$WAIC
