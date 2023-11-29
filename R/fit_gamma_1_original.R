@@ -71,8 +71,8 @@ t2-t1
 t3 <- Sys.time()
 posterior_gamma_1 <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter=50000,
-  nburnin=10000,
+  niter=5000, #0,
+  nburnin=1000,#0,
   nchain=3,
   thin=4,
   inits = Inits,
@@ -83,7 +83,7 @@ t4 <- Sys.time()
 cat("Run time:")
 t4-t3
 
-# plot(posterior_gamma_1$samples)
+plot(posterior_gamma_1$samples)
 summary(posterior_gamma_1$samples)
 posterior_gamma_1$WAIC
 
