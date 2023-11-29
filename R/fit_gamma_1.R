@@ -33,7 +33,8 @@ Inits = function(){
   p1 = exp(log(p1hat)*runif(1, 0.9, 1.1))
   p2 = exp(log(p2hat)*runif(1, 0.9, 1.1))
   list(
-    mu0 = log(lambdahat*runif(length(lambdahat), 0.9, 1.1)),
+#    mu0 = log(lambdahat*runif(length(lambdahat), 0.9, 1.1)),
+    exp_mu0 = lambdahat*runif(length(lambdahat), 0.9, 1.1),
     logit_p1 = rnorm(prior_parameters_for_p$mu_logit_p, prior_parameters_for_p$sigma_logit_p/5),
     logit_p2 = rnorm(prior_parameters_for_p$mu_logit_p, prior_parameters_for_p$sigma_logit_p/5),
     N = N,
@@ -62,7 +63,8 @@ DoubleObsMultisiteModel <- nimbleModel(
 
 t1 <- Sys.time()
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be compiled for the last step
-DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("mean_lambda" , "p1", "p2", "mu0", "rate", "beta"), enableWAIC = TRUE)
+#DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("mean_lambda" , "p1", "p2", "mu0", "rate", "beta"), enableWAIC = TRUE)
+DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("p1", "p2", "exp_mu0", "rate", "beta"), enableWAIC = TRUE)
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
 CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
 
@@ -79,8 +81,8 @@ t2-t1
 t3 <- Sys.time()
 posterior_gamma_1 <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter=5000, #0,
-  nburnin=1000, #0,
+  niter=6000, #0,
+  nburnin= 5000,
   nchain=3,
   thin=4,
   inits = Inits,
@@ -93,6 +95,16 @@ t4-t3
 
 plot(posterior_gamma_1$samples)
 summary(posterior_gamma_1$samples)
+lapply(posterior_gamma_1$samples, function(i) mean(i[,"rate"]))
+# # Run 1:
+# $chain1
+# [1] 0.1472822
+# $chain2
+# [1] 0.6091215
+# $chain3
+# [1] 0.04872913
+
+
 posterior_gamma_1$WAIC
 
 # nimbleList object of type waicNimbleList

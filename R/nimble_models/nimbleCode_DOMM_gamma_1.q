@@ -13,8 +13,9 @@ nimbleCode_DOMM_gamma_1 <- nimbleCode({
       # Process model:
       N[s,i] ~ dpois(lambda[s,i]*area[s,i])
       lambda[s,i] ~ dgamma(shape[s,i], rate)
-      shape[s,i] <- exp(mu[s,i])*rate
-      mu[s,i] <- mu0[sam[s]] + x[s,i]*beta
+      #shape[s,i] <- exp(mu[s,i])*rate
+      #mu[s,i] <- mu0[sam[s]] + x[s,i]*beta
+      shape[s,i] <- exp_mu0[sam[s]]*exp(x[s,i]*beta)*rate
       # Observation model:
       Y[s,i] ~ dbin(Psum, N[s,i])
       y[s, i, 1:3] ~ dmulti(pi[1:3], Y[s,i])
@@ -28,8 +29,9 @@ nimbleCode_DOMM_gamma_1 <- nimbleCode({
   # sigma ~ dgamma(0.1, 0.1) 
   # 
   for(k in 1:N_sam){
-  mu0[k] ~ dunif(log(lamblow[k]), log(lambupp[k]))
-  mean_lambda[k] <- exp(mu0[k])
+  #mu0[k] ~ dunif(log(lamblow[k]), log(lambupp[k]))
+  exp_mu0[k] ~ dunif(0, 10)
+#  mean_lambda[k] <- exp(mu0[k])
   #   mean_lnorm[k] <- log(mean_lambda[k]) - 0.5*sigma*sigma
   #   var_lognormal[k] <- (exp(sigma*sigma) - 1)*exp(2*mean_lnorm[k] + sigma*sigma)  
   #   rate[k] <- mean_lambda[k]/var_lognormal[k]
