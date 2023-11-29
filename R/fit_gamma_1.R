@@ -81,11 +81,7 @@ t2-t1
 t3 <- Sys.time()
 posterior_gamma_1 <- runMCMC(
   CDoubleObsMultisiteMCMC,
-<<<<<<< HEAD
   niter= 6000, #0,
-=======
-  niter=6000, #0,
->>>>>>> ad6ada01fc6019ea3c6cdcea574af7737ef0db3b
   nburnin= 5000,
   nchain=3,
   thin=4,
