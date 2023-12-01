@@ -65,14 +65,15 @@ t1 <- Sys.time()
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be compiled for the last step
 #DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("mean_lambda" , "p1", "p2", "mu0", "rate", "beta"), enableWAIC = TRUE)
 DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("p1", "p2", "exp_mu0", "rate", "beta"), enableWAIC = TRUE)
-DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
-CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
 
 # Trying to set up a block sampler for 'rate', 'mu0[1:8]' nodes
 nn <- DoubleObsMultisiteModel$expandNodeNames(c('rate', 'beta', 'mu0'))
 DoubleObsMultisiteConf$removeSamplers(nn)
 DoubleObsMultisiteConf$addSampler(nn, 'RW_block', control = list(adaptScaleOnly=FALSE))
 #DoubleObsMultisiteConf$addSampler(nn, 'AF_slice', control = list(adaptScaleOnly=FALSE))
+
+DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
+CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
 
 t2 <- Sys.time()
 cat("Compilation time:")
@@ -81,7 +82,7 @@ t2-t1
 t3 <- Sys.time()
 posterior_gamma_1 <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter= 6000, #0,
+  niter= 20000, #0,
   nburnin= 5000,
   nchain=3,
   thin=4,
