@@ -23,20 +23,12 @@ nimbleCode_DOMM_gamma_1 <- nimbleCode({
   }
   
   # Priors
-  #rate ~ dunif(0,10)
-  rate ~ dgamma(0.1, 0.1)
-  
-  # sigma ~ dgamma(0.1, 0.1) 
-  # 
+  rate ~ dunif(0,10)
+
   for(k in 1:N_sam){
-  #mu0[k] ~ dunif(log(lamblow[k]), log(lambupp[k]))
-  exp_mu0[k] ~ dunif(0, 10)
-#  mean_lambda[k] <- exp(mu0[k])
-  #   mean_lnorm[k] <- log(mean_lambda[k]) - 0.5*sigma*sigma
-  #   var_lognormal[k] <- (exp(sigma*sigma) - 1)*exp(2*mean_lnorm[k] + sigma*sigma)  
-  #   rate[k] <- mean_lambda[k]/var_lognormal[k]
+    exp_mu0[k] ~ dunif(0, 10)
   }
-  # 
+
   beta ~ dnorm(0, sd=2)
   
   logit_p1 ~ dnorm(mu_logit_p, sd = sigma_logit_p) 

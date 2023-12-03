@@ -26,8 +26,6 @@ N[is.na(N)] <- 0
 nrowY <- nrow(LDDdata$data$Y)
 ncolY <- ncol(LDDdata$data$Y)
 
-# MERK: Ser at vi ikke har noen starting values for lambda
-
 Inits = function(){
   rate = runif(1, 0.5, 5)
   p1 = exp(log(p1hat)*runif(1, 0.9, 1.1))
@@ -38,6 +36,7 @@ Inits = function(){
     logit_p1 = rnorm(prior_parameters_for_p$mu_logit_p, prior_parameters_for_p$sigma_logit_p/5),
     logit_p2 = rnorm(prior_parameters_for_p$mu_logit_p, prior_parameters_for_p$sigma_logit_p/5),
     N = N,
+    lambda = N + 0.01,
     rate = rate,
     beta = runif(1, -0.5, 0.5)
   )
@@ -70,7 +69,6 @@ DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("p
 nn <- DoubleObsMultisiteModel$expandNodeNames(c('rate', 'beta', 'mu0'))
 DoubleObsMultisiteConf$removeSamplers(nn)
 DoubleObsMultisiteConf$addSampler(nn, 'RW_block', control = list(adaptScaleOnly=FALSE))
-#DoubleObsMultisiteConf$addSampler(nn, 'AF_slice', control = list(adaptScaleOnly=FALSE))
 
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
 CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
@@ -96,21 +94,6 @@ t4-t3
 
 plot(posterior_gamma_1$samples)
 summary(posterior_gamma_1$samples)
-
-lapply(posterior_gamma_1$samples, function(i) apply(i, 2, mean)[c("rate", "beta")])
-# # Run 1:
-# $chain1
-# rate     beta 
-# 0.162997 0.322608 
-# 
-# $chain2
-# rate      beta 
-# 0.1563404 0.6641122 
-# 
-# $chain3
-# rate       beta 
-# 0.05897441 0.42049683
-
 
 posterior_gamma_1$WAIC
 
