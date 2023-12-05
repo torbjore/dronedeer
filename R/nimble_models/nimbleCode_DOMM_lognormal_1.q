@@ -33,11 +33,31 @@ nimbleCode_DOMM_lognormal_1 <- nimbleCode({
   p1 <- exp(logit_p1)/(1+exp(logit_p1))
   p2 <- exp(logit_p2)/(1+exp(logit_p2))
   
-  sigma ~ dgamma(0.1, 0.1)
+  #sigma ~ dgamma(0.1, 0.1)
+  sigma ~ dunif(0.5, 3)
   
   # Derived: Mean and median densities at mean x
   for(k in 1:N_sam){
     median_lambda[k] <- exp(mu0[k])
     mean_lambda[k] <- exp(mu0[k] + 0.5*sigma^2)
   }
+  
+  # For posterior predictive checks
+  for(s in 1:N_surv){
+    for(i in 1:N_sites[s]){
+      New_Y[s,i] ~ dbin(Psum, N[s,i])
+      #New_y[s,i,1:3] ~ dmulti(pi[1:3], Y[s,i])
+      E_Y[s,i] <- Psum*N[s,i] + 0.0001
+      #E_y[s,i,1:3] <- pi[1:3]*Y[s,i]
+      # Discrepancy contributions
+      DiscC_Y[s,i] <- pow(Y[s,i] - E_Y[s,i], 2) / E_Y[s,i]
+      DiscC_New_Y[s,i] <- pow(New_Y[s,i] - E_Y[s,i], 2) / E_Y[s,i]
+    }
+    # Sums per survey
+    Disc_Y_s[s] <- sum(DiscC_Y[s, 1:N_sites[s]])
+    Disc_New_Y_s[s] <- sum(DiscC_New_Y[s, 1:N_sites[s]])
+  }
+  # Discrepancy statistics (Pearson chi-sq, but note many small expectations)
+  Disc_Y <- sum(Disc_Y_s[1:N_surv])
+  Disc_New_Y <- sum(Disc_New_Y_s[1:N_surv])
 })

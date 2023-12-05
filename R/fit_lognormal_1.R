@@ -28,7 +28,7 @@ ncolY <- ncol(LDDdata$data$Y)
 
 # FUNCTION FOR INITIAL VALUES
 Inits <- function(){
-  sigma <- runif(1, 0, 0.1)
+  sigma <- runif(1, 0.5, 1)
   p1 <- exp(log(p1hat)*runif(1, 0.9, 1.1))
   p2 <- exp(log(p2hat)*runif(1, 0.9, 1.1))
   list(
@@ -62,7 +62,12 @@ DoubleObsMultisiteModel <- nimbleModel(
 
 t1 <- Sys.time()
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be compiled for the last step
-DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("median_lambda", "mean_lambda" , "p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
+DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, 
+#                                        monitors = c("p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
+#                                        monitors = c("median_lambda", "mean_lambda" , "p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
+                                        monitors = c("Disc_New_Y", "Disc_Y", "median_lambda", "mean_lambda" , "p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
+
+
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
 CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
 t2 <- Sys.time()
@@ -71,12 +76,12 @@ cat("Compilation time:")
 t2-t1
 
 t3 <- Sys.time()
-posterior_lognormal <- runMCMC(
+posterior_lognormal_1 <- runMCMC(
   CDoubleObsMultisiteMCMC,
   niter=50000,
   nburnin=10000,
   nchain=3,
-  thin=4,
+  thin= 4,
   inits = Inits,
   samplesAsCodaMCMC = TRUE,
   WAIC = TRUE)
@@ -87,10 +92,21 @@ t4-t3
 
 #load(file = "data/posterior_samples/posterior_lognormal_1.RData")
 
-# plot(posterior_lognormal$samples)
-summary(posterior_lognormal$samples)
-posterior_lognormal$WAIC
+plot(posterior_lognormal_1$samples)
+crosscorr.plot(posterior_lognormal_1$samples)
+summary(posterior_lognormal_1$samples)
+crosscorr(posterior_lognormal_1$samples)
 
-gelman.diag(posterior_lognormal$samples)
+posterior_lognormal_1$WAIC
 
-#save(posterior_lognormal, file = "data/posterior_samples/posterior_lognormal_1.RData")
+gelman.diag(posterior_lognormal_1$samples)
+
+#save(posterior_lognormal_1, file = "data/posterior_samples/posterior_lognormal_1.RData")
+
+# Posterior predictive checks
+# 
+samp <- as.matrix(posterior_lognormal_1$samples)
+plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
+abline(0, 1, col="red")
+
+mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
