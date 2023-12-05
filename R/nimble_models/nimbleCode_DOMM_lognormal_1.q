@@ -49,18 +49,28 @@ nimbleCode_DOMM_lognormal_1 <- nimbleCode({
   for(s in 1:N_surv){
     for(i in 1:N_sites[s]){
       New_Y[s,i] ~ dbin(Psum, N[s,i])
-      #New_y[s,i,1:3] ~ dmulti(pi[1:3], Y[s,i])
+      New_y[s,i,1:3] ~ dmulti(pi[1:3], Y[s,i])
       E_Y[s,i] <- Psum*N[s,i] + 0.0001
-      #E_y[s,i,1:3] <- pi[1:3]*Y[s,i]
       # Discrepancy contributions
-      DiscC_Y[s,i] <- pow(Y[s,i] - E_Y[s,i], 2) / E_Y[s,i]
-      DiscC_New_Y[s,i] <- pow(New_Y[s,i] - E_Y[s,i], 2) / E_Y[s,i]
+      DiscC_Y[s,i] <- (Y[s,i] - E_Y[s,i])^2 / E_Y[s,i]
+      DiscC_New_Y[s,i] <- (New_Y[s,i] - E_Y[s,i])^2 / E_Y[s,i]
+      for(j in 1:3){
+        E_y[s,i,j] <- pi[j]*Y[s,i] + 0.00001
+        DiscC_y_v[s,i, j] <- (y[s,i,j] - E_y[s,i,j])^2 / E_y[s,i,j]
+        DiscC_New_y_v[s,i, j] <- (New_y[s,i,j] - E_y[s,i,j])^2 / E_y[s,i,j]
+      }
+      DiscC_y[s,i] <- sum(DiscC_y_v[s,i, 1:3])
+      DiscC_New_y[s,i] <- sum(DiscC_New_y_v[s,i, 1:3])
     }
     # Sums per survey
     Disc_Y_s[s] <- sum(DiscC_Y[s, 1:N_sites[s]])
     Disc_New_Y_s[s] <- sum(DiscC_New_Y[s, 1:N_sites[s]])
+    Disc_y_s[s] <- sum(DiscC_y[s, 1:N_sites[s]])
+    Disc_New_y_s[s] <- sum(DiscC_New_y[s, 1:N_sites[s]])
   }
   # Discrepancy statistics (Pearson chi-sq, but note many small expectations)
   Disc_Y <- sum(Disc_Y_s[1:N_surv])
   Disc_New_Y <- sum(Disc_New_Y_s[1:N_surv])
+  Disc_y <- sum(Disc_y_s[1:N_surv])
+  Disc_New_y <- sum(Disc_New_y_s[1:N_surv])
 })

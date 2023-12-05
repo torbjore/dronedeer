@@ -66,7 +66,7 @@ CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be
 DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, 
 #                                        monitors = c("p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
 #                                        monitors = c("median_lambda", "mean_lambda" , "p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
-                                        monitors = c("Disc_New_Y", "Disc_Y", "median_lambda", "mean_lambda" , "p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
+                                        monitors = c("Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "median_lambda", "mean_lambda" , "p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
 
 
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
@@ -105,9 +105,28 @@ gelman.diag(posterior_lognormal_1$samples)
 #save(posterior_lognormal_1, file = "data/posterior_samples/posterior_lognormal_1.RData")
 
 # Posterior predictive checks
-# 
+
+# Wrt Y
 samp <- as.matrix(posterior_lognormal_1$samples)
 plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
 abline(0, 1, col="red")
-
 mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+# OK!
+
+# Wrt y
+plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
+abline(0, 1, col="red")
+mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
+# Before adding random effects: [1] 0.03423333. This means that there are more 
+# variation in y[] than expected - probably because observers vary in focus from
+# picture to picture
+
+# Looking at lack of fit
+n <- sum(colsumy)
+# Expected ab
+n*p1hat*(1-p2hat)
+# Expected jb
+n*p2hat*(1-p1hat)
+# Expected both
+n*p2hat*p1hat
+# I don't think this says much though
