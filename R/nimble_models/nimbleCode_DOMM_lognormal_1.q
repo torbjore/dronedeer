@@ -33,8 +33,12 @@ nimbleCode_DOMM_lognormal_1 <- nimbleCode({
   p1 <- exp(logit_p1)/(1+exp(logit_p1))
   p2 <- exp(logit_p2)/(1+exp(logit_p2))
   
-  #sigma ~ dgamma(0.1, 0.1)
-  sigma ~ dunif(0.5, 3)
+#  sigma ~ dunif(0.5, 3) # WAIC 122.1556
+  sigma ~ dunif(0, 0.5) # 
+  
+  # If allowed to be too small, chains sometimes hover around smaller values
+  # before jumping to the higher values (but not the other way it looks).
+  # I interpret this to mean that there is a local minimum with low sigma
   
   # Derived: Mean and median densities at mean x
   for(k in 1:N_sam){
