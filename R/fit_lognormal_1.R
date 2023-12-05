@@ -28,8 +28,8 @@ ncolY <- ncol(LDDdata$data$Y)
 
 # FUNCTION FOR INITIAL VALUES
 Inits <- function(){
-#  sigma <- runif(1, 0.5, 1)
-  sigma <- runif(1, 0.1, 0.3)
+  sigma <- runif(1, 0.5, 1)
+#  sigma <- runif(1, 0.1, 0.3)
   p1 <- exp(log(p1hat)*runif(1, 0.9, 1.1))
   p2 <- exp(log(p2hat)*runif(1, 0.9, 1.1))
   list(
