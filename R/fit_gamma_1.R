@@ -27,7 +27,7 @@ nrowY <- nrow(LDDdata$data$Y)
 ncolY <- ncol(LDDdata$data$Y)
 
 Inits <- function(){
-  rate <- runif(1, 0.1, 1)
+  rate <- runif(1, 0.3, 1)
   p1 <- exp(log(p1hat)*runif(1, 0.9, 1.1))
   p2 <- exp(log(p2hat)*runif(1, 0.9, 1.1))
   list(
@@ -37,15 +37,18 @@ Inits <- function(){
     logit_p2 = rnorm(prior_parameters_for_p$mu_logit_p, prior_parameters_for_p$sigma_logit_p/5),
     N = N,
     lambda = N + 0.01,
-    rate = rate,
-    beta = runif(1, -0.5, 0.5)
+    invrate = 1/rate,
+    beta = runif(1, -0.5, 0.5),
+    New_Y = N
   )
 }
 
 # SETTING UP THE MCMC
 DoubleObsMultisiteModel <- nimbleModel(
   nimbleCode_DOMM_gamma_1,
-  constants = list(N_surv = length(LDDdata$const$N_sites),
+  constants = list(lamblow = 0.1*lambdahat,  # 0.1 to 10 times point estimate
+                   lambupp = 10*lambdahat,
+                   N_surv = length(LDDdata$const$N_sites),
                    N_sites = LDDdata$const$N_sites,
                    mu_logit_p = prior_parameters_for_p$mu_logit_p,
                    sigma_logit_p = prior_parameters_for_p$sigma_logit_p,
@@ -69,13 +72,13 @@ DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel,
                                         #monitors = c("p1", "p2", "mu0", "rate", "beta"), 
                                         enableWAIC = TRUE)
 
-# Setting up a block sampler (I've tried various combiations of blocking, chains often get stuck with any combination)
+# Setting up a block sampler (I've tried various combinations of blocking, chains often get stuck with any combination)
 nn1 <- DoubleObsMultisiteModel$expandNodeNames(c('beta', 'rate')) #
 DoubleObsMultisiteConf$removeSamplers(nn1)
 DoubleObsMultisiteConf$addSampler(nn1, 'RW_block', control = list(adaptScaleOnly=FALSE))
-nn2 <- DoubleObsMultisiteModel$expandNodeNames(c('exp_mu0')) #
-DoubleObsMultisiteConf$removeSamplers(nn2)
-DoubleObsMultisiteConf$addSampler(nn2, 'RW_block', control = list(adaptScaleOnly=FALSE))
+# nn2 <- DoubleObsMultisiteModel$expandNodeNames(c('exp_mu0')) #
+# DoubleObsMultisiteConf$removeSamplers(nn2)
+# DoubleObsMultisiteConf$addSampler(nn2, 'RW_block', control = list(adaptScaleOnly=FALSE))
 
 print(DoubleObsMultisiteConf)
 
@@ -114,6 +117,7 @@ gelman.diag(posterior_gamma_1$samples)
 
 lapply(posterior_gamma_1$samples, function(i) var(i[,"rate"]))
 lapply(posterior_gamma_1$samples, function(i) mean(i[,"rate"]))
+lapply(posterior_gamma_1$samples, function(i) mean(i[,"beta"]))
 lapply(init.values, function(i) i[c("exp_mu0", "rate", "beta")])
 
 posterior_gamma_1$WAIC

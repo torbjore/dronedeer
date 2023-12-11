@@ -23,10 +23,14 @@ nimbleCode_DOMM_gamma_1 <- nimbleCode({
   }
   
   # Priors
-  rate ~ dunif(0, 10)
+  invrate ~ dunif(0, 5)# 10)
+  rate <- 1/invrate
+  # NB! It may be that we need an upper bound on rate if there is a local peak
+  # with small variance. Could maybe also try a uniform prior for 1/rate.
 
   for(k in 1:N_sam){
-    exp_mu0[k] ~ dunif(0, 10)
+    #exp_mu0[k] ~ dunif(0, 10) # Denne bør nok settes mer restrektivt, slik som i log-normal modellen
+    exp_mu0[k] ~ dunif(lamblow[k], lambupp[k])
     mu0[k] <- log(exp_mu0[k])
   }
 
