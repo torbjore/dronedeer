@@ -118,7 +118,7 @@ gelman.diag(posterior_gamma_1$samples)
 lapply(posterior_gamma_1$samples, function(i) var(i[,"rate"]))
 lapply(posterior_gamma_1$samples, function(i) mean(i[,"rate"]))
 lapply(posterior_gamma_1$samples, function(i) mean(i[,"beta"]))
-lapply(init.values, function(i) i[c("exp_mu0", "rate", "beta")])
+lapply(init.values, function(i) i[c("exp_mu0", "invrate", "beta")])
 
 posterior_gamma_1$WAIC
 
