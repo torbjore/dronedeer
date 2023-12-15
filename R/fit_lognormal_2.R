@@ -12,7 +12,7 @@ load(file = "data/prior_parameters_for_p.rda")
 load(file = "data/LDDdata.rda")
 
 # READING THE MODEL CODE
-source("R/nimble_models/nimbleCode_DOMM_lognormal_1.q")
+source("R/nimble_models/nimbleCode_DOMM_lognormal_2.q")
 
 # CONSTANTS USED FOR INITIAL INITUAL VALUES AND FOR PRIORS
 colsumy <- apply(LDDdata$data$y, 3, sum, na.rm=TRUE)
@@ -30,7 +30,8 @@ ncolY <- ncol(LDDdata$data$Y)
 Inits <- function(){
   sigma <- runif(1, 0.5, 1)
   #  sigma <- runif(1, 0.1, 0.3)
-  sigma_p <- runif(1, 0.1, 0.4)
+  #sigma_p <- runif(1, 0.1, 0.4)
+  sigma_p <- runif(2, 0.1, 0.4)
   p1 <- exp(log(p1hat)*runif(1, 0.9, 1.1))
   p2 <- exp(log(p2hat)*runif(1, 0.9, 1.1))
   mu_p1 <- log(p1/(1-p1))
@@ -45,7 +46,7 @@ Inits <- function(){
     N = N,
     sigma = sigma,
     sigma_p = sigma_p,
-    beta = runif(1, -0.5, 0.5),
+    beta = runif(2, -0.5, 0.5),
     New_Y = N, # Warning message if not included
     New_y = LDDdata$data$y
   )
@@ -53,7 +54,7 @@ Inits <- function(){
 
 # SETTING UP THE MCMC
 DoubleObsMultisiteModel <- nimbleModel(
-  nimbleCode_DOMM_lognormal_1,
+  nimbleCode_DOMM_lognormal_2,
   constants = list(lamblow = 0.1*lambdahat,  # 0.1 to 10 times point estimate
                    lambupp = 10*lambdahat,
                    N_surv = length(LDDdata$const$N_sites),
@@ -74,7 +75,6 @@ CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be
 DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, 
 #                                        monitors = c("p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
 #                                        monitors = c("median_lambda", "mean_lambda" , "p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
-#                                        monitors = c("Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "median_lambda", "mean_lambda" , "mu_p1", "mu_p2", "mu0", "sigma", "sigma_p", "beta"), enableWAIC = TRUE)
                                         monitors = c("Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "mu_p1", "mu_p2", "mu0", "sigma", "sigma_p", "beta"), enableWAIC = TRUE)
 
 
@@ -86,7 +86,7 @@ cat("Compilation time:")
 t2-t1
 
 t3 <- Sys.time()
-posterior_lognormal_1 <- runMCMC(
+posterior_lognormal_2 <- runMCMC(
   CDoubleObsMultisiteMCMC,
   niter=50000,
   nburnin=10000,
@@ -100,54 +100,36 @@ t4 <- Sys.time()
 cat("Run time:")
 t4-t3
 
-#load(file = "data/posterior_samples/posterior_lognormal_1.RData")
+#load(file = "data/posterior_samples/posterior_lognormal_2.RData")
 
-plot(posterior_lognormal_1$samples)
-crosscorr.plot(posterior_lognormal_1$samples)
-summary(posterior_lognormal_1$samples)
-crosscorr(posterior_lognormal_1$samples)
+plot(posterior_lognormal_2$samples)
+crosscorr.plot(posterior_lognormal_2$samples)
+crosscorr(posterior_lognormal_2$samples)
+summary(posterior_lognormal_2$samples)
 
-posterior_lognormal_1$WAIC
+posterior_lognormal_2$WAIC
+# konstant sigma_p:
+# Field "WAIC":
+# [1] 119.6522
 
-gelman.diag(posterior_lognormal_1$samples)
 
-#save(posterior_lognormal_1, file = "data/posterior_samples/posterior_lognormal_1.RData")
+gelman.diag(posterior_lognormal_2$samples)
+
+#save(posterior_lognormal_2, file = "data/posterior_samples/posterior_lognormal_2.RData")
 
 # Posterior predictive checks
 
 # Wrt Y
-samp <- as.matrix(posterior_lognormal_1$samples)
+samp <- as.matrix(posterior_lognormal_2$samples)
 plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
 abline(0, 1, col="red")
 mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
-# OK!
 
 # Wrt y
 plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
 abline(0, 1, col="red")
 mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
-# Now OK
-# Before adding random effects: [1] 0.03423333. This means that there are more 
-# variation in y[] than expected - probably because observers vary in focus from
-# picture to picture
-# 
-# 2. Quantiles for each variable:
-# 
-# 2.5%     25%     50%     75%    97.5%
-# Disc_New_Y  0.14707  0.7933  1.4121  2.1963   4.1576
-# Disc_New_y 25.60289 38.2987 47.8034 60.2280 103.6541
-# Disc_Y      0.14868  1.0016  1.6883  2.6257   4.9057
-# Disc_y     28.16323 41.1363 50.7363 63.4592 107.5061
-# beta        0.04675  0.3554  0.5168  0.6756   0.9764
-# mu0[1]     -2.38229 -1.9036 -1.5404 -1.1618  -0.4973
-# mu0[2]     -2.81964 -2.4402 -2.1251 -1.7892  -1.1899
-# mu0[3]     -6.80932 -6.0006 -5.0581 -3.9832  -2.5831
-# mu0[4]     -6.83190 -6.1345 -5.2787 -4.2994  -2.7585
-# mu0[5]     -4.21993 -3.8896 -3.5496 -3.1393  -2.3198
-# mu0[6]     -3.31674 -2.9519 -2.6638 -2.3719  -1.8336
-# mu0[7]     -6.84318 -6.2259 -5.4742 -4.5561  -2.9776
-# mu0[8]     -4.54373 -4.2160 -3.8433 -3.3806  -2.4791
-# mu_p1       0.63152  1.0096  1.2063  1.3976   1.7900
-# mu_p2       1.08607  1.4835  1.6970  1.9202   2.3410
-# sigma       1.31758  1.5985  1.7541  1.9110   2.2320
-# sigma_p     0.69672  1.0833  1.2651  1.3916   1.4892
+
+y1 <- apply(LDDdata$data$y, c(1,2), function(i) i[1] + i[3])
+y2 <- apply(LDDdata$data$y, c(1,2), function(i) i[2] + i[3])
+
