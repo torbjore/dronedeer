@@ -12,20 +12,24 @@ nimbleCode_DOMM_gamma_1 <- nimbleCode({
     for(i in 1:N_sites[s]){
       # Process model:
       N[s,i] ~ dpois(lambda[s,i]*area[s,i])
-      lambda[s,i] ~ dgamma(shape[s,i], rate)
-      #shape[s,i] <- exp(mu[s,i])*rate
-      #mu[s,i] <- mu0[sam[s]] + x[s,i]*beta
-      shape[s,i] <- exp_mu0[sam[s]]*exp(x[s,i]*beta)*rate
+      lambda[s,i] ~ dgamma(shape, rate[s,i])
+      rate[s,i] <- shape/exp(mu[s,i] + 0.5*sigma^2)
+      mu[s,i] <- mu0[sam[s]] + x[s,i]*beta      
+      
       # Observation model:
       Y[s,i] ~ dbin(Psum, N[s,i])
       y[s, i, 1:3] ~ dmulti(pi[1:3], Y[s,i])
     }
   }
-  
-  # Priors
-  invrate ~ dunif(0, 5)# 10)
-  rate <- 1/invrate
-  # NB! It may be that we need an upper bound on rate if there is a local peak
+
+  # Negative binomial variant
+  # P ~ dunif(0,1)
+  # rate <- P/(1-P)
+    
+  # # Priors
+  # invrate ~ dunif(0, 5)# 10)
+  # rate <- 1/invrate
+  # # NB! It may be that we need an upper bound on rate if there is a local peak
   # with small variance. Could maybe also try a uniform prior for 1/rate.
 
   for(k in 1:N_sam){
@@ -34,6 +38,9 @@ nimbleCode_DOMM_gamma_1 <- nimbleCode({
     mu0[k] <- log(exp_mu0[k])
   }
 
+  sigma ~ dunif(0.5, 3)
+  shape <- 1/(exp(sigma^2) - 1)
+  
   beta ~ dnorm(0, sd=2)
   
   logit_p1 ~ dnorm(mu_logit_p, sd = sigma_logit_p) 

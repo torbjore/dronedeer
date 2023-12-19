@@ -37,8 +37,10 @@ Inits <- function(){
     logit_p2 = rnorm(prior_parameters_for_p$mu_logit_p, prior_parameters_for_p$sigma_logit_p/5),
     N = N,
     lambda = N + 0.01,
-    invrate = 1/rate,
+#    P = runif(1, 0.1, 0.9),
+#    invrate = 1/rate,
     beta = runif(1, -0.5, 0.5),
+    sigma = runif(1, 0.5, 1),
     New_Y = N
   )
 }
@@ -68,14 +70,14 @@ DoubleObsMultisiteModel <- nimbleModel(
 t1 <- Sys.time()
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be compiled for the last step
 DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, 
-                                        monitors = c("p1", "p2", "mu0", "rate", "beta", "Disc_Y", "Disc_New_Y"), 
+                                        monitors = c("p1", "p2", "mu0", "sigma", "beta", "Disc_Y", "Disc_New_Y"), 
                                         #monitors = c("p1", "p2", "mu0", "rate", "beta"), 
                                         enableWAIC = TRUE)
 
 # Setting up a block sampler (I've tried various combinations of blocking, chains often get stuck with any combination)
-nn1 <- DoubleObsMultisiteModel$expandNodeNames(c('beta', 'rate')) #
-DoubleObsMultisiteConf$removeSamplers(nn1)
-DoubleObsMultisiteConf$addSampler(nn1, 'RW_block', control = list(adaptScaleOnly=FALSE))
+# nn1 <- DoubleObsMultisiteModel$expandNodeNames(c('beta', 'rate')) #
+# DoubleObsMultisiteConf$removeSamplers(nn1)
+# DoubleObsMultisiteConf$addSampler(nn1, 'RW_block', control = list(adaptScaleOnly=FALSE))
 # nn2 <- DoubleObsMultisiteModel$expandNodeNames(c('exp_mu0')) #
 # DoubleObsMultisiteConf$removeSamplers(nn2)
 # DoubleObsMultisiteConf$addSampler(nn2, 'RW_block', control = list(adaptScaleOnly=FALSE))
@@ -115,19 +117,20 @@ plot(posterior_gamma_1$samples) # 1 = svart, 2 = rød, 3 = grønn
 summary(posterior_gamma_1$samples)
 gelman.diag(posterior_gamma_1$samples)
 
-lapply(posterior_gamma_1$samples, function(i) var(i[,"rate"]))
-lapply(posterior_gamma_1$samples, function(i) mean(i[,"rate"]))
-lapply(posterior_gamma_1$samples, function(i) mean(i[,"beta"]))
-lapply(init.values, function(i) i[c("exp_mu0", "invrate", "beta")])
+# lapply(posterior_gamma_1$samples, function(i) var(i[,"rate"]))
+# lapply(posterior_gamma_1$samples, function(i) mean(i[,"rate"]))
+# lapply(posterior_gamma_1$samples, function(i) mean(i[,"beta"]))
+# lapply(init.values, function(i) i[c("exp_mu0", "invrate", "beta")])
 
 posterior_gamma_1$WAIC
 
 # nimbleList object of type waicNimbleList
 # Field "WAIC":
-# ORIGINAL  [1] 117.1246
-#   Field "WAIC":
-# [1] 117.1465
-#   
+#   [1] 123.4445
+# Field "lppd":
+#   [1] -43.80825
+# Field "pWAIC":
+#   [1] 17.91402 
 
 
 #save(posterior_gamma_1, file = "data/posterior_samples/gamma_1.RData")
