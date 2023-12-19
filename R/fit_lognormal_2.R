@@ -35,7 +35,7 @@ Inits <- function(){
   p1 <- exp(log(p1hat)*runif(1, 0.9, 1.1))
   p2 <- exp(log(p2hat)*runif(1, 0.9, 1.1))
   mu_p1 <- log(p1/(1-p1))
-  mu_p2 <- log(p1/(1-p1))
+  mu_p2 <- log(p2/(1-p2))
   list(
     mu0 = log(lambdahat*runif(length(lambdahat), 0.9, 1.1)),
     epsilon = matrix(rnorm(nrowY*ncolY, 0, sigma) , nrow = nrowY, ncol = ncolY),
