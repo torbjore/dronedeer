@@ -27,21 +27,24 @@ nrowY <- nrow(LDDdata$data$Y)
 ncolY <- ncol(LDDdata$data$Y)
 
 Inits <- function(){
-  rate <- runif(1, 0.3, 1)
+  sigma_p <- runif(1, 0.1, 0.4)
   p1 <- exp(log(p1hat)*runif(1, 0.9, 1.1))
   p2 <- exp(log(p2hat)*runif(1, 0.9, 1.1))
+  mu_p1 <- log(p1/(1-p1))
+  mu_p2 <- log(p2/(1-p2))
   list(
-    #mu0 = log(lambdahat*runif(length(lambdahat), 0.9, 1.1)),
-    exp_mu0 = lambdahat*runif(length(lambdahat), 0.9, 1.1),
-    logit_p1 = rnorm(prior_parameters_for_p$mu_logit_p, prior_parameters_for_p$sigma_logit_p/5),
-    logit_p2 = rnorm(prior_parameters_for_p$mu_logit_p, prior_parameters_for_p$sigma_logit_p/5),
+    mu0 = log(lambdahat*runif(length(lambdahat), 0.9, 1.1)),
+    mu_p1 = mu_p1,
+    mu_p2 = mu_p2,
+    logit_p1 = matrix(rnorm(nrowY*ncolY, mu_p1, sigma_p/2) , nrow = nrowY, ncol = ncolY),
+    logit_p2 = matrix(rnorm(nrowY*ncolY, mu_p2, sigma_p/2) , nrow = nrowY, ncol = ncolY),
     N = N,
     lambda = N + 0.01,
-#    P = runif(1, 0.1, 0.9),
-#    invrate = 1/rate,
+
     beta = runif(1, -0.5, 0.5),
     sigma = runif(1, 0.5, 1),
-    New_Y = N
+    New_Y = N, # Warning message if not included
+    New_y = LDDdata$data$y
   )
 }
 
@@ -52,8 +55,8 @@ DoubleObsMultisiteModel <- nimbleModel(
                    lambupp = 10*lambdahat,
                    N_surv = length(LDDdata$const$N_sites),
                    N_sites = LDDdata$const$N_sites,
-                   mu_logit_p = prior_parameters_for_p$mu_logit_p,
-                   sigma_logit_p = prior_parameters_for_p$sigma_logit_p,
+                   prior_mu_logit_p = prior_parameters_for_p$mu_logit_p,
+                   prior_sigma_logit_p = prior_parameters_for_p$sigma_logit_p,
                    sam = LDDdata$const$sam,
                    N_sam = length(unique(LDDdata$const$sam)),
                    area = LDDdata$const$area,
@@ -70,8 +73,7 @@ DoubleObsMultisiteModel <- nimbleModel(
 t1 <- Sys.time()
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be compiled for the last step
 DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, 
-                                        monitors = c("p1", "p2", "mu0", "sigma", "beta", "Disc_Y", "Disc_New_Y"), 
-                                        #monitors = c("p1", "p2", "mu0", "rate", "beta"), 
+                                        monitors = c("Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "mu_p1", "mu_p2", "mu0", "sigma", "sigma_p", "beta"),
                                         enableWAIC = TRUE)
 
 # Setting up a block sampler (I've tried various combinations of blocking, chains often get stuck with any combination)
@@ -124,22 +126,17 @@ gelman.diag(posterior_gamma_1$samples)
 
 posterior_gamma_1$WAIC
 
-# nimbleList object of type waicNimbleList
-# Field "WAIC":
-#   [1] 123.4445
-# Field "lppd":
-#   [1] -43.80825
-# Field "pWAIC":
-#   [1] 17.91402 
-
-
 #save(posterior_gamma_1, file = "data/posterior_samples/gamma_1.RData")
 
 # # Posterior predictive checks
 # 
-# samp <- as.matrix(posterior_gamma_1$samples)
-# plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
-# abline(0,1, col="red")
-# 
-# mean(samp[,"Disc_New_Y"] > samp[,"Disc_Y"])
+samp <- as.matrix(posterior_gamma_1$samples)
+plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
+abline(0, 1, col="red")
+mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+# OK!
 
+# Wrt y
+plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
+abline(0, 1, col="red")
+mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
