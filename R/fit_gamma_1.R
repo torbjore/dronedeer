@@ -90,7 +90,6 @@ CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
 # DoubleObsMultisiteConf$getSamplers('beta')
 # DoubleObsMultisiteConf$printSamplers('exp_mu0')
 
-
 t2 <- Sys.time()
 cat("Compilation time:")
 t2-t1
