@@ -1,4 +1,4 @@
-# Double observer multi-site model with lognormal lambda and first order covariate effect
+# Double observer multi-site model with exponential lambda and first order covariate effect
 
 # DEFINING THE MODEL
 nimbleCode_DOMM_exponential_1 <- nimbleCode({
@@ -7,8 +7,8 @@ nimbleCode_DOMM_exponential_1 <- nimbleCode({
   for(s in 1:N_surv){
     for(i in 1:N_sites[s]){
       # Random p's
-      logit_p1[s,i] ~ dnorm(mu_p1, sd = sigma_p[1])
-      logit_p2[s,i] ~ dnorm(mu_p2, sd = sigma_p[2])
+      logit_p1[s,i] ~ dnorm(mu_p1, sd = sigma_p)
+      logit_p2[s,i] ~ dnorm(mu_p2, sd = sigma_p)
       p1[s,i] <- 1/(1+exp(-logit_p1[s,i]))
       p2[s,i] <- 1/(1+exp(-logit_p2[s,i]))
       
@@ -39,12 +39,7 @@ nimbleCode_DOMM_exponential_1 <- nimbleCode({
   mu_p1 ~ dnorm(prior_mu_logit_p, sd = prior_sigma_logit_p) 
   mu_p2 ~ dnorm(prior_mu_logit_p, sd = prior_sigma_logit_p)
   
-  # Prøver med obs-spesifikk sigma_p  
-  for(k in 1:2){
-    sigma_p[k] ~ dunif(0.1, 1)
-  }
-  
-  # sigma_p ~ dunif(0.1, 0.59)
+  sigma_p ~ dunif(0.1, 0.59)
   # It is not reasonable that sigma_p could be very high because observers did an
   # honest attempt to locate deer at all sites, and we we don't believe that a
   # very high proportion of sites with zero counts actually had deer present (it's
