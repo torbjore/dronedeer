@@ -72,10 +72,10 @@ pred_plots <- function(predfun, x=X, x_st=X_st, PS = post_samp_mat, names = sam_
       # Adding CI, mean and median
       #geom_ribbon(aes(ymin=lwr, ymax=upr, x=x, fill ="Lower/Upper 95% CI", alpha = 0.1), show.legend = TRUE) +
       geom_ribbon(aes(ymin=lwr, ymax=upr, x=x, fill ="Lower/Upper 95% CI", alpha = 0.1), show.legend = FALSE) +
-      geom_line(aes(y=mean, color="Posterior mean"), color="#fe2323", size=1.2) + 
-      geom_line(aes(y=median, color="Posterior median"), color="#369bbe", size=1.2) +
-      geom_vline(aes(xintercept=mpv), color="#68754D", linetype="dashed", size=1) +
-      geom_vline(aes(xintercept = pap), color="#68754D", linetype="dotted", size=1 ) +
+      geom_line(aes(y=mean, color="Posterior mean"), color="#fe2323", linewidth=1.2) + 
+      geom_line(aes(y=median, color="Posterior median"), color="#369bbe", linewidth=1.2) +
+      geom_vline(aes(xintercept=mpv), color="#68754D", linetype="dashed", linewidth=1) +
+      geom_vline(aes(xintercept = pap), color="#68754D", linetype="dotted", linewidth=1 ) +
       
       # Adding legend
       # scale_fill_manual(name = "",
@@ -89,8 +89,8 @@ pred_plots <- function(predfun, x=X, x_st=X_st, PS = post_samp_mat, names = sam_
       xlab(Xlab) +
       ylab(Ylab) +
       scale_y_continuous(trans='log10') +
-      #theme_ipsum(axis_title_size = 11.5, axis_title_just = "cc",)
-      theme_ipsum(axis_title_size = 8, axis_title_just = "cc",)
+      theme_ipsum(axis_title_size = 11.5, axis_title_just = "cc",)
+      #theme_ipsum(axis_title_size = 8, axis_title_just = "cc",)
     
     # print(plots[[SAM]])
     # png(paste(modelcov, SAM, ".png", sep = ""), width=600, height=500, res=120) # Start export
@@ -110,5 +110,3 @@ plot_grid(plots[[5]],
           plots[[6]],
           plots[[7]],
           plots[[8]])
-
-
