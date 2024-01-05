@@ -2,12 +2,7 @@
 
 # DEFINING THE MODEL
 nimbleCode_DOMM_gamma_1 <- nimbleCode({
-  # Model
-  # Psum <- 1-(1-p1)*(1-p2)
-  # pi[1] <- p1*(1-p2)/Psum
-  # pi[2] <- (1-p1)*p2/Psum
-  # pi[3] <- p1*p2/Psum
-  
+
   for(s in 1:N_surv){
     for(i in 1:N_sites[s]){
       
