@@ -66,10 +66,6 @@ DoubleObsMultisiteModel <- nimbleModel(
   inits = Inits()
 )
 
-# dataNodes <- DoubleObsMultisiteModel$getNodeNames(dataOnly = TRUE)
-# parentNodes <- DoubleObsMultisiteModel$getParents(dataNodes, stochOnly = TRUE, includeData = FALSE, upstream = TRUE)
-# simNodes <- DoubleObsMultisiteModel$getDependencies(parentNodes, self = FALSE)
-
 t1 <- Sys.time()
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be compiled for the last step
 DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, 

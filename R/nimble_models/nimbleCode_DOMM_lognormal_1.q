@@ -52,7 +52,7 @@ nimbleCode_DOMM_lognormal_1 <- nimbleCode({
   # that the 97.% percentile site had a maximum of 10 times higher detection
   # odds as the 2.5% percentile site, we used a uniform prior for sigma_p with 
   # an upper bound of log(10)/(1.96*2) = 0.59. To avoid poor mixing when the 
-  # chains entered flatparts of the likelihood surface, we also set a lower
+  # chains entered flat parts of the likelihood surface, we also set a lower
   # bound of 0.1.
   
   sigma ~ dunif(0.5, 3) # WAIC 122.1556 (before random effects on p)

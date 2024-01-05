@@ -52,11 +52,15 @@ nimbleCode_DOMM_gamma_1 <- nimbleCode({
   mu_p1 ~ dnorm(prior_mu_logit_p, sd = prior_sigma_logit_p) 
   mu_p2 ~ dnorm(prior_mu_logit_p, sd = prior_sigma_logit_p)
   sigma_p ~ dunif(0.1, 0.59)
-  
-  # logit_p1 ~ dnorm(mu_logit_p, sd = sigma_logit_p) 
-  # logit_p2 ~ dnorm(mu_logit_p, sd = sigma_logit_p)
-  # p1 <- exp(logit_p1)/(1+exp(logit_p1))
-  # p2 <- exp(logit_p2)/(1+exp(logit_p2))
+  # It is not reasonable that sigma_p could be very high because observers did an
+  # honest attempt to locate deer at all sites, and we we don't believe that a
+  # very high proportion of sites with zero counts actually had deer present (it's
+  # more likely that most of these sites did not have deer in them). Assuming
+  # that the 97.% percentile site had a maximum of 10 times higher detection
+  # odds as the 2.5% percentile site, we used a uniform prior for sigma_p with 
+  # an upper bound of log(10)/(1.96*2) = 0.59. To avoid poor mixing when the 
+  # chains entered flat parts of the likelihood surface, we also set a lower
+  # bound of 0.1.
   
   # For posterior predictive checks
   for(s in 1:N_surv){
