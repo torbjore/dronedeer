@@ -1,56 +1,58 @@
-# GGPLOT FIG 3.3 DENSITY OF DEER AT SAMPLING AREAS AND MONTH, GAMMA DISTIBUTION
+# GGPLOT FIG 3.3 DENSITY OF DEER AT SAMPLING AREAS AND MONTH
 
 library(coda)
 library(ggplot2)
 library(hrbrthemes) 
-
 library(cowplot)
 
-# Loading site-data
-load(file = "data/derived/UseData.rda")
+#############
+# Functions #
+#############
 
-# Loading counts
-load(file = "data/derived/Counts.rda")
+# pred_gamma2_orig <- function(x, PS = post_samp_mat, sam){
+#   mu0 = PS[, paste0("mu0[", sam, "]")]
+#   beta1 = PS[, "beta[1]"]
+#   beta2 = PS[, "beta[2]"]
+#   sigma = PS[, "sigma"]
+#   
+#   mean_lambda = exp(mu0)
+#   mean_lnorm = log(mean_lambda) - 0.5*sigma*sigma
+#   var_lognormal = (exp(sigma*sigma) - 1)*exp(2*mean_lnorm + sigma*sigma)  
+#   rate = mean_lambda/var_lognormal  
+#   
+#   mu = mu0 + x*beta1 + (x^2)*beta2
+#   shape = exp(mu)*rate
+#   
+#   mean_lambda_km2 = (shape/rate)*100 
+#   return(mean_lambda_km2)
+# }
 
-#load("data/CountData.RData")
-sam_names = c("Haugen (April)", "Haugen (March)", "Raa (April)", "Raa (March)", "Soere Bjoerkum (April)", "Soere Bjoerkum (March)", "Sprakehaug (April)", "Sprakehaug (March)")
-
-# Field
-load("original/posterior_gamma_2.RData")
-predictor_variable = UseData$mean_field_dist
-Xlab = "Distance from field (m)"
-Ylab = expression(Density~of~deer~(km^-2))
-modelcov = "field_plot_"
-
-#summary(posterior_gamma_2$samples)
-post_samp_mat = as.matrix(posterior_gamma_2$samples)
-
-X = seq(0, max(predictor_variable, na.rm = TRUE), length.out=50)
-X_mean <-  mean(predictor_variable, na.rm=TRUE)
-X_sd = sd(predictor_variable, na.rm=TRUE)
-X_st = (X - X_mean)/X_sd
-
-mpv <- mean(predictor_variable, na.rm = TRUE) # mean predictor variable
-pap <- mean(post_samp_mat[,"x_at_peak"])*X_sd + X_mean# predictor variable at peak
-
-
-pred_gamma2_orig = function(x, PS = post_samp_mat, sam){
-  mu0 = PS[, paste0("mu0[", sam, "]")]
-  beta1 = PS[, "beta[1]"]
-  beta2 = PS[, "beta[2]"]
-  sigma = PS[, "sigma"]
+pred <- function(x, PS = post_samp_mat, sam){ #general prediction function
   
-  mean_lambda = exp(mu0)
-  mean_lnorm = log(mean_lambda) - 0.5*sigma*sigma
-  var_lognormal = (exp(sigma*sigma) - 1)*exp(2*mean_lnorm + sigma*sigma)  
-  rate = mean_lambda/var_lognormal  
+  parnames <- dimnames(PS)[[2]]
   
-  mu = mu0 + x*beta1 + (x^2)*beta2
-  shape = exp(mu)*rate
+  mu0 <- PS[, paste0("mu0[", sam, "]")]
   
-  mean_lambda_km2 = (shape/rate)*100 
+  if("beta[2]" %in% parnames){
+    beta1 <- PS[, "beta[1]"]
+    beta2 <- PS[, "beta[2]"]
+  } else {
+    beta1 <- PS[, "beta"]
+    beta2 <- 0
+  }
+  
+  if("sigma" %in% parnames){
+    sigma <- PS[, "sigma"]
+  } else {
+    sigma <- 0
+  }
+  
+  mu <- mu0 + x*beta1 + (x^2)*beta2
+
+  mean_lambda_km2 <- exp(mu + 0.5*sigma^2)*100 
   return(mean_lambda_km2)
 }
+
 
 pred_plots <- function(predfun, x=X, x_st=X_st, PS = post_samp_mat, names = sam_names){
   plots = list() # Empty list to store plots in
@@ -99,6 +101,40 @@ pred_plots <- function(predfun, x=X, x_st=X_st, PS = post_samp_mat, names = sam_
   }
   return(plots)
 }
+
+#############
+# Preparing #
+#############
+
+# Loading site-data
+load(file = "data/derived/UseData.rda")
+
+# Loading counts
+load(file = "data/derived/Counts.rda")
+
+#load("data/CountData.RData")
+sam_names <- c("Haugen (April)", "Haugen (March)", "Raa (April)", "Raa (March)", "Soere Bjoerkum (April)", "Soere Bjoerkum (March)", "Sprakehaug (April)", "Sprakehaug (March)")
+
+load("original/posterior_gamma_2.RData")
+predictor_variable <- UseData$mean_field_dist
+Xlab <- "Distance from field (m)"
+Ylab <- expression(Density~of~deer~(km^-2))
+#modelcov = "field_plot_"
+
+#summary(posterior_gamma_2$samples)
+post_samp_mat <- as.matrix(posterior_gamma_2$samples)
+
+X <- seq(0, max(predictor_variable, na.rm = TRUE), length.out=50)
+X_mean <-  mean(predictor_variable, na.rm=TRUE)
+X_sd <- sd(predictor_variable, na.rm=TRUE)
+X_st <- (X - X_mean)/X_sd
+
+mpv <- mean(predictor_variable, na.rm = TRUE) # mean predictor variable
+pap <- mean(post_samp_mat[,"x_at_peak"])*X_sd + X_mean# predictor variable at peak
+
+############
+# Plotting #
+############
 
 plots <- pred_plots(pred_gamma2_orig)
 
