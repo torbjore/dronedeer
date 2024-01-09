@@ -1,10 +1,10 @@
 # Making 'Lærdal Deer Drone data' (structured for nimble input)
 
 # Loading site-data
-load(file = "data/derived/UseData.rda")
+load(file = "data/UseData.rda")
 
 # Loading counts
-load(file = "data/derived/Counts.rda")
+load(file = "data/Counts.rda")
 
 # KOMMENTAR: UseData inneholder også counts (men i et annet format)
 
