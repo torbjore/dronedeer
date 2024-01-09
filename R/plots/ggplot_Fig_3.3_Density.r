@@ -9,24 +9,6 @@ library(cowplot)
 # Functions #
 #############
 
-# pred_gamma2_orig <- function(x, PS = post_samp_mat, sam){
-#   mu0 = PS[, paste0("mu0[", sam, "]")]
-#   beta1 = PS[, "beta[1]"]
-#   beta2 = PS[, "beta[2]"]
-#   sigma = PS[, "sigma"]
-#   
-#   mean_lambda = exp(mu0)
-#   mean_lnorm = log(mean_lambda) - 0.5*sigma*sigma
-#   var_lognormal = (exp(sigma*sigma) - 1)*exp(2*mean_lnorm + sigma*sigma)  
-#   rate = mean_lambda/var_lognormal  
-#   
-#   mu = mu0 + x*beta1 + (x^2)*beta2
-#   shape = exp(mu)*rate
-#   
-#   mean_lambda_km2 = (shape/rate)*100 
-#   return(mean_lambda_km2)
-# }
-
 pred <- function(x, PS = post_samp_mat, sam){ #general prediction function
   
   parnames <- dimnames(PS)[[2]]
@@ -54,7 +36,7 @@ pred <- function(x, PS = post_samp_mat, sam){ #general prediction function
 }
 
 
-pred_plots <- function(predfun, x=X, x_st=X_st, PS = post_samp_mat, names = sam_names){
+pred_plots <- function(predfun = pred, x=X, x_st=X_st, PS = post_samp_mat, names = sam_names){
   plots = list() # Empty list to store plots in
   
   for(SAM in 1:length(sam_names)){
@@ -74,10 +56,10 @@ pred_plots <- function(predfun, x=X, x_st=X_st, PS = post_samp_mat, names = sam_
       # Adding CI, mean and median
       #geom_ribbon(aes(ymin=lwr, ymax=upr, x=x, fill ="Lower/Upper 95% CI", alpha = 0.1), show.legend = TRUE) +
       geom_ribbon(aes(ymin=lwr, ymax=upr, x=x, fill ="Lower/Upper 95% CI", alpha = 0.1), show.legend = FALSE) +
-      geom_line(aes(y=mean, color="Posterior mean"), color="#fe2323", linewidth=1.2) + 
+      #geom_line(aes(y=mean, color="Posterior mean"), color="#fe2323", linewidth=1.2) + 
       geom_line(aes(y=median, color="Posterior median"), color="#369bbe", linewidth=1.2) +
       geom_vline(aes(xintercept=mpv), color="#68754D", linetype="dashed", linewidth=1) +
-      geom_vline(aes(xintercept = pap), color="#68754D", linetype="dotted", linewidth=1 ) +
+      #geom_vline(aes(xintercept = pap), color="#68754D", linetype="dotted", linewidth=1 ) +
       
       # Adding legend
       # scale_fill_manual(name = "",
@@ -106,23 +88,18 @@ pred_plots <- function(predfun, x=X, x_st=X_st, PS = post_samp_mat, names = sam_
 # Preparing #
 #############
 
-# Loading site-data
-load(file = "data/derived/UseData.rda")
+# Loading data and posterior samples
+load("data/posterior_samples/gamma_2.RData")
+load(file = "data/UseData.rda")
+load(file = "data/Counts.rda")
 
-# Loading counts
-load(file = "data/derived/Counts.rda")
-
-#load("data/CountData.RData")
 sam_names <- c("Haugen (April)", "Haugen (March)", "Raa (April)", "Raa (March)", "Soere Bjoerkum (April)", "Soere Bjoerkum (March)", "Sprakehaug (April)", "Sprakehaug (March)")
 
-load("original/posterior_gamma_2.RData")
 predictor_variable <- UseData$mean_field_dist
 Xlab <- "Distance from field (m)"
 Ylab <- expression(Density~of~deer~(km^-2))
-#modelcov = "field_plot_"
 
-#summary(posterior_gamma_2$samples)
-post_samp_mat <- as.matrix(posterior_gamma_2$samples)
+post_samp_mat <- as.matrix(out$samples)
 
 X <- seq(0, max(predictor_variable, na.rm = TRUE), length.out=50)
 X_mean <-  mean(predictor_variable, na.rm=TRUE)
@@ -130,13 +107,13 @@ X_sd <- sd(predictor_variable, na.rm=TRUE)
 X_st <- (X - X_mean)/X_sd
 
 mpv <- mean(predictor_variable, na.rm = TRUE) # mean predictor variable
-pap <- mean(post_samp_mat[,"x_at_peak"])*X_sd + X_mean# predictor variable at peak
+#pap <- mean(post_samp_mat[,"x_at_peak"])*X_sd + X_mean # predictor variable at peak
 
 ############
 # Plotting #
 ############
 
-plots <- pred_plots(pred_gamma2_orig)
+plots <- pred_plots()
 
 plot_grid(plots[[1]],
           plots[[2]],
@@ -146,3 +123,31 @@ plot_grid(plots[[5]],
           plots[[6]],
           plots[[7]],
           plots[[8]])
+
+###########################
+# Convergence diagnostics #
+###########################
+
+#plot(out$samples) # 1 = svart, 2 = rød, 3 = grønn
+gelman.diag(out$samples)
+
+#######################
+# Posterior summaries #
+#######################
+summary(out$samples)
+out$WAIC
+
+###############################
+# Posterior predictive checks #
+###############################
+
+samp <- as.matrix(out$samples)
+#plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
+abline(0, 1, col="red")
+mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+# OK!
+
+# Wrt y
+#plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
+abline(0, 1, col="red")
+mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
