@@ -96,16 +96,18 @@ t2-t1
 
 t3 <- Sys.time()
 init.values <- list(Inits(), Inits(), Inits())
-niter <- 10000 #115000
-nburnin <- 5000 #15000
-nchain <- 3
-thin <- 4
+settings <- list(
+  niter = 200000,
+  nburnin = 20000,
+  nchain = 3,
+  thin = 6
+)
 out <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter = niter,
-  nburnin = nburnin,
-  nchain = nchain,
-  thin = thin,
+  niter = settings$niter,
+  nburnin = settings$nburnin,
+  nchain = settings$nchain,
+  thin = settings$thin,
   inits = init.values,
   samplesAsCodaMCMC = TRUE,
   WAIC = TRUE)
@@ -114,11 +116,11 @@ cat("Run time:")
 t4-t3
 
 # Saving workspace
-#save.image(file = "data/posterior_samples/gamma_2.RData")
+save(settings, out, file = "data/posterior_samples/gamma_2.RData")
 
-plot(out$samples) # 1 = svart, 2 = rød, 3 = grønn
-summary(out$samples)
-gelman.diag(out$samples)
+#plot(out$samples) # 1 = black, 2 = red, 3 = green
+# summary(out$samples)
+# gelman.diag(out$samples)
 
 # out$WAIC
 # 
@@ -134,3 +136,4 @@ gelman.diag(out$samples)
 # plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
 # abline(0, 1, col="red")
 # mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
+

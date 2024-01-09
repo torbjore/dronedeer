@@ -85,50 +85,45 @@ cat("Compilation time:")
 t2-t1
 
 t3 <- Sys.time()
-posterior_lognormal_2 <- runMCMC(
+init.values <- list(Inits(), Inits(), Inits())
+settings <- list(
+  niter = 200000,
+  nburnin = 20000,
+  nchain = 3,
+  thin = 6
+)
+out <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter=50000,
-  nburnin=10000,
-  nchain=3,
-  thin= 4,
-  inits = Inits,
+  niter = settings$niter,
+  nburnin = settings$nburnin,
+  nchain = settings$nchain,
+  thin = settings$thin,
+  inits = init.values,
   samplesAsCodaMCMC = TRUE,
   WAIC = TRUE)
 t4 <- Sys.time()
-
 cat("Run time:")
 t4-t3
 
-#load(file = "data/posterior_samples/posterior_lognormal_2.RData")
+# Saving workspace
+save(settings, out, file = "data/posterior_samples/lognormal_2.RData")
 
-plot(posterior_lognormal_2$samples)
-crosscorr.plot(posterior_lognormal_2$samples)
-crosscorr(posterior_lognormal_2$samples)
-summary(posterior_lognormal_2$samples)
+# #plot(out$samples) # 1 = black, 2 = red, 3 = green
+# summary(out$samples)
+# gelman.diag(out$samples)
 
-posterior_lognormal_2$WAIC
-# konstant sigma_p:
-# Field "WAIC":
-# [1] 119.6522
-
-
-gelman.diag(posterior_lognormal_2$samples)
-
-#save(posterior_lognormal_2, file = "data/posterior_samples/posterior_lognormal_2.RData")
-
-# Posterior predictive checks
-
-# Wrt Y
-samp <- as.matrix(posterior_lognormal_2$samples)
-plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
-abline(0, 1, col="red")
-mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
-
-# Wrt y
-plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
-abline(0, 1, col="red")
-mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
-
-y1 <- apply(LDDdata$data$y, c(1,2), function(i) i[1] + i[3])
-y2 <- apply(LDDdata$data$y, c(1,2), function(i) i[2] + i[3])
+# out$WAIC
+# 
+# # # Posterior predictive checks
+# # 
+# samp <- as.matrix(out$samples)
+# plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
+# abline(0, 1, col="red")
+# mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+# # OK!
+# 
+# # Wrt y
+# plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
+# abline(0, 1, col="red")
+# mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
 

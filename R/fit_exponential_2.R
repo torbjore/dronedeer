@@ -80,44 +80,43 @@ t2-t1
 
 t3 <- Sys.time()
 init.values <- list(Inits(), Inits(), Inits())
-posterior_samples <- runMCMC(
+settings <- list(
+  niter = 200000,
+  nburnin = 20000,
+  nchain = 3,
+  thin = 6
+)
+out <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter=5000, #0,
-  nburnin=1000, #0,
-  nchain=length(init.values),
-  thin= 1, #4,
+  niter = settings$niter,
+  nburnin = settings$nburnin,
+  nchain = settings$nchain,
+  thin = settings$thin,
   inits = init.values,
   samplesAsCodaMCMC = TRUE,
   WAIC = TRUE)
 t4 <- Sys.time()
-
 cat("Run time:")
 t4-t3
 
-#save(posterior_samples, file = "data/posterior_samples/posterior_exponential_2.RData")
+# Saving workspace
+save(settings, out, file = "data/posterior_samples/exponential_2.RData")
 
-#load(file = "data/posterior_samples/posterior_exponential_1.RData")
+#plot(out$samples) # 1 = black, 2 = red, 3 = green
+# summary(out$samples)
+# gelman.diag(out$samples)
 
-plot(posterior_exponential_1$samples)
-crosscorr.plot(posterior_exponential_1$samples)
-summary(posterior_exponential_1$samples)
-crosscorr(posterior_exponential_1$samples)
-
-posterior_exponential_1$WAIC
-
-gelman.diag(posterior_exponential_1$samples)
-
-# Posterior predictive checks
-
-# Wrt Y
-samp <- as.matrix(posterior_exponential_1$samples)
-plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
-abline(0, 1, col="red")
-mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
-# OK!
-
-# Wrt y
-plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
-abline(0, 1, col="red")
-mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
-
+# out$WAIC
+# 
+# # # Posterior predictive checks
+# # 
+# samp <- as.matrix(out$samples)
+# plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
+# abline(0, 1, col="red")
+# mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+# # OK!
+# 
+# # Wrt y
+# plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
+# abline(0, 1, col="red")
+# mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])

@@ -96,42 +96,43 @@ t2-t1
 
 t3 <- Sys.time()
 init.values <- list(Inits(), Inits(), Inits())
-posterior_gamma_1 <- runMCMC(
-  CDoubleObsMultisiteMCMC,
-  niter = 10000, #115000,
-  nburnin = 5000, #15000,
+settings <- list(
+  niter = 200000,
+  nburnin = 20000,
   nchain = 3,
-  thin = 4,
+  thin = 6
+)
+out <- runMCMC(
+  CDoubleObsMultisiteMCMC,
+  niter = settings$niter,
+  nburnin = settings$nburnin,
+  nchain = settings$nchain,
+  thin = settings$thin,
   inits = init.values,
   samplesAsCodaMCMC = TRUE,
   WAIC = TRUE)
 t4 <- Sys.time()
-
 cat("Run time:")
 t4-t3
 
-plot(posterior_gamma_1$samples) # 1 = svart, 2 = rød, 3 = grønn
-summary(posterior_gamma_1$samples)
-gelman.diag(posterior_gamma_1$samples)
+# Saving workspace
+save(settings, out, file = "data/posterior_samples/gamma_1.RData")
 
-# lapply(posterior_gamma_1$samples, function(i) var(i[,"rate"]))
-# lapply(posterior_gamma_1$samples, function(i) mean(i[,"rate"]))
-# lapply(posterior_gamma_1$samples, function(i) mean(i[,"beta"]))
-# lapply(init.values, function(i) i[c("exp_mu0", "invrate", "beta")])
+#plot(out$samples) # 1 = black, 2 = red, 3 = green
+# summary(out$samples)
+# gelman.diag(out$samples)
 
-posterior_gamma_1$WAIC
-
-#save(posterior_gamma_1, file = "data/posterior_samples/gamma_1.RData")
-
-# # Posterior predictive checks
+# out$WAIC
 # 
-samp <- as.matrix(posterior_gamma_1$samples)
-plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
-abline(0, 1, col="red")
-mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
-# OK!
-
-# Wrt y
-plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
-abline(0, 1, col="red")
-mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
+# # # Posterior predictive checks
+# # 
+# samp <- as.matrix(out$samples)
+# plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
+# abline(0, 1, col="red")
+# mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+# # OK!
+# 
+# # Wrt y
+# plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
+# abline(0, 1, col="red")
+# mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])

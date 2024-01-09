@@ -89,7 +89,7 @@ pred_plots <- function(predfun = pred, x=X, x_st=X_st, PS = post_samp_mat, names
 #############
 
 # Loading data and posterior samples
-load("data/posterior_samples/gamma_2.RData")
+load("data/posterior_samples/lognormal_2_temp.RData")
 load(file = "data/UseData.rda")
 load(file = "data/Counts.rda")
 
@@ -143,11 +143,11 @@ out$WAIC
 
 samp <- as.matrix(out$samples)
 #plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
-abline(0, 1, col="red")
+#abline(0, 1, col="red")
 mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
 # OK!
 
 # Wrt y
 #plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
-abline(0, 1, col="red")
+#abline(0, 1, col="red")
 mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
