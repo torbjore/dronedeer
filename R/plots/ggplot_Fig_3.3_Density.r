@@ -34,7 +34,7 @@ X_sd <- sd(predictor_variable, na.rm=TRUE)
 X_st <- (X - X_mean)/X_sd
 
 mpv <- mean(predictor_variable, na.rm = TRUE) # mean predictor variable
-#pap <- mean(post_samp_mat[,"x_at_peak"])*X_sd + X_mean # predictor variable at peak
+pap <- median(-post_samp_mat[,"beta[1]"]/(2*post_samp_mat[,"beta[2]"]))*X_sd + X_mean # predictor variable at peak
 
 ############
 # Plotting #

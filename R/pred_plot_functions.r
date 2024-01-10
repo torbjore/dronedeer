@@ -52,7 +52,7 @@ pred_plots <- function(predfun = pred, x=X, x_st=X_st, PS = post_samp_mat, names
       #geom_line(aes(y=mean, color="Posterior mean"), color="#fe2323", linewidth=1.2) + 
       geom_line(aes(y=median, color="Posterior median"), color="#369bbe", linewidth=1.2) +
       geom_vline(aes(xintercept=mpv), color="#68754D", linetype="dashed", linewidth=1) +
-      #geom_vline(aes(xintercept = pap), color="#68754D", linetype="dotted", linewidth=1 ) +
+      geom_vline(aes(xintercept = pap), color="#68754D", linetype="dotted", linewidth=1 ) +
       
       # Adding legend
       # scale_fill_manual(name = "",
