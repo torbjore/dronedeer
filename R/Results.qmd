@@ -1,6 +1,5 @@
 ---
 title: "Results"
-format: html
 date: last-modified
 number-sections: true
 toc: true
@@ -69,10 +68,57 @@ No indication of serious lack of fit.
 
 ```{r}
 #| echo: false
-load("../data/posterior_samples/gamma_1.RData")
+load("../data/posterior_samples/gamma_2.RData") # Best model
 summary(out$samples)
 ```
 
-## Predictions from teh best model
+## Predictions from the best model
 
+```{r}
+#| echo: false
+#| warning: FALSE
 
+library(ggplot2)
+library(hrbrthemes) 
+library(cowplot)
+
+source("pred_plot_functions.r")
+
+#############
+# Preparing #
+#############
+
+load(file = "../data/UseData.rda")
+load(file = "../data/Counts.rda")
+
+sam_names <- c("Haugen (April)", "Haugen (March)", "Raa (April)", "Raa (March)", "Soere Bjoerkum (April)", "Soere Bjoerkum (March)", "Sprakehaug (April)", "Sprakehaug (March)")
+
+predictor_variable <- UseData$mean_field_dist
+Xlab <- "Distance from field (m)"
+Ylab <- expression(Density~of~deer~(km^-2))
+
+post_samp_mat <- as.matrix(out$samples)
+
+X <- seq(0, max(predictor_variable, na.rm = TRUE), length.out=50)
+X_mean <-  mean(predictor_variable, na.rm=TRUE)
+X_sd <- sd(predictor_variable, na.rm=TRUE)
+X_st <- (X - X_mean)/X_sd
+
+mpv <- mean(predictor_variable, na.rm = TRUE) # mean predictor variable
+#pap <- mean(post_samp_mat[,"x_at_peak"])*X_sd + X_mean # predictor variable at peak
+
+############
+# Plotting #
+############
+
+plots <- pred_plots()
+
+plot_grid(plots[[1]],
+          plots[[2]],
+          plots[[3]],
+          plots[[4]])
+plot_grid(plots[[5]],
+          plots[[6]],
+          plots[[7]],
+          plots[[8]])
+```

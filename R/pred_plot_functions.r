@@ -34,7 +34,7 @@ pred_plots <- function(predfun = pred, x=X, x_st=X_st, PS = post_samp_mat, names
   
   for(SAM in 1:length(sam_names)){
     Title = names[SAM]
-    cat(Title, "\n")
+    #cat(Title, "\n")
     df = data.frame(x = x, x_st = x_st)
     for(i in 1:length(x_st)){
       y = predfun(x = x_st[i], sam=SAM)
