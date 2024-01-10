@@ -29,11 +29,6 @@ nimbleCode_DOMM_gamma_1 <- nimbleCode({
     }
   }
 
-  # for(k in 1:N_sam){
-  #   exp_mu0[k] ~ dunif(lamblow[k], lambupp[k])
-  #   mu0[k] <- log(exp_mu0[k])
-  # }
-  
   # Priors
   for(k in 1:N_sam){
     mu0[k] ~ dunif(log(lamblow[k]), log(lambupp[k]))
