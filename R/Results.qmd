@@ -1,0 +1,78 @@
+---
+title: "Results"
+format: html
+date: last-modified
+number-sections: true
+toc: true
+toc-depth: 4
+format:
+  html:
+    embed-resources: true
+---
+
+```{r}
+#| echo: false
+library(coda)
+```
+
+
+## Checking convergence and WAIC models
+
+```{r}
+#| echo: false
+
+# WAIC can be used even when we have different observation models: https://discourse.mc-stan.org/t/can-waic-looic-be-used-to-compare-models-with-different-likelihoods/7380
+
+Path <- "../data/posterior_samples"
+files <- dir(path = Path)
+files <- files[substring(files, 1, 3) != "pos"]
+for(fil in files){
+  cat("\n **", fil, "**\n")
+  load(paste0("../data/posterior_samples/", fil))
+  print(unlist(settings))
+  print(gelman.diag(out$samples))
+  print(out$WAIC)
+}
+```
+
+The upper CI of the 'potential scale reduction factor' by Gelman and Rubin is a bit high for some models, so we should probably either run these models longer or do something to get better mixing.
+
+Assuming that this convergence issue will not affect the WIAC-ranking of the models, the best model is 'gamma_2' (this model has pretty good convergence criteria, but we can run for longer to get even better).
+
+## Posterior predictive checks of best model
+
+### Bayesian p-value based on Y
+
+```{r}
+#| echo: false
+samp <- as.matrix(out$samples)
+plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
+abline(0, 1, col="red")
+mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+```
+
+### Bayesian p-value based on y
+
+```{r}
+#| echo: false
+
+plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
+abline(0, 1, col="red")
+mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
+```
+
+### Conclusion
+
+No indication of serious lack of fit.
+
+## Summary of best model
+
+```{r}
+#| echo: false
+load("../data/posterior_samples/gamma_1.RData")
+summary(out$samples)
+```
+
+## Predictions from teh best model
+
+
