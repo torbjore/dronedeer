@@ -75,7 +75,7 @@ nimbleCode_DOMM_gamma_1 <- nimbleCode({
     Disc_y_s[s] <- sum(DiscC_y[s, 1:N_sites[s]])
     Disc_New_y_s[s] <- sum(DiscC_New_y[s, 1:N_sites[s]])
   }
-  # Discrepancy statistics (Pearson chi-sq, but note many small expectations)
+  # Discrepancy statistics (summed Pearson residuals)
   Disc_Y <- sum(Disc_Y_s[1:N_surv])
   Disc_New_Y <- sum(Disc_New_Y_s[1:N_surv])
   Disc_y <- sum(Disc_y_s[1:N_surv])

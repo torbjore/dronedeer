@@ -2,7 +2,7 @@
 # Functions #
 #############
 
-pred <- function(x, PS = post_samp_mat, sam){ #general prediction function
+pred <- function(x, PS, sam){ #general prediction function
   
   parnames <- dimnames(PS)[[2]]
   
@@ -29,7 +29,7 @@ pred <- function(x, PS = post_samp_mat, sam){ #general prediction function
 }
 
 
-pred_plots <- function(predfun = pred, x=X, x_st=X_st, PS = post_samp_mat, names = sam_names){
+pred_plots <- function(predfun = pred, x=X, x_st=X_st, PS, names = sam_names){
   plots = list() # Empty list to store plots in
   
   for(SAM in 1:length(sam_names)){
@@ -37,7 +37,7 @@ pred_plots <- function(predfun = pred, x=X, x_st=X_st, PS = post_samp_mat, names
     #cat(Title, "\n")
     df = data.frame(x = x, x_st = x_st)
     for(i in 1:length(x_st)){
-      y = predfun(x = x_st[i], sam=SAM)
+      y = predfun(x = x_st[i], PS=PS, sam=SAM)
       Q = quantile(y, probs = c(0.025, 0.5, 0.975))
       df$lwr[i] = Q[1]
       df$median[i] = Q[2]

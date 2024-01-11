@@ -40,7 +40,7 @@ pap <- median(-post_samp_mat[,"beta[1]"]/(2*post_samp_mat[,"beta[2]"]))*X_sd + X
 # Plotting #
 ############
 
-plots <- pred_plots()
+plots <- pred_plots(PS = post_samp_mat)
 
 plot_grid(plots[[1]],
           plots[[2]],
