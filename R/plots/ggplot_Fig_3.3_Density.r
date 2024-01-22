@@ -1,15 +1,17 @@
 # GGPLOT FIG 3.3 DENSITY OF DEER AT SAMPLING AREAS AND MONTH
 
+Sys.setlocale(locale='no_NB.utf8') # For å være sikker på at du får med norske bokstaver
+
 library(coda)
 library(ggplot2)
-library(hrbrthemes) 
+# library(hrbrthemes) # TE> Tar bort dette for jeg har ikke alle fontene som kreves installert på min maskin ser det ut til
 library(cowplot)
 
 #############
 # Functions #
 #############
 
-source("R/pred_plot_functions.r")
+source("R/utilities.r")
 
 #############
 # Preparing #
@@ -20,7 +22,7 @@ load("data/posterior_samples/gamma_2.RData")
 load(file = "data/UseData.rda")
 load(file = "data/Counts.rda")
 
-sam_names <- c("Haugen (April)", "Haugen (March)", "Raa (April)", "Raa (March)", "Soere Bjoerkum (April)", "Soere Bjoerkum (March)", "Sprakehaug (April)", "Sprakehaug (March)")
+sam_names <- c("Haugen (April)", "Haugen (March)", "Raa (April)", "Raa (March)", "Søre Bjørkum (April)", "Søre Bjørkum (March)", "Sprakehaug (April)", "Sprakehaug (March)")
 
 predictor_variable <- UseData$mean_field_dist
 Xlab <- "Distance from field (m)"
