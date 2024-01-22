@@ -18,9 +18,9 @@ post_prior_overlap <- function(post_samp, prior_density_fun, plt = FALSE, ...){
 # post_prior_overlap(samp[, "mu0[1]"], prior_density_fun = dnorm, mean = mean(samples), sd = sd(samples), plt = TRUE)
 
 
-#############
-# Functions #
-#############
+#####################################################
+# Functions for predictions and plot of predictions #
+#####################################################
 
 pred <- function(x, PS, sam){ #general prediction function
   
