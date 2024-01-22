@@ -14,6 +14,11 @@ format:
 library(coda)
 ```
 
+DETTE ER ET INTERNT ARBEIDSDOKUMENT - IKKE MENT FOR PUBLISERING
+
+## Overview of raw data
+
+
 
 ## Checking convergence and WAIC models
 
@@ -106,15 +111,19 @@ summary(best_postsamp)
 
 ## Predictions from the best model
 
+### Plot
+
 ```{r}
 #| echo: false
 #| warning: FALSE
 
+Sys.setlocale(locale='no_NB.utf8')
+
 library(ggplot2)
-library(hrbrthemes) 
+#library(hrbrthemes) # TE> Tar bort dette for jeg har ikke alle fontene som kreves installert på min maskin ser det ut til
 library(cowplot)
 
-source("pred_plot_functions.r")
+source("utilities.r")
 
 #############
 # Preparing #
@@ -123,7 +132,7 @@ source("pred_plot_functions.r")
 load(file = "../data/UseData.rda")
 load(file = "../data/Counts.rda")
 
-sam_names <- c("Haugen (April)", "Haugen (March)", "Raa (April)", "Raa (March)", "Soere Bjoerkum (April)", "Soere Bjoerkum (March)", "Sprakehaug (April)", "Sprakehaug (March)")
+sam_names <- c("Haugen (April)", "Haugen (March)", "Raa (April)", "Raa (March)", "Søre Bjørkum (April)", "Søre Bjørkum (March)", "Sprakehaug (April)", "Sprakehaug (March)")
 
 predictor_variable <- UseData$mean_field_dist
 Xlab <- "Distance from field (m)"
@@ -165,9 +174,9 @@ plot_grid(plots[[6]],
 
 <!-- ``` -->
 
-Predictions at peak deer density (for table A3):
+### Table - Predictions at peak deer density (for table A3):
 
-* Kommentar: Jeg har her brukt samme rekkefølge som i figuren (den rekkefølgen i du har på plottene i manus), men table A3 har en annen rekkefølge. Jeg synes du skal bruke samme rekkefølge i figur og tabell. Kanskje du også skal forenkle å bare ta med posterior median, 2.5 percentil og 97.5 percentil - det er det jeg har gjort i plottet nå.
+* Kommentar: Jeg har her brukt samme rekkefølge som i figuren (den rekkefølgen du har på plottene i manus), men table A3 har en annen rekkefølge. Jeg synes du skal bruke samme rekkefølge i figur og tabell. Kanskje du også skal forenkle å bare ta med posterior median, 2.5 percentil og 97.5 percentil - det er det jeg har gjort i plottet nå.
 
 ```{r}
 #| echo: FALSE
@@ -187,3 +196,121 @@ print(df[c(2,1,4,3,6,5,8,7), ])
 
 ```
 
+## Some sensitivity assessment
+
+### Choice of radom distribution for $\lambda$
+
+Predictions from each of the models at mean distance from field at Haugen in March:
+
+```{r}
+#| echo: false
+
+i = 1
+df <- data.frame(Model = models)
+for(mod in models){
+  fls <- files[grep(mod, files)]
+  postsamp <- NULL
+  for(fl in fls){
+    load(paste0("../data/posterior_samples/", fl))
+    postsamp <- c(postsamp, out$samples)
+  }
+  postsamp <- as.mcmc.list(postsamp) |> as.matrix()
+  y <- pred(x=0, PS = postsamp, sam = 2)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[i] <- mean(y)
+  df$median[i] <- Q[2]
+  df$lwr[i] <- Q[1]
+  df$upr[i] <- Q[3]
+  i <- i+1
+}
+print(df)
+```
+
+Upper credible interval limit substantial higher for lognormal and gamma models than exponential models.
+
+### Influence of restrictive prior for $\sigma_p$
+
+Summaries from a model where I increased the upper limit of the the random effects SD for detection log-odds from 0.59 to 5.
+
+```{r}
+#| echo: FALSE
+
+load("../data/posterior_samples/gam_2_test.RData")
+gelman.diag(out$samples)
+#plot(out$samples)
+summary(out$samples)
+
+samp <- as.matrix(out$samples)
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]])
+plot_grid(plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]])
+
+df <- data.frame(SAM = sam_names, x = pap)
+pap_st <- (pap - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(pap_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+print(df[c(2,1,4,3,6,5,8,7), ])
+
+```
+
+The results are, perhaps surprisingly, similar although the 'sigma_p' parameter is estimated very high. I think it is strange that 'sigma_p' is estimated so high, but good to see that it makes such a small difference of the results.
+
+### Alternative prior for mu0
+
+See files 'nimbleCode_DOMM_gamma_2_test.q' and 'fit_gamma_2_test.R'.
+
+```{r}
+#| echo: FALSE
+
+load("../data/posterior_samples/gam_2_test_2.RData")
+gelman.diag(out$samples)
+#plot(out$samples)
+summary(out$samples)
+
+samp <- as.matrix(out$samples)
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]])
+plot_grid(plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]])
+
+df2 <- data.frame(SAM = sam_names, x = pap)
+pap_st <- (pap - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(pap_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df2$mean[SAM] <- mean(y)
+  df2$median[SAM] <- Q[2]
+  df2$lwr[SAM] <- Q[1]
+  df2$upr[SAM] <- Q[3]
+}
+
+print(df2[c(2,1,4,3,6,5,8,7), ])
+```
+
+Sammenlignet med resultatet over:
+
+```{r}
+#| echo: FALSE
+
+print(df[c(2,1,4,3,6,5,8,7), ])
+```
