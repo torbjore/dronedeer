@@ -18,6 +18,74 @@ DETTE ER ET INTERNT ARBEIDSDOKUMENT - IKKE MENT FOR PUBLISERING
 
 ## Overview of raw data
 
+```{r}
+#| echo: false
+# Loading data
+load(file = "../data/LDDdata.rda")
+```
+
+Numbers of deer seen per 'site and month' ('sam')
+
+```{r}
+#| echo: false
+# Numbers seen in each 'site and month' (sam)
+Y_per_sam <- apply(LDDdata$data$Y, 1, sum, na.rm=TRUE) |> tapply(INDEX = LDDdata$const$sam, sum)
+sam_names <- c("Haugen (April)", "Haugen (March)", "Raa (April)", "Raa (March)", "Søre Bjørkum (April)", "Søre Bjørkum (March)", "Sprakehaug (April)", "Sprakehaug (March)")
+names(Y_per_sam) <- sam_names
+Y_per_sam
+```
+
+Simple point estimate of detectability
+
+```{r}
+colsumy <- apply(LDDdata$data$y, 3, sum, na.rm=TRUE)
+p1hat <- colsumy[3]/(colsumy[2]+colsumy[3])
+p2hat <- colsumy[3]/(colsumy[1]+colsumy[3])
+(phat_simple <- 1 - (1-p1hat)*(1-p2hat))
+#Y_per_sam/phat_simple
+
+apply(LDDdata$const$area, 1, mean, na.rm=TRUE) 
+```
+
+Total area per 'sam' (unit = hectare)
+
+```{r}
+area_per_sam <- apply(LDDdata$const$area, 1, sum, na.rm=TRUE) |> tapply(INDEX = LDDdata$const$sam, sum)
+(names(area_per_sam) <- sam_names)
+area_per_sam
+```
+
+Simple density estimates per 'sam' (unit = number of deer per hectare)
+
+```{r}
+lambdahat <- (Y_per_sam/phat_simple)/area_per_sam
+```
+
+For the exponential model we can use the logarithms of these values to construct priors for 'mu0' (except for the sam's where there are zero observations). Initial models fitted to the data suggest that 'sigma' in the lognormal and gamma models is about 1.47, which means that the median is quite much lower than the mean (only about 1/3).
+
+```{r}
+log(lambdahat/exp(0.5*1.47^2))
+```
+
+To construct priors for 'mu0' I have used a normal distribution with the above means and the value of the standard deviation selected such that the 97.5% quantile of the prior distribution for median density, exp(mu0), is 100 times higher than the 2.5% quantile of the prior distribution
+
+```{r}
+round(log(100)/(2*1.96), 3)
+```
+
+The sam's where there are zero observations pose a problem. We cannot say much in terms of a point estimate or a lower confidence/credible interval in these cases, but there is some information about the upper confidence/credible interval (i.e, we can get some idea about how high the densities can potentially be).
+
+To use the same prior-structure as for the other sams I computed prior mean densities from mcmc-samling with a Poisson-model as specified in the script 'prior_zero_sites.r' 
+
+```{r}
+lambdahat[3] <- 0.0066 # Raa (April)
+lambdahat[4] <- 0.0046 # Raa (March)
+lambdahat[7] <- 0.0047 # Sprakehaug (April)
+
+log(lambdahat)
+log(lambdahat/exp(0.5*1.47^2))
+```
+
 
 
 ## Checking convergence and WAIC models
