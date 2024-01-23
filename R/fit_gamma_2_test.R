@@ -53,7 +53,7 @@ DoubleObsMultisiteModel <- nimbleModel(
   nimbleCode_DOMM_gamma_2,
   constants = list(#lamblow = 0.1*lambdahat,  # 0.1 to 10 times point estimate
                    #lambupp = 10*lambdahat,
-                   mu0hat = log(lambdahat/exp(0.5*1.48^2)),
+                   mu0hat = log(lambdahat/exp(0.5*1.47^2)),
                    N_surv = length(LDDdata$const$N_sites),
                    N_sites = LDDdata$const$N_sites,
                    prior_mu_logit_p = prior_parameters_for_p$mu_logit_p,
