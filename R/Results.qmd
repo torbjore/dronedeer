@@ -12,6 +12,7 @@ format:
 ```{r}
 #| echo: false
 library(coda)
+source("utilities.r")
 ```
 
 DETTE ER ET INTERNT ARBEIDSDOKUMENT - IKKE MENT FOR PUBLISERING
@@ -67,7 +68,7 @@ For the exponential model we can use the logarithms of these values to construct
 log(lambdahat/exp(0.5*1.47^2))
 ```
 
-To construct priors for 'mu0' I have used a normal distribution with the above means and the value of the standard deviation selected such that the 97.5% quantile of the prior distribution for median density, exp(mu0), is 100 times higher than the 2.5% quantile of the prior distribution
+To construct priors for 'mu0' for the lognormal and gamma models, I have used a normal distribution with the above means and the value of the standard deviation selected such that the 97.5% quantile of the prior distribution for median density, exp(mu0), is 100 times higher than the 2.5% quantile of the prior distribution
 
 ```{r}
 round(log(100)/(2*1.96), 3)
@@ -99,11 +100,11 @@ Path <- "../data/posterior_samples"
 files <- dir(path = Path)
 #files <- files[substring(files, 1, 3) != "pos"]
 models <- c(
-  "exponential_1",
-  "lognormal_1",
-  "gamma_1",
-  "exponential_2",
-  "lognormal_2",
+  # "exponential_1",
+  # "lognormal_1",
+  # "gamma_1",
+  # "exponential_2",
+  # "lognormal_2",
   "gamma_2"
   )
 
@@ -174,8 +175,46 @@ No indication of serious lack of fit.
 
 ```{r}
 #| echo: false
+best_postsamp <- best_postsamp[,-(1:4)]
 summary(best_postsamp)
 ```
+
+### Overlap with prior
+
+```{r}
+samp <- samp[,-(1:4)]
+df = data.frame(par = dimnames(samp)[[2]],
+                sam = c(NA, NA, sam_names, rep(NA, 4)),
+                overlap = 0)
+
+#1-2 (beta):
+lambdahat <- LDDdata$const$lambdahat
+for(i in 1:2){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 2)
+}
+
+#3-10 (mu0):
+lambdahat <- LDDdata$const$lambdahat
+for(i in 3:10){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = log(lambdahat[i-2]/exp(0.5*1.47^2)), sd = 1.175)
+}
+
+#11-12 (mu_p1 and mu_p2)
+load(file = "../data/prior_parameters_for_p.rda")
+for(i in 11:12){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = prior_parameters_for_p$mu_logit_p, sd = prior_parameters_for_p$sigma_logit_p)
+}
+
+#13 (sigma)
+df$overlap[13] <- post_prior_overlap(samp[,13], dunif, min = 0.5, max = 3)
+
+#14 (sigma_p)
+df$overlap[14] <- post_prior_overlap(samp[,14], dunif, min = 0.1, max = 0.59)
+
+print(df)
+```
+
+There is substantial overlap...
 
 ## Predictions from the best model
 
@@ -185,13 +224,11 @@ summary(best_postsamp)
 #| echo: false
 #| warning: FALSE
 
-Sys.setlocale(locale='no_NB.utf8')
+Sys.setlocale(locale='no_NB.utf8') # Include for using Norwegian letters
 
 library(ggplot2)
 #library(hrbrthemes) # TE> Tar bort dette for jeg har ikke alle fontene som kreves installert på min maskin ser det ut til
 library(cowplot)
-
-source("utilities.r")
 
 #############
 # Preparing #
@@ -296,89 +333,45 @@ print(df)
 
 Upper credible interval limit substantial higher for lognormal and gamma models than exponential models.
 
-### Influence of restrictive prior for $\sigma_p$
+<!-- ### Influence of restrictive prior for $\sigma_p$ -->
 
-Summaries from a model where I increased the upper limit of the the random effects SD for detection log-odds from 0.59 to 5.
+<!-- Summaries from a model where I increased the upper limit of the the random effects SD for detection log-odds from 0.59 to 5. -->
 
-```{r}
-#| echo: FALSE
+<!-- ```{r} -->
+<!-- #| echo: FALSE -->
 
-load("../data/posterior_samples/gam_2_test.RData")
-gelman.diag(out$samples)
-#plot(out$samples)
-summary(out$samples)
+<!-- load("../data/posterior_samples/gam_2_test.RData") -->
+<!-- gelman.diag(out$samples) -->
+<!-- #plot(out$samples) -->
+<!-- summary(out$samples) -->
 
-samp <- as.matrix(out$samples)
-plots <- pred_plots(PS = samp)
+<!-- samp <- as.matrix(out$samples) -->
+<!-- plots <- pred_plots(PS = samp) -->
 
-plot_grid(plots[[2]],
-          plots[[1]],
-          plots[[4]],
-          plots[[3]])
-plot_grid(plots[[6]],
-          plots[[5]],
-          plots[[8]],
-          plots[[7]])
+<!-- plot_grid(plots[[2]], -->
+<!--           plots[[1]], -->
+<!--           plots[[4]], -->
+<!--           plots[[3]]) -->
+<!-- plot_grid(plots[[6]], -->
+<!--           plots[[5]], -->
+<!--           plots[[8]], -->
+<!--           plots[[7]]) -->
 
-df <- data.frame(SAM = sam_names, x = pap)
-pap_st <- (pap - X_mean)/X_sd
-for(SAM in 1:length(sam_names)){
-  y <- pred(pap_st, PS = samp, sam = SAM)
-  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
-  df$mean[SAM] <- mean(y)
-  df$median[SAM] <- Q[2]
-  df$lwr[SAM] <- Q[1]
-  df$upr[SAM] <- Q[3]
-}
+<!-- df <- data.frame(SAM = sam_names, x = pap) -->
+<!-- pap_st <- (pap - X_mean)/X_sd -->
+<!-- for(SAM in 1:length(sam_names)){ -->
+<!--   y <- pred(pap_st, PS = samp, sam = SAM) -->
+<!--   Q <- quantile(y, probs = c(0.025, 0.5, 0.975)) -->
+<!--   df$mean[SAM] <- mean(y) -->
+<!--   df$median[SAM] <- Q[2] -->
+<!--   df$lwr[SAM] <- Q[1] -->
+<!--   df$upr[SAM] <- Q[3] -->
+<!-- } -->
 
-print(df[c(2,1,4,3,6,5,8,7), ])
+<!-- print(df[c(2,1,4,3,6,5,8,7), ]) -->
 
-```
+<!-- ``` -->
 
-The results are, perhaps surprisingly, similar although the 'sigma_p' parameter is estimated very high. I think it is strange that 'sigma_p' is estimated so high, but good to see that it makes such a small difference of the results.
+<!-- The results are, perhaps surprisingly, similar although the 'sigma_p' parameter is estimated very high. I think it is strange that 'sigma_p' is estimated so high, but good to see that it makes such a small difference of the results. -->
 
-### Alternative prior for mu0
 
-See files 'nimbleCode_DOMM_gamma_2_test.q' and 'fit_gamma_2_test.R'.
-
-```{r}
-#| echo: FALSE
-
-load("../data/posterior_samples/gam_2_test_2.RData")
-gelman.diag(out$samples)
-#plot(out$samples)
-summary(out$samples)
-
-samp <- as.matrix(out$samples)
-plots <- pred_plots(PS = samp)
-
-plot_grid(plots[[2]],
-          plots[[1]],
-          plots[[4]],
-          plots[[3]])
-plot_grid(plots[[6]],
-          plots[[5]],
-          plots[[8]],
-          plots[[7]])
-
-df2 <- data.frame(SAM = sam_names, x = pap)
-pap_st <- (pap - X_mean)/X_sd
-for(SAM in 1:length(sam_names)){
-  y <- pred(pap_st, PS = samp, sam = SAM)
-  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
-  df2$mean[SAM] <- mean(y)
-  df2$median[SAM] <- Q[2]
-  df2$lwr[SAM] <- Q[1]
-  df2$upr[SAM] <- Q[3]
-}
-
-print(df2[c(2,1,4,3,6,5,8,7), ])
-```
-
-Sammenlignet med resultatet over:
-
-```{r}
-#| echo: FALSE
-
-print(df[c(2,1,4,3,6,5,8,7), ])
-```
