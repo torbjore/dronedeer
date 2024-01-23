@@ -3,7 +3,7 @@
 ###########################
 
 post_prior_overlap <- function(post_samp, prior_density_fun, plt = FALSE, ...){
-  post_density <- density(samples, bw = "sj")
+  post_density <- density(post_samp, bw = "sj")
   delta <- post_density$x[2] - post_density$x[1] # spaced equally
   prior_density <- prior_density_fun(post_density$x, ...)
   if(plt){
