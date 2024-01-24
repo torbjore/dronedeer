@@ -375,14 +375,14 @@ Upper credible interval limit substantial higher for lognormal and gamma models 
 
 ## Proof of concept - Indentifiablity
 
-Results from model fitted to simulated data. 8 areas with 100 sites. Parameters set to posterior mean of original fit. Same priors as original.
+Results from model fitted to simulated data. 8 areas with 500 sites. Parameters set to posterior mean of original fit. Same priors as original.
 
 Predictions at peak density:
 
 ```{r}
 #| echo: FALSE
 
-load("../data/posterior_samples/sim_gamma_2_run1.RData")
+load("../data/posterior_samples/sim_gamma_2_500_sites.RData")
 gelman.diag(out)
 #plot(out$samples)
 summary(out)
