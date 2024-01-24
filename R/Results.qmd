@@ -87,8 +87,6 @@ log(lambdahat)
 log(lambdahat/exp(0.5*1.47^2))
 ```
 
-
-
 ## Checking convergence and WAIC models
 
 ```{r}
@@ -182,6 +180,7 @@ summary(best_postsamp)
 ### Overlap with prior
 
 ```{r}
+#| echo: FALSE
 samp <- samp[,-(1:4)]
 df = data.frame(par = dimnames(samp)[[2]],
                 sam = c(NA, NA, sam_names, rep(NA, 4)),
@@ -374,4 +373,79 @@ Upper credible interval limit substantial higher for lognormal and gamma models 
 
 <!-- The results are, perhaps surprisingly, similar although the 'sigma_p' parameter is estimated very high. I think it is strange that 'sigma_p' is estimated so high, but good to see that it makes such a small difference of the results. -->
 
+## Proof of concept - Indentifiablity
+
+Results from model fitted to simulated data. 8 areas with 100 sites. Parameters set to posterior mean of original fit. Same priors as original.
+
+Predictions at peak density:
+
+```{r}
+#| echo: FALSE
+
+load("../data/posterior_samples/sim_gamma_2_run1.RData")
+gelman.diag(out)
+#plot(out$samples)
+summary(out)
+
+samp <- as.matrix(out)
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]])
+plot_grid(plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]])
+
+df <- data.frame(SAM = sam_names, x = pap)
+pap_st <- (pap - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(pap_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+print(df[c(2,1,4,3,6,5,8,7), ])
+
+```
+
+Overlap with prior:
+
+```{r}
+#| echo: FALSE
+df = data.frame(par = dimnames(samp)[[2]],
+                sam = c(NA, NA, sam_names, rep(NA, 4)),
+                overlap = 0)
+
+#1-2 (beta):
+lambdahat <- LDDdata$const$lambdahat
+for(i in 1:2){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 2)
+}
+
+#3-10 (mu0):
+lambdahat <- LDDdata$const$lambdahat
+for(i in 3:10){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = log(lambdahat[i-2]/exp(0.5*1.47^2)), sd = 1.175)
+}
+
+#11-12 (mu_p1 and mu_p2)
+load(file = "../data/prior_parameters_for_p.rda")
+for(i in 11:12){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = prior_parameters_for_p$mu_logit_p, sd = prior_parameters_for_p$sigma_logit_p)
+}
+
+#13 (sigma)
+df$overlap[13] <- post_prior_overlap(samp[,13], dunif, min = 0.5, max = 3)
+
+#14 (sigma_p)
+df$overlap[14] <- post_prior_overlap(samp[,14], dunif, min = 0.1, max = 0.59)
+
+print(df)
+```
 

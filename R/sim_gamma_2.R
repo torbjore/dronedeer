@@ -38,7 +38,7 @@ truepar <- list(
 
 # Setting up constants to be used for both simulation and model fitting
 N_surv <- length(truepar$mu0)
-n_sim_sites <- 100 # Number of sites in each survey
+n_sim_sites <- 500 # Number of sites in each survey
 area_val <- as.vector(LDDdata$const$area)
 area_val <- area_val[!is.na(area_val)]
 x_val <- as.vector(standardize(LDDdata$const$mean_field_dist))
@@ -140,4 +140,4 @@ out <- runMCMC(
   )
 
 # Saving workspace
-save(settings, out, file = "data/posterior_samples/sim_gamma_2_run1.RData")
+save(settings, out, file = "data/posterior_samples/sim_gamma_2_500_sites.RData")
