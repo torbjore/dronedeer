@@ -2,21 +2,26 @@
 # Posterior-prior overlap #
 ###########################
 
-post_prior_overlap <- function(post_samp, prior_density_fun, plt = FALSE, ...){
-  post_density <- density(post_samp, bw = "sj")
-  delta <- post_density$x[2] - post_density$x[1] # spaced equally
+ddensity <- function(x, dens) approx(x=dens$x, y=dens$y, xout=x)$y
+
+post_prior_overlap <- function(post_samp, prior_density_fun, plt = FALSE, full = FALSE, ...){
+  post_density <- density(post_samp) #, bw = "sj")
   prior_density <- prior_density_fun(post_density$x, ...)
   if(plt){
     plot(post_density)
     lines(prior_density ~ post_density$x, col = "red")
   }
-  return(sum(pmin(prior_density, post_density$y))*delta)
+  dens <- list(
+    x = post_density$x,
+    y = pmin(prior_density, post_density$y)
+  )
+  int <- integrate(ddensity, min(post_density$x), max(post_density$x), dens = dens, stop.on.error = FALSE)
+  if(full){
+    return(int)
+  } else {
+    return(int$value)
+  }
 }
-
-# # Test:
-# samp <- as.matrix(out$samples)
-# post_prior_overlap(samp[, "mu0[1]"], prior_density_fun = dnorm, mean = mean(samples), sd = sd(samples), plt = TRUE)
-
 
 #####################################################
 # Functions for predictions and plot of predictions #
