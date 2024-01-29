@@ -22,6 +22,9 @@ Nhat <- apply(LDDdata$data$Y, 1, sum, na.rm=TRUE)/(1-(1-p1hat)*(1-p2hat)) # For 
 # lambdahat_surv <- (Nhat/LDDdata$const$N_sites)/apply(LDDdata$const$area, 1, mean, na.rm=TRUE) + 0.01 # Adding a small value since we get -Inf from log(lambdahat=0)
 # lambdahat <- tapply(lambdahat_surv, list(LDDdata$const$sam), mean)
 lambdahat <- LDDdata$const$lambdahat
+lambdahat[3] <- 5.634e-03 # Raa (April)
+lambdahat[4] <- 3.515e-03 # Raa (March)
+lambdahat[7] <- 3.756e-03 # Sprakehaug (April)
 
 N <- round(LDDdata$data$Y/(1-(1-p1hat)*(1-p2hat)), 0)
 N[is.na(N)] <- 0
