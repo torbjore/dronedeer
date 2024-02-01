@@ -1,4 +1,5 @@
 library(nimble)
+library(coda)
 
 # DEFINING THE MODEL
 code <- nimbleCode({
@@ -6,7 +7,8 @@ code <- nimbleCode({
   lambda <- lambda0*area
   lambda0 <- exp(mu0)
   #mu0 ~ dnorm(mu0mean, sd = 1.175)
-  mu0 ~ dnorm(mu0mean, sd = 2.35)
+  #mu0 ~ dnorm(mu0mean, sd = 2.35)
+  mu0 ~ dnorm(mu0mean, sd = 5)
   mu0mean ~ dnorm(0, sd=5)
 })
 
@@ -25,6 +27,7 @@ gelman.diag(mcmc.output)
 summary(mcmc.output)
 # lambda0 = 6.621e-03 = 0.0066
 # with sd = 2.35: lambda0 = 5.634e-03
+# with sd = 5: lambda0 = 2.096e-03
 
 # Raa March
 data <- list(Y = 0)
@@ -41,6 +44,7 @@ gelman.diag(mcmc.output)
 summary(mcmc.output)
 # lambda0 = 4.607e-03 = 0.0046
 # with sd = 2.35: 3.515e-03
+# with sd = 5: lambda0 = 1.174e-03
 
 # Sprakehaug (April)
 mcmc.output <- nimbleMCMC(code, 
@@ -54,4 +58,4 @@ gelman.diag(mcmc.output)
 summary(mcmc.output)
 # lambda0 = 4.734e-03 = 0.0047
 # with sd = 2.35: 3.756e-03
-
+# with sd = 5: lambda0 = 1.268e-03
