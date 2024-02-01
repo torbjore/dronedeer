@@ -51,8 +51,8 @@ Inits <- function(){
 # SETTING UP THE MCMC
 DoubleObsMultisiteModel <- nimbleModel(
   nimbleCode_DOMM_gamma_1,
-  constants = list(lamblow = 0.1*lambdahat,  # 0.1 to 10 times point estimate
-                   lambupp = 10*lambdahat,
+  constants = list(#lamblow = 0.1*lambdahat,  # 0.1 to 10 times point estimate
+                   #lambupp = 10*lambdahat,
                    N_surv = length(LDDdata$const$N_sites),
                    N_sites = LDDdata$const$N_sites,
                    prior_mu_logit_p = prior_parameters_for_p$mu_logit_p,
@@ -116,7 +116,7 @@ cat("Run time:")
 t4-t3
 
 # Saving workspace
-save(settings, out, file = "data/posterior_samples/gamma_1.RData")
+save(settings, out, file = "data/posterior_samples/gamma_1_run1.RData")
 
 #plot(out$samples) # 1 = black, 2 = red, 3 = green
 # summary(out$samples)
