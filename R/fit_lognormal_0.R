@@ -72,10 +72,7 @@ DoubleObsMultisiteModel <- nimbleModel(
 t1 <- Sys.time()
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be compiled for the last step
 DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, 
-#                                        monitors = c("p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
-#                                        monitors = c("median_lambda", "mean_lambda" , "p1", "p2", "mu0", "sigma", "beta"), enableWAIC = TRUE)
-#                                        monitors = c("Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "median_lambda", "mean_lambda" , "mu_p1", "mu_p2", "mu0", "sigma", "sigma_p", "beta"), enableWAIC = TRUE)
-                                        monitors = c("Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "mu_p1", "mu_p2", "mu0", "sigma", "sigma_p", "beta"), enableWAIC = TRUE)
+                                        monitors = c("Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "mu_p1", "mu_p2", "mu0", "sigma", "sigma_p"), enableWAIC = TRUE)
 
 
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)

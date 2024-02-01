@@ -69,7 +69,7 @@ DoubleObsMultisiteModel <- nimbleModel(
 t1 <- Sys.time()
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be compiled for the last step
 DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, 
-                                        monitors = c("Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "mu_p1", "mu_p2", "mu0", "sigma", "sigma_p", "beta"),
+                                        monitors = c("Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "mu_p1", "mu_p2", "mu0", "sigma", "sigma_p"),
                                         enableWAIC = TRUE)
 
 # Setting up a block sampler (I've tried various combinations of blocking, chains often get stuck with any combination)
