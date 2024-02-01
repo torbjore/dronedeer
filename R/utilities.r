@@ -4,11 +4,11 @@
 
 ddensity <- function(x, dens) approx(x=dens$x, y=dens$y, xout=x)$y
 
-post_prior_overlap <- function(post_samp, prior_density_fun, plt = FALSE, full = FALSE, ...){
+post_prior_overlap <- function(post_samp, prior_density_fun, plt = FALSE, plt.main = NULL, full = FALSE, ...){
   post_density <- density(post_samp) #, bw = "sj")
   prior_density <- prior_density_fun(post_density$x, ...)
   if(plt){
-    plot(post_density)
+    plot(post_density, main = plt.main)
     lines(prior_density ~ post_density$x, col = "red")
   }
   dens <- list(
