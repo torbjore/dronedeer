@@ -107,7 +107,7 @@ cat("Run time:")
 t4-t3
 
 # Saving workspace
-save(settings, out, file = "data/posterior_samples/lognormal_1.RData")
+save(settings, out, file = "data/posterior_samples/lognormal_1_run1.RData")
 
 #plot(out$samples) # 1 = black, 2 = red, 3 = green
 # summary(out$samples)
