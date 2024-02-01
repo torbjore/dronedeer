@@ -345,6 +345,24 @@ df
 
 There is substantial overlap here! Especially for mu0 for the areas with zero observations (mu0 is log-median density at mean distance from the field) - 96-98%! For the other sites the overlap between prior and posterior mu0 is 60-77% (still high). Overlaps for 'mu_p1' and 'mu_p2' are high because we used informative priors based on the enclosure surveys. The high overlap for 'sigma_p' is also expected (I've explained this in the methods-appendix).
 
+
+Plot:
+
+* black = posterior
+* red = prior
+
+```{r}
+#| echo: FALSE
+#| layout-ncol: 2
+#| layout-nrow: 4
+
+for(i in 3:10){
+  nouse <- post_prior_overlap(samp[,i], dnorm, mean = log(lambdahat[i-2]/exp(0.5*1.47^2)), sd = 1.175, plt = TRUE,
+                                      plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
+                                      )
+}
+```
+
 We can also compute the overlap for predicted median density at mean distance from field (i.e., for exp(mu)). These are a bit different than for mu, depending on whether the overlap is largest to the left or the right of the distribution:
 
 ```{r}
@@ -355,10 +373,22 @@ df = data.frame(par = paste0('exp(', dimnames(samp)[[2]][3:10], ')'),
                 sam = sam_names,
                 overlap = 0)
 for(i in 1:8){
-  df$overlap[i] <- post_prior_overlap(exp(samp[,i+2]), dlnorm, mean = log(lambdahat[i]/exp(0.5*1.47^2)), sd = 1.175)
+  df$overlap[i] <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = log(lambdahat[i]/exp(0.5*1.47^2)), sdlog = 1.175)
 }
 
 df
+```
+
+```{r}
+#| echo: FALSE
+#| layout-ncol: 2
+#| layout-nrow: 4
+
+for(i in 1:8){
+  nouse <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = log(lambdahat[i]/exp(0.5*1.47^2)), sdlog = 1.175, plt = TRUE,
+                                      plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
+                                      )
+}
 ```
 
 
@@ -542,6 +572,8 @@ One would perhaps expect higher precision (narrower credible intervals) when hav
 
 Since we get very substantial overlap between prior and posterior distributions. I also tried setting sigma such that the 2.5 percentile for the prior distribution for density is 1/100'th of the median and the 97.5 percentile is 100 times the median (i.e., the relative difference between these two percentiles is 10 000):
 
+### Summary and predictions
+
 ```{r}
 #| echo: FALSE
 
@@ -563,7 +595,7 @@ plot_grid(plots[[6]],
           plots[[7]])
 ```
 
-Predictions at peak density:
+#### Predictions at peak density:
 
 ```{r}
 #| echo: FALSE
@@ -582,7 +614,7 @@ for(SAM in 1:length(sam_names)){
 kable(df[c(2,1,4,3,6,5,8,7), ], digits = 4)
 ```
 
-Predictions at mean distance from field:
+#### Predictions at mean distance from field:
 
 ```{r}
 #| echo: FALSE
@@ -601,10 +633,11 @@ for(SAM in 1:length(sam_names)){
 kable(df[c(2,1,4,3,6,5,8,7), ], digits = 4)
 ```
 
-Overlap with prior:
+### Overlap with prior
 
 ```{r}
 #| echo: FALSE
+
 samp <- samp[,-(1:4)]
 df = data.frame(par = dimnames(samp)[[2]],
                 sam = c(NA, NA, sam_names, rep(NA, 4)),
@@ -634,7 +667,30 @@ df$overlap[13] <- post_prior_overlap(samp[,13], dunif, min = 0.5, max = 3)
 #14 (sigma_p)
 df$overlap[14] <- post_prior_overlap(samp[,14], dunif, min = 0.1, max = 0.59)
 
-print(df)
+df
+```
+
+Plot:
+
+* black = posterior
+* red = prior
+
+```{r}
+#| echo: FALSE
+#| layout-ncol: 2
+#| layout-nrow: 4
+
+for(i in 3:10){
+  nouse <- post_prior_overlap(samp[,i], dnorm, mean = log(lambdahat[i-2]/exp(0.5*1.47^2)), sd = 2.35, plt = TRUE,
+                                      plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
+                                      )
+}
+```
+
+Overlap for exp(mu)
+
+```{r}
+#| echo: FALSE
 
 # Overlap for predicted density at mean distance from field (i.e., for exp(mu))
 df = data.frame(par = paste0('exp(', dimnames(samp)[[2]][3:10], ')'),
@@ -645,5 +701,177 @@ for(i in 1:8){
   
 }
 
-print(df)
+df
+```
+
+Plot:
+
+* black = posterior
+* red = prior
+
+```{r}
+#| echo: FALSE
+#| layout-ncol: 2
+#| layout-nrow: 4
+
+for(i in 1:8){
+  nouse <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = log(lambdahat[i]/exp(0.5*1.47^2)), sdlog = 2.35, plt = TRUE,
+                                      plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
+                                      )
+}
+```
+
+## With super-wide priors
+
+I finally used an N(0, sd=10) prior for all 'mu0' parameters. This prior is essentially uninformative (the lower 2.5 percentile of the prior distribution of median density at mean distance from the field is 32,521,595,612 km$^2$/deer and the upper 97.5 percentile is 32,521,595,612 deer/km$^2... :)).
+
+### Summary and predictions
+
+```{r}
+#| echo: FALSE
+
+load("../data/posterior_samples/wide/gamma_2_superwide.RData")
+#gelman.diag(out$samples)
+#plot(out$samples)
+summary(out$samples)
+
+samp <- as.matrix(out$samples)
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]])
+plot_grid(plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]])
+```
+
+#### Predictions at peak density:
+
+```{r}
+#| echo: FALSE
+
+df <- data.frame(SAM = sam_names, x = pap)
+pap_st <- (pap - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(pap_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), ], digits = 4)
+```
+
+#### Predictions at mean distance from field:
+
+```{r}
+#| echo: FALSE
+
+df <- data.frame(SAM = sam_names, x = mpv)
+mpv_st <- (mpv - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(mpv_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), ], digits = 4)
+```
+
+### Overlap with prior
+
+NOTE: An overlap of less than 35% is often regarded as indicating weak prior influence (Gimenez et al.).
+
+```{r}
+#| echo: FALSE
+#| 
+samp <- samp[,-(1:4)]
+df = data.frame(par = dimnames(samp)[[2]],
+                sam = c(NA, NA, sam_names, rep(NA, 4)),
+                overlap = 0)
+
+#1-2 (beta):
+lambdahat <- LDDdata$const$lambdahat
+for(i in 1:2){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 2)
+}
+
+#3-10 (mu0):
+lambdahat <- LDDdata$const$lambdahat
+for(i in 3:10){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 10)
+}
+
+#11-12 (mu_p1 and mu_p2)
+load(file = "../data/prior_parameters_for_p.rda")
+for(i in 11:12){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = prior_parameters_for_p$mu_logit_p, sd = prior_parameters_for_p$sigma_logit_p)
+}
+
+#13 (sigma)
+df$overlap[13] <- post_prior_overlap(samp[,13], dunif, min = 0.5, max = 3)
+
+#14 (sigma_p)
+df$overlap[14] <- post_prior_overlap(samp[,14], dunif, min = 0.1, max = 0.59)
+
+df
+```
+
+Plot:
+
+* black = posterior
+* red = prior
+
+```{r}
+#| echo: FALSE
+#| layout-ncol: 2
+#| layout-nrow: 4
+
+for(i in 3:10){
+  nouse <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 10, plt = TRUE,
+                                      plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
+                                      )
+}
+```
+
+Overlap for exp(mu)
+
+```{r}
+#| echo: FALSE
+
+# Overlap for predicted density at mean distance from field (i.e., for exp(mu))
+df = data.frame(par = paste0('exp(', dimnames(samp)[[2]][3:10], ')'),
+                sam = sam_names,
+                overlap = 0)
+for(i in 1:8){
+  df$overlap[i] <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = 0, sdlog = 10)
+  
+}
+
+df
+```
+
+Plot:
+
+* black = posterior
+* red = prior
+
+```{r}
+#| echo: FALSE
+#| layout-ncol: 2
+#| layout-nrow: 4
+
+for(i in 1:8){
+  nouse <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = 0, sdlog = 10, plt = TRUE,
+                                      plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
+                                      )
+}
 ```
