@@ -104,8 +104,6 @@ To construct priors for 'mu0', I have used a normal distribution with the standa
 
 ## Checking convergence and WAIC models
 
-I've commented this out in the source file for this document for now. In short, convergence is good and the gamma_2-model (gamma distributed Poisson expectation among sites and a quadratic effect of distance from field) 
-
 ```{r}
 #| echo: false
 
@@ -113,18 +111,22 @@ I've commented this out in the source file for this document for now. In short, 
 
 Path <- "../data/posterior_samples"
 files <- dir(path = Path)
-#files <- files[substring(files, 1, 3) != "pos"]
+files <- files[substring(files, 1, 3) != "pos"]
 models <- c(
-  # "exponential_1",
-  # "lognormal_1",
-  # "gamma_1",
-  # "exponential_2",
-  # "lognormal_2",
+  "exponential_0",
+  "lognormal_0",
+  "gamma_0",
+  "exponential_1",
+  "lognormal_1",
+  "gamma_1",
+  "exponential_2",
+  "lognormal_2",
   "gamma_2"
   )
 
+df <- data.frame(model = models, WAIC = rep(NA, length(models)))
 for(mod in models){
-#  cat("\n **", mod, "**\n")
+  cat("\n **", mod, "**\n")
   fls <- files[grep(mod, files)]
   postsamp <- WAIC <- NULL
   for(fl in fls){
@@ -133,19 +135,22 @@ for(mod in models){
     WAIC <- c(WAIC, out$WAIC$WAIC)
   }
   postsamp <- as.mcmc.list(postsamp)
-  # cat("Number of runs:", length(fls), "\n")
-  # cat("Settings for each run:\n")
-  # print(unlist(settings))
-  # cat("\nConvergence diagnostics for all chains combined:\n")
-  # print(gelman.diag(postsamp))
-  # cat("\nWIAC in each run:", WAIC)
-  # cat("\nMean WIAC:", mean(WAIC), "\n")
+  cat("Number of runs:", length(fls), "\n")
+  cat("Settings for each run:\n")
+  print(unlist(settings))
+  cat("\nConvergence diagnostics for all chains combined:\n")
+  print(gelman.diag(postsamp))
+  cat("\nWIAC in each run:", WAIC)
+  cat("\nMean WAIC:", mean(WAIC), "\n")
+  df$WAIC[df$model == mod] <- mean(WAIC)
 }
+
+kable(df)
 ```
 
-<!-- The upper CI of the 'potential scale reduction factor' by Gelman and Rubin is a bit high for some models, so we should probably either run these models longer or do something to get better mixing. -->
+The upper CI of the 'potential scale reduction factor' by Gelman and Rubin is a bit high for some models, so we should probably either run these models longer or do something to get better mixing.
 
-<!-- Assuming that this convergence issue will not affect the WIAC-ranking of the models, the best model is 'gamma_2' (this model has pretty good convergence criteria, but we can run for longer to get even better). -->
+Assuming that this convergence issue will not affect the WIAC-ranking of the models, the best model is 'gamma_2' (this model has pretty good convergence criteria, but we can run for longer to get even better).
 
 ## Posterior predictive checks of best model
 
