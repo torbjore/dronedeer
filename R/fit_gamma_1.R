@@ -19,8 +19,10 @@ colsumy <- apply(LDDdata$data$y, 3, sum, na.rm=TRUE)
 p1hat <- colsumy[3]/(colsumy[2]+colsumy[3])
 p2hat <- colsumy[3]/(colsumy[1]+colsumy[3])
 Nhat <- apply(LDDdata$data$Y, 1, sum, na.rm=TRUE)/(1-(1-p1hat)*(1-p2hat)) # For all sites combined
-lambdahat_surv <- (Nhat/LDDdata$const$N_sites)/apply(LDDdata$const$area, 1, mean, na.rm=TRUE) + 0.01 # Adding a small value since we get -Inf from log(lambdahat=0)
-lambdahat <- tapply(lambdahat_surv, list(LDDdata$const$sam), mean)
+# lambdahat_surv <- (Nhat/LDDdata$const$N_sites)/apply(LDDdata$const$area, 1, mean, na.rm=TRUE) + 0.01 # Adding a small value since we get -Inf from log(lambdahat=0)
+# lambdahat <- tapply(lambdahat_surv, list(LDDdata$const$sam), mean)
+lambdahat <- LDDdata$const$lambdahat
+
 N <- round(LDDdata$data$Y/(1-(1-p1hat)*(1-p2hat)), 0)
 N[is.na(N)] <- 0
 nrowY <- nrow(LDDdata$data$Y)
