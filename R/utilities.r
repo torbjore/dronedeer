@@ -36,8 +36,11 @@ pred <- function(x, PS, sam){ #general prediction function
   if("beta[2]" %in% parnames){
     beta1 <- PS[, "beta[1]"]
     beta2 <- PS[, "beta[2]"]
-  } else {
+  } else if("beta[1]" %in% parnames){
     beta1 <- PS[, "beta"]
+    beta2 <- 0
+  } else {
+    beta1 <- 0
     beta2 <- 0
   }
   
