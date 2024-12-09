@@ -100,10 +100,10 @@ t2-t1
 t3 <- Sys.time()
 init.values <- list(Inits(), Inits(), Inits())
 settings <- list(
-  niter = 200000,
+  niter = 1100000,
   nburnin = 20000,
   nchain = 3,
-  thin = 6
+  thin = 18
 )
 out <- runMCMC(
   CDoubleObsMultisiteMCMC,
@@ -119,7 +119,7 @@ cat("Run time:")
 t4-t3
 
 # Saving workspace
-save(settings, out, file = "data/posterior_samples/gamma_2_run2.RData")
+save(settings, out, file = "data/posterior_samples/gamma_2_LONGrun.RData")
 
 #plot(out$samples) # 1 = black, 2 = red, 3 = green
 # summary(out$samples)
