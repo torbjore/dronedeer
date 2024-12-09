@@ -1,6 +1,6 @@
 ---
 title: "Results"
-date: last-modified
+date: now
 author: Torbjørn Ergon
 number-sections: true
 toc: true
@@ -20,6 +20,29 @@ source("utilities.r")
 ```
 
 DETTE ER ET INTERNT ARBEIDSDOKUMENT - IKKE MENT FOR PUBLISERING (men skriver på engelsk av vane og for eventuelt gjenbruk)
+
+SISTE OPPDATERING:
+
+* Bruker nå bare det jeg før kalte "super wide priors" for 'mu'.
+* Har retta opp feil i data
+
+OPPSUMMERING *FØR* SISTE ZOOM-MØTE (kopiert fra e-post):
+
+* Gamma-modellen (den beste WAIC-modellen) hadde vi formulert på en litt innfløkt måte og vi hadde også gjort det litt feil. Jeg forsøkte å gjøre det på en mye enklere måte, men da fikk jeg problemer med særdeles dårlig mixing i mcmc-kjedene fra NIMBLE som jeg ikke fant ut av (jeg viste det til Daniel Turek som har laget NIMBLE, og som jeg kjenner godt – han syntes det var interessant, men fant heller ikke noen rask løsning). Long-story-short, jeg fant til slutt en slags reparameterisering av modellen (med en annen variance-mean relationship som lignet på den måten vi først gjorde det (bare riktig denne gangen)) som fungerte. All good.
+
+* Jeg gjorde ‘posterior predictive checks’ på modellene. Disse viste at det er betydelig mer variasjon i y-matrisa (antallet sett av obs1, ob2 og begge for hvert site) enn det man skal forvente utfra modellen. For å hanskes med dette innførte jeg en random effekt på deteksjonssansynlighetene. Dette løste problemet, men ga naturligvis enda litt bredere konfidensintervaller (eller «credible intervals» for å være mer korrekt) – men ikke så mye som man kunne frykte. All good.
+
+* Jeg har gjort noen sensitivitetsanalyser – bl.a. sett på betydningen av ulike priors og overlapp mellom priors og posteriors. Dette viste at det var urovekkende høy overlapp mellom prior og posterior for noen av parameterene. For noen av parameterene var dette forventet for vi har bruk priors som er noe informative – spesielt for deteksjonssannsynlighetene der vi har brukt informasjon fra flyvningene over inngjerdingene. For mu0 (median tetthet ved gjennomsnittlig avstand fra innmark) brukte vi også litt informative priors basert på enkle estimater av deteksjonssannsynlighet og antall hjort sett. Vi gjorde dette helt fra starten av for å beregne noen rimelige startverdier og for å få en raskere konvergens i mcmc-kjøringene. Jeg regna likevel med at vi satt priors såpass vide at de hadde liten innvirkning på resultatet – men det er dessverre ikke tilfelle; for m0 er overlap mellom prior og posterior mellom 60% (for områder med mest data) til 98% (!) for områder det det ikke er sett hjort i det hele tatt. Så for områdene der det ikke er sett hjort får vi altså posterior-fordelinger som er så å si helt lik priors, og for de andre områdene er overlappen også urovekkende stor (vi burde selvsagt ha sjekka dette tidligere). Jeg har sjekka med simulering at vi får smalere konfidensintervaller som er mye smalere med mye mer data, så jeg tror ikke det er noe iboende i modellen som gjør noen parametere uidentifiserbare
+
+
+REFERAT FRA SISTE ZOOM-MØTE (kopiert fra e-post):
+
+Her er noen oppsummeringspunkter – og noen tanker videre som vi kan huske på i skrivingen (kommenter gjerne):
+
+* Vi ble enige om å presentere resultater fra tilpassingen med essensielt ikke-informative priors for hjortetettheter (til sist i den siste versjonen av dokumentet dere fikk). Men i den biologiske tolkningen av resultatet kan vi legge mest vekt på nedre «konfidens-grense» (2.5% kvantilen av posteriori-fordelingen) – som et slags minimumsestimat. For de 4 områdene er disse 20, 0, 16, og 0.8 deer/km2 i mars og 28, 0, 1.5 og 0 deer/km2 i april. Jeg kan også beregne 1% og 0.1% kvantiler. Disse viser jo at tetthetene i alle fall lokalt er vesentlig høyere enn «management target» på én hjort per km2. Siden vi bare har 4 områder og ikke har flydd mer enn max 500 m fra innmark, kan vi ikke si noe om gjennomsnittlig tetthet over noe større områder.
+
+* Som «proof of concept» kan vi presentere resultat fra simuleringer med 500 sites per område. Selv om konfidensintervallene her blir mye smalere får vi fortsatt ganske usikre estimater. Vi har høy deteksjonssannsynlighet, med gode estimater, så de nokså usikre tetthetsestimatene skyldes nok at hjorten er nokså klumpvis fordelt (det er stor variasjon i tetthet mellom ‘sites’ (fokusbilde-«foot prints») innen områder, i tillegg til stor variasjon mellom områder).  Man kan potensielt fly enda høyere, slik at hvert bilde dekker et større område og man får både høyere antall hjort per site og lavere variasjon mellom sites – men jeg er da redd for at man da vil få vesentlig lavere oppdagbarhet og ikke minst lavere «availability» siden man ikke får bilde av bakken fra ulike vinkler på samme måten når man flyr veldig høyt. Det er en stor fordel å kunne regne med at availability er tilnærmet 1 slik vi har indikasjoner på at den er (gitt at vi betrakter flere bilder av samme sites fra ulike vinkler). Jeg tror derfor Julie har flydd på en ganske optimal høyde.
+
 
 ## Overview of raw data
 
@@ -110,8 +133,8 @@ To construct priors for 'mu0', I have used a normal distribution with the standa
 # WAIC can be used even when we have different observation models: https://discourse.mc-stan.org/t/can-waic-looic-be-used-to-compare-models-with-different-likelihoods/7380
 
 Path <- "../data/posterior_samples"
-files <- dir(path = Path)
-files <- files[substring(files, 1, 3) != "pos"]
+files_all <- dir(path = Path)
+files <- files_all[grep(pattern = "pos|LONG", files_all, invert=TRUE)]
 models <- c(
   "exponential_0",
   "lognormal_0",
@@ -148,50 +171,53 @@ for(mod in models){
 kable(df)
 ```
 
-The upper CI of the 'potential scale reduction factor' by Gelman and Rubin is a bit high for some models, so we should probably either run these models longer or do something to get better mixing.
+There are some parameters that have problems with convergence in the exponential models now that I didn't have when I used more restrictive parameters, I will have to look closer at that to see if it can be improved. However, since these models were far from having the lowest WAIC also when convergence was good (more restricted priors), I'm sure these model will not get the lowest WAIC even with good convergence - this can also be assessed from the differences in the WAIC values between the runs (each run has 3 chains).
 
-Assuming that this convergence issue will not affect the WIAC-ranking of the models, the best model is 'gamma_2' (this model has pretty good convergence criteria, but we can run for longer to get even better).
-
-## Posterior predictive checks of best model
-
-I've commented this out in the source file for this document for now. In short, we need random effects on detection probabilities to get acceptable goodness-of-fit (GOF).
+## Convergence diagnistics from the long run of the gamma_2 model
 
 ```{r}
 #| echo: false
-# Loading best model
+# Loading LONG RUN of the best model
 best <- "gamma_2"
-fls <- files[grep(best, files)]
+fls <- files_all[grep("gamma_2_LONG", files_all)]
 best_postsamp <- NULL
 for(fl in fls){
   load(paste0("../data/posterior_samples/", fl))
   best_postsamp <- c(best_postsamp, out$samples)
 }
 best_postsamp <- as.mcmc.list(best_postsamp)
+
+gelman.diag(best_postsamp)
+
 ```
 
-<!-- ### Bayesian p-value based on Y -->
+## Posterior predictive checks of best model
+
+Posterior predictive checks on initial models showed that we need random effects on detection probabilities to get acceptable fit (see summary in beginning of the document). I here only show the Bayesian p-value plots for the final best model.
+
+### Bayesian p-value based on Y
 
 ```{r}
 #| echo: false
 samp <- as.matrix(best_postsamp)
-# plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
-# abline(0, 1, col="red")
-# mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
+abline(0, 1, col="red")
+mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
 ```
 
-<!-- ### Bayesian p-value based on y -->
+### Bayesian p-value based on y
 
-<!-- ```{r} -->
-<!-- #| echo: false -->
+```{r}
+#| echo: false
 
-<!-- plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"]) -->
-<!-- abline(0, 1, col="red") -->
-<!-- mean(samp[, "Disc_New_y"] > samp[, "Disc_y"]) -->
-<!-- ``` -->
+plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
+abline(0, 1, col="red")
+mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
+```
 
-<!-- ### Conclusion -->
+### Conclusion
 
-<!-- No indication of serious lack of fit. -->
+No indication of serious lack of fit.
 
 ## Summary of best model
 
@@ -254,14 +280,14 @@ plot_grid(plots[[6]],
 * Mean distance from the field (stippled line): `r round(mpv, 0)` meters.
 * Posterior median of distance at peak deer density (dotted line): `r round(pap, 0)` meters.
 
-<!-- Posterior summary for distance at peak deer density: -->
+Posterior summary for distance at peak deer density:
 
-<!-- ```{r} -->
-<!-- #| echo: FALSE -->
+```{r}
+#| echo: FALSE
 
-<!-- quantile(-samp[,"beta[1]"]/(2*samp[,"beta[2]"]), probs = c(0.025, 0.5, 0.975))*X_sd + X_mean -->
+quantile(-samp[,"beta[1]"]/(2*samp[,"beta[2]"]), probs = c(0.025, 0.5, 0.975))*X_sd + X_mean
 
-<!-- ``` -->
+```
 
 ### Table - Predictions at peak deer density (for table A3):
 
@@ -308,7 +334,7 @@ for(SAM in 1:length(sam_names)){
 kable(df[c(2,1,4,3,6,5,8,7), ], digits = 2)
 ```
 
-(Konfidensintervallene blir jo her smallere - kanskje bedre å presentere disse?? Eller begge deler??)
+Konfidensintervallene blir jo her smallere. Jeg forelsår vi presenterer bare denne istedenfor.
 
 ## Overlap with prior
 
@@ -330,7 +356,7 @@ for(i in 1:2){
 #3-10 (mu0):
 lambdahat <- LDDdata$const$lambdahat
 for(i in 3:10){
-  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = log(lambdahat[i-2]/exp(0.5*1.47^2)), sd = 1.175)
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 10) #log(lambdahat[i-2]/exp(0.5*1.47^2)), sd = 1.175)
 }
 
 #11-12 (mu_p1 and mu_p2)
@@ -348,7 +374,7 @@ df$overlap[14] <- post_prior_overlap(samp[,14], dunif, min = 0.1, max = 0.59)
 df
 ```
 
-There is substantial overlap here! Especially for mu0 for the areas with zero observations (mu0 is log-median density at mean distance from the field) - 96-98%! For the other sites the overlap between prior and posterior mu0 is 60-77% (still high). Overlaps for 'mu_p1' and 'mu_p2' are high because we used informative priors based on the enclosure surveys. The high overlap for 'sigma_p' is also expected (I've explained this in the methods-appendix).
+Overlaps for 'mu_p1' and 'mu_p2' are high because we used informative priors based on the enclosure surveys. The high overlap for 'sigma_p' is also expected (I've explained this in the methods-appendix).
 
 
 Plot:
@@ -362,7 +388,7 @@ Plot:
 #| layout-nrow: 4
 
 for(i in 3:10){
-  nouse <- post_prior_overlap(samp[,i], dnorm, mean = log(lambdahat[i-2]/exp(0.5*1.47^2)), sd = 1.175, plt = TRUE,
+  nouse <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 10, plt = TRUE,
                                       plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
                                       )
 }
@@ -378,103 +404,123 @@ df = data.frame(par = paste0('exp(', dimnames(samp)[[2]][3:10], ')'),
                 sam = sam_names,
                 overlap = 0)
 for(i in 1:8){
-  df$overlap[i] <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = log(lambdahat[i]/exp(0.5*1.47^2)), sdlog = 1.175)
+  df$overlap[i] <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = 0, sdlog = 10)
 }
 
 df
 ```
 
+## Predictions from the constant gamma model
+
+The constant gamma model has only slightly higher WAIC: Computing the predictions from this model:
+
 ```{r}
 #| echo: FALSE
-#| layout-ncol: 2
-#| layout-nrow: 4
 
-for(i in 1:8){
-  nouse <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = log(lambdahat[i]/exp(0.5*1.47^2)), sdlog = 1.175, plt = TRUE,
-                                      plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
-                                      )
+# Loading
+const_fls <- files[grep("gamma_0", files)]
+const__postsamp <- NULL
+for(fl in const_fls){
+  load(paste0("../data/posterior_samples/", fl))
+  const_postsamp <- c(const__postsamp, out$samples)
 }
-```
+const_postsamp <- as.mcmc.list(const_postsamp)
+const_samp <- as.matrix(const_postsamp)
 
+df <- data.frame(SAM = sam_names)
+#mpv_st <- (mpv - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(x=0, PS = const_samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), ], digits = 2)
+```
 
 ## Some sensitivity assessment
 
-Commented out for now.
+### Choice of radom distribution for $\lambda$
 
-<!-- ### Choice of radom distribution for $\lambda$ -->
+Predictions from each of the models at mean distance from field at Haugen in March:
 
-<!-- Predictions from each of the models at mean distance from field at Haugen in March: -->
+```{r}
+#| echo: false
 
-<!-- ```{r} -->
-<!-- #| echo: false -->
+i = 1
+df <- data.frame(Model = models)
+for(mod in models){
+  fls <- files[grep(mod, files)]
+  postsamp <- NULL
+  for(fl in fls){
+    load(paste0("../data/posterior_samples/", fl))
+    postsamp <- c(postsamp, out$samples)
+  }
+  postsamp <- as.mcmc.list(postsamp) |> as.matrix()
+  y <- pred(x=0, PS = postsamp, sam = 2)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[i] <- mean(y)
+  df$median[i] <- Q[2]
+  df$lwr[i] <- Q[1]
+  df$upr[i] <- Q[3]
+  i <- i+1
+}
+print(df)
+```
 
-<!-- i = 1 -->
-<!-- df <- data.frame(Model = models) -->
-<!-- for(mod in models){ -->
-<!--   fls <- files[grep(mod, files)] -->
-<!--   postsamp <- NULL -->
-<!--   for(fl in fls){ -->
-<!--     load(paste0("../data/posterior_samples/", fl)) -->
-<!--     postsamp <- c(postsamp, out$samples) -->
-<!--   } -->
-<!--   postsamp <- as.mcmc.list(postsamp) |> as.matrix() -->
-<!--   y <- pred(x=0, PS = postsamp, sam = 2) -->
-<!--   Q <- quantile(y, probs = c(0.025, 0.5, 0.975)) -->
-<!--   df$mean[i] <- mean(y) -->
-<!--   df$median[i] <- Q[2] -->
-<!--   df$lwr[i] <- Q[1] -->
-<!--   df$upr[i] <- Q[3] -->
-<!--   i <- i+1 -->
-<!-- } -->
-<!-- print(df) -->
-<!-- ``` -->
+### Influence of restrictive prior for $\sigma_p$
 
-<!-- Upper credible interval limit substantial higher for lognormal and gamma models than exponential models. -->
+NB! This has not (yet) been updated with "superwide" priors and corrected data.
 
-<!-- ### Influence of restrictive prior for $\sigma_p$ -->
+Summaries from a model where I increased the upper limit of the the random effects SD for detection log-odds from 0.59 to 5.
 
-<!-- Summaries from a model where I increased the upper limit of the the random effects SD for detection log-odds from 0.59 to 5. -->
+```{r}
+#| echo: FALSE
 
-<!-- ```{r} -->
-<!-- #| echo: FALSE -->
+load("../data/posterior_samples/OLD/gam_2_test.RData")
+gelman.diag(out$samples)
+#plot(out$samples)
+summary(out$samples)
 
-<!-- load("../data/posterior_samples/gam_2_test.RData") -->
-<!-- gelman.diag(out$samples) -->
-<!-- #plot(out$samples) -->
-<!-- summary(out$samples) -->
+samp <- as.matrix(out$samples)
+plots <- pred_plots(PS = samp)
 
-<!-- samp <- as.matrix(out$samples) -->
-<!-- plots <- pred_plots(PS = samp) -->
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]])
+plot_grid(plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]])
 
-<!-- plot_grid(plots[[2]], -->
-<!--           plots[[1]], -->
-<!--           plots[[4]], -->
-<!--           plots[[3]]) -->
-<!-- plot_grid(plots[[6]], -->
-<!--           plots[[5]], -->
-<!--           plots[[8]], -->
-<!--           plots[[7]]) -->
+df <- data.frame(SAM = sam_names, x = pap)
+#pap_st <- (pap - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(x = 0, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
 
-<!-- df <- data.frame(SAM = sam_names, x = pap) -->
-<!-- pap_st <- (pap - X_mean)/X_sd -->
-<!-- for(SAM in 1:length(sam_names)){ -->
-<!--   y <- pred(pap_st, PS = samp, sam = SAM) -->
-<!--   Q <- quantile(y, probs = c(0.025, 0.5, 0.975)) -->
-<!--   df$mean[SAM] <- mean(y) -->
-<!--   df$median[SAM] <- Q[2] -->
-<!--   df$lwr[SAM] <- Q[1] -->
-<!--   df$upr[SAM] <- Q[3] -->
-<!-- } -->
+print(df[c(2,1,4,3,6,5,8,7), ])
 
-<!-- print(df[c(2,1,4,3,6,5,8,7), ]) -->
+```
 
-<!-- ``` -->
+Predictions above are at the mean distance from the field.
 
-<!-- The results are, perhaps surprisingly, similar although the 'sigma_p' parameter is estimated very high. I think it is strange that 'sigma_p' is estimated so high, but good to see that it makes such a small difference of the results. -->
+The results are, perhaps surprisingly, similar although the 'sigma_p' parameter is estimated very high. I think it is strange that 'sigma_p' is estimated so high, but good to see that it makes such a small difference of the results.
 
 ## Proof of concept - Indentifiablity
 
-To check that there are no inherent identifiability problems with the model, I fitted the model to simulated data; 8 areas with 500 sites. Parameters set to posterior mean of original fit. Same priors as original.
+NB! This has not (yet) been updated with "superwide" priors and corrected data.
+
+To check that there are no inherent identifiability problems with the model, I fitted the model to simulated data; 8 areas with 500 sites. Parameters set to posterior mean of original fit. Same priors as original (IKKE "superwide" - bør oppdatere).
 
 ```{r}
 #| echo: FALSE
@@ -572,311 +618,3 @@ print(df)
 CONCLUSION: With this much data (8 areas with 500 sites each), the credible intervals do get a lot narrower, so there doesn't seem to be any inherent no non-identifiable issues. Overlaps with prior distributions are still high - there would naturally be lower overlap if I used wider priors, but credible intervals will then also become somewhat wider (especially for the areas with low densities where the overlap is the highest). Below I have fitted the model to the observed data with much wider priors.
 
 One would perhaps expect higher precision (narrower credible intervals) when having 8 $\times$ 500 sites but the high variation in number of deer per sites contributes to much uncertainty, and since the average area of sites is just under 0.6 ha (0.6% of a km$^2$), the expected counts per km$^2$ is quite small.
-
-## With wide priors
-
-Since we get very substantial overlap between prior and posterior distributions. I also tried setting sigma such that the 2.5 percentile for the prior distribution for density is 1/100'th of the median and the 97.5 percentile is 100 times the median (i.e., the relative difference between these two percentiles is 10 000):
-
-### Summary and predictions
-
-```{r}
-#| echo: FALSE
-
-load("../data/posterior_samples/wide/gamma_2_wide.RData")
-#gelman.diag(out$samples)
-#plot(out$samples)
-summary(out$samples)
-
-samp <- as.matrix(out$samples)
-plots <- pred_plots(PS = samp)
-
-plot_grid(plots[[2]],
-          plots[[1]],
-          plots[[4]],
-          plots[[3]])
-plot_grid(plots[[6]],
-          plots[[5]],
-          plots[[8]],
-          plots[[7]])
-```
-
-#### Predictions at peak density:
-
-```{r}
-#| echo: FALSE
-
-df <- data.frame(SAM = sam_names, x = pap)
-pap_st <- (pap - X_mean)/X_sd
-for(SAM in 1:length(sam_names)){
-  y <- pred(pap_st, PS = samp, sam = SAM)
-  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
-  df$mean[SAM] <- mean(y)
-  df$median[SAM] <- Q[2]
-  df$lwr[SAM] <- Q[1]
-  df$upr[SAM] <- Q[3]
-}
-
-kable(df[c(2,1,4,3,6,5,8,7), ], digits = 4)
-```
-
-#### Predictions at mean distance from field:
-
-```{r}
-#| echo: FALSE
-
-df <- data.frame(SAM = sam_names, x = mpv)
-mpv_st <- (mpv - X_mean)/X_sd
-for(SAM in 1:length(sam_names)){
-  y <- pred(mpv_st, PS = samp, sam = SAM)
-  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
-  df$mean[SAM] <- mean(y)
-  df$median[SAM] <- Q[2]
-  df$lwr[SAM] <- Q[1]
-  df$upr[SAM] <- Q[3]
-}
-
-kable(df[c(2,1,4,3,6,5,8,7), ], digits = 4)
-```
-
-### Overlap with prior
-
-```{r}
-#| echo: FALSE
-
-samp <- samp[,-(1:4)]
-df = data.frame(par = dimnames(samp)[[2]],
-                sam = c(NA, NA, sam_names, rep(NA, 4)),
-                overlap = 0)
-
-#1-2 (beta):
-lambdahat <- LDDdata$const$lambdahat
-for(i in 1:2){
-  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 2)
-}
-
-#3-10 (mu0):
-lambdahat <- LDDdata$const$lambdahat
-for(i in 3:10){
-  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = log(lambdahat[i-2]/exp(0.5*1.47^2)), sd = 2.35)
-}
-
-#11-12 (mu_p1 and mu_p2)
-load(file = "../data/prior_parameters_for_p.rda")
-for(i in 11:12){
-  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = prior_parameters_for_p$mu_logit_p, sd = prior_parameters_for_p$sigma_logit_p)
-}
-
-#13 (sigma)
-df$overlap[13] <- post_prior_overlap(samp[,13], dunif, min = 0.5, max = 3)
-
-#14 (sigma_p)
-df$overlap[14] <- post_prior_overlap(samp[,14], dunif, min = 0.1, max = 0.59)
-
-df
-```
-
-Plot:
-
-* black = posterior
-* red = prior
-
-```{r}
-#| echo: FALSE
-#| layout-ncol: 2
-#| layout-nrow: 4
-
-for(i in 3:10){
-  nouse <- post_prior_overlap(samp[,i], dnorm, mean = log(lambdahat[i-2]/exp(0.5*1.47^2)), sd = 2.35, plt = TRUE,
-                                      plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
-                                      )
-}
-```
-
-Overlap for exp(mu)
-
-```{r}
-#| echo: FALSE
-
-# Overlap for predicted density at mean distance from field (i.e., for exp(mu))
-df = data.frame(par = paste0('exp(', dimnames(samp)[[2]][3:10], ')'),
-                sam = sam_names,
-                overlap = 0)
-for(i in 1:8){
-  df$overlap[i] <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = log(lambdahat[i]/exp(0.5*1.47^2)), sdlog = 2.35)
-  
-}
-
-df
-```
-
-Plot:
-
-* black = posterior
-* red = prior
-
-```{r}
-#| echo: FALSE
-#| layout-ncol: 2
-#| layout-nrow: 4
-
-for(i in 1:8){
-  nouse <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = log(lambdahat[i]/exp(0.5*1.47^2)), sdlog = 2.35, plt = TRUE,
-                                      plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
-                                      )
-}
-```
-
-## With super-wide priors
-
-I finally used an N(0, sd=10) prior for all 'mu0' parameters. This prior is essentially uninformative (the lower 2.5 percentile of the prior distribution of median density at mean distance from the field is 32,521,595,612 km$^2$/deer and the upper 97.5 percentile is 32,521,595,612 deer/km$^2... :)).
-
-### Summary and predictions
-
-```{r}
-#| echo: FALSE
-
-load("../data/posterior_samples/wide/gamma_2_superwide.RData")
-#gelman.diag(out$samples)
-#plot(out$samples)
-summary(out$samples)
-
-samp <- as.matrix(out$samples)
-plots <- pred_plots(PS = samp)
-
-plot_grid(plots[[2]],
-          plots[[1]],
-          plots[[4]],
-          plots[[3]])
-plot_grid(plots[[6]],
-          plots[[5]],
-          plots[[8]],
-          plots[[7]])
-```
-
-#### Predictions at peak density:
-
-```{r}
-#| echo: FALSE
-
-df <- data.frame(SAM = sam_names, x = pap)
-pap_st <- (pap - X_mean)/X_sd
-for(SAM in 1:length(sam_names)){
-  y <- pred(pap_st, PS = samp, sam = SAM)
-  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
-  df$mean[SAM] <- mean(y)
-  df$median[SAM] <- Q[2]
-  df$lwr[SAM] <- Q[1]
-  df$upr[SAM] <- Q[3]
-}
-
-kable(df[c(2,1,4,3,6,5,8,7), ], digits = 4)
-```
-
-#### Predictions at mean distance from field:
-
-```{r}
-#| echo: FALSE
-
-df <- data.frame(SAM = sam_names, x = mpv)
-mpv_st <- (mpv - X_mean)/X_sd
-for(SAM in 1:length(sam_names)){
-  y <- pred(mpv_st, PS = samp, sam = SAM)
-  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
-  df$mean[SAM] <- mean(y)
-  df$median[SAM] <- Q[2]
-  df$lwr[SAM] <- Q[1]
-  df$upr[SAM] <- Q[3]
-}
-
-kable(df[c(2,1,4,3,6,5,8,7), ], digits = 4)
-```
-
-### Overlap with prior
-
-NOTE: An overlap of less than 35% is often regarded as indicating weak prior influence (Gimenez et al.).
-
-```{r}
-#| echo: FALSE
-#| 
-samp <- samp[,-(1:4)]
-df = data.frame(par = dimnames(samp)[[2]],
-                sam = c(NA, NA, sam_names, rep(NA, 4)),
-                overlap = 0)
-
-#1-2 (beta):
-lambdahat <- LDDdata$const$lambdahat
-for(i in 1:2){
-  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 2)
-}
-
-#3-10 (mu0):
-lambdahat <- LDDdata$const$lambdahat
-for(i in 3:10){
-  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 10)
-}
-
-#11-12 (mu_p1 and mu_p2)
-load(file = "../data/prior_parameters_for_p.rda")
-for(i in 11:12){
-  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = prior_parameters_for_p$mu_logit_p, sd = prior_parameters_for_p$sigma_logit_p)
-}
-
-#13 (sigma)
-df$overlap[13] <- post_prior_overlap(samp[,13], dunif, min = 0.5, max = 3)
-
-#14 (sigma_p)
-df$overlap[14] <- post_prior_overlap(samp[,14], dunif, min = 0.1, max = 0.59)
-
-df
-```
-
-Plot:
-
-* black = posterior
-* red = prior
-
-```{r}
-#| echo: FALSE
-#| layout-ncol: 2
-#| layout-nrow: 4
-
-for(i in 3:10){
-  nouse <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 10, plt = TRUE,
-                                      plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
-                                      )
-}
-```
-
-Overlap for exp(mu)
-
-```{r}
-#| echo: FALSE
-
-# Overlap for predicted density at mean distance from field (i.e., for exp(mu))
-df = data.frame(par = paste0('exp(', dimnames(samp)[[2]][3:10], ')'),
-                sam = sam_names,
-                overlap = 0)
-for(i in 1:8){
-  df$overlap[i] <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = 0, sdlog = 10)
-  
-}
-
-df
-```
-
-Plot:
-
-* black = posterior
-* red = prior
-
-```{r}
-#| echo: FALSE
-#| layout-ncol: 2
-#| layout-nrow: 4
-
-for(i in 1:8){
-  nouse <- post_prior_overlap(exp(samp[,i+2]), dlnorm, meanlog = 0, sdlog = 10, plt = TRUE,
-                                      plt.main = paste0(df$par[i], " (overlap: ", round(df$overlap[i], 3), ")")
-                                      )
-}
-```
