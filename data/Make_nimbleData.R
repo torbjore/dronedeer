@@ -1,10 +1,10 @@
 # Making 'Lærdal Deer Drone data' (structured for nimble input)
 
 # Loading site-data
-load(file = "data/UseData.rda")
+load(file = "data/SiteData.rda")
 
 # Loading counts
-load(file = "data/Counts.rda")
+load(file = "data/CountData.rda")
 
 # KOMMENTAR: UseData inneholder også counts (men i et annet format)
 
@@ -49,7 +49,7 @@ lambdahat[3] <- 0.0066 # Raa (April)
 lambdahat[4] <- 0.0046 # Raa (March)
 lambdahat[7] <- 0.0047 # Sprakehaug (April)
 
-LDDdata <- list(
+nimbleData <- list(
   data = list(
     y = y,
     Y = Y
@@ -63,4 +63,4 @@ LDDdata <- list(
   )
 )
 
-save(LDDdata, file = "data/LDDdata.rda")
+save(nimbleData, file = "data/nimbleData.rda")

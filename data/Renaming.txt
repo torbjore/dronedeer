@@ -1,0 +1,6 @@
+Renaming of files done 15-Dec-2024:
+
+UseData.rda -> SiteData.rda
+Counts.rda -> CountData.rda
+LDDdata.rda -> nimbleData.rda 
+MakeLDDdata.R -> Make_nimbleData.R
