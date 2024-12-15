@@ -6,17 +6,22 @@ library(nimble)
 # Defining the model
 DoubleObsMultisiteCode_fence <- nimbleCode({
   # Model
+  
   for(s in 1:N_surv){
-    Psum[s] <- 1-(1-p[s])*(1-p[s])
-    pi[s,1] <- p[s]*(1-p[s])/Psum[s]
-    pi[s,2] <- (1-p[s])*p[s]/Psum[s]
-    pi[s,3] <- p[s]*p[s]/Psum[s]
-    #mu[s] <- log(mean_lambda) - 0.5*sigma[s]*sigma[s]
+    logit_p1[s] ~ dnorm(mu_p, sd = sigma_p)
+    logit_p2[s] ~ dnorm(mu_p, sd = sigma_p)
+    p1[s] <- exp(logit_p1[s])/(1+exp(logit_p1[s]))
+    p2[s] <- exp(logit_p2[s])/(1+exp(logit_p2[s]))
+    Psum[s] <- 1-(1-p1[s])*(1-p2[s])
+    pi[s,1] <- p1[s]*(1-p2[s])/Psum[s]
+    pi[s,2] <- (1-p1[s])*p2[s]/Psum[s]
+    pi[s,3] <- p1[s]*p2[s]/Psum[s]
+    mu[s] <- log(mean_lambda) - 0.5*sigma[s]*sigma[s]
     for(i in 1:N_sites[s]){
       # Process model:
-      #N[s,i] ~ dpois(lambda[s,i]*area[s,i])
-      #lambda[s,i] <- exp(mu[s] + epsilon[s,i])
-      #epsilon[s,i] ~ dnorm(0, sd = sigma[s])
+      N[s,i] ~ dpois(lambda[s,i]*area[s,i])
+      lambda[s,i] <- exp(mu[s] + epsilon[s,i])
+      epsilon[s,i] ~ dnorm(0, sd = sigma[s])
       # Observation model:
       Y[s,i] ~ dbin(Psum[s], N[s,i])
       y[s, i, 1:3] ~ dmulti(pi[s,1:3], Y[s,i])
@@ -25,16 +30,18 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
   
   # Priors
   for(s in 1:N_surv){
-    #sigma[s] ~ dunif(0, 5) # hist(rgamma(1000000, 0.1, 0.1))
+    sigma[s] ~ dunif(0, 5)
     p[s] ~ dunif(0, 1)
-    for(i in 1:N_sites[s]){
-      N[s,i] ~ dpois(lambda_N[s,i]) # dflat() # dunif(0, 100)
-      lambda_N[s,i] ~ dunif(0, 50)
-    }
+    # for(i in 1:N_sites[s]){
+    #   N[s,i] ~ dpois(lambda_N[s,i]) # dflat() # dunif(0, 100)
+    #   lambda_N[s,i] ~ dunif(0, 50)
+    # }
   }
   #lambda_N ~ dunif(0, 35)
-  #mean_lambda ~ dunif(lamblow, lambupp)
-  #mean_lambda <- 117/5 # Deterministic! Not stochastic prior!
+  mean_lambda <- 117/5 # Deterministic! Not stochastic prior!
+  
+  mu_p ~ dnorm(0, sd = 2) 
+  sigma_p ~ dunif(0.1, 0.59)
   
   # Derived parameters
   for(s in 1:N_surv){
@@ -71,7 +78,6 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
   Disc_New_Y <- sum(Disc_New_Y_s[1:N_surv])
   Disc_y <- sum(Disc_y_s[1:N_surv])
   Disc_New_y <- sum(Disc_New_y_s[1:N_surv])
-  
   
   # for(s in 1:N_surv){
   #   median_lambda[s] <- exp(mu[s])

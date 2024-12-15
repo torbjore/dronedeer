@@ -3,7 +3,7 @@
 library(nimble)
 
 # SOURCE THE MODEL CODE
-source("R/nimble_models/enclosure_model_N.q")
+source("R/nimble_models/enclosure_model_N_FULL.q")
 
 # Loading the data
 load("data/CountData_Fence.rda")
@@ -31,21 +31,23 @@ colsumy = apply(y, 3, sum, na.rm=TRUE)
 p1hat = colsumy[3]/(colsumy[2]+colsumy[3])
 p2hat = colsumy[3]/(colsumy[1]+colsumy[3])
 phat = (p1hat+p2hat)/2
-#Nhat = apply(Y, 1, sum, na.rm=TRUE)/(1-(1-p1hat)*(1-p2hat)) # For all sites combined
-#lambdahat = (Nhat/N_sites)/apply(area, 1, mean, na.rm=TRUE) + 0.01 # Adding a small value since we get -Inf from log(lambdahat=0)
+Nhat = apply(Y, 1, sum, na.rm=TRUE)/(1-(1-p1hat)*(1-p2hat)) # For all sites combined
+lambdahat = (Nhat/N_sites)/apply(area, 1, mean, na.rm=TRUE) + 0.01 # Adding a small value since we get -Inf from log(lambdahat=0)
 
 Inits = function(){
   N = round(Y/(1-(1-p1hat)*(1-p2hat)), 0)
-  #N[is.na(N)] = 0
-  #sigma = runif(2, 0, 0.1)
+  N[is.na(N)] = 0
+  sigma = runif(2, 0, 0.1)
   list(
-    #mean_lambda = mean(lambdahat)*runif(length(mean(lambdahat)), 0.9, 1.1),
-    #epsilon = matrix(rnorm(nrow(Y)*ncol(Y), 0, sigma) , nrow = nrow(Y), ncol = ncol(Y)),
-    p = exp(log(phat)*runif(2, 0.9, 1.1)),
+    mean_lambda = mean(lambdahat)*runif(length(mean(lambdahat)), 0.9, 1.1),
+    epsilon = matrix(rnorm(nrow(Y)*ncol(Y), 0, sigma) , nrow = nrow(Y), ncol = ncol(Y)),
+    #p = exp(log(phat)*runif(2, 0.9, 1.1)),
+    mu_p = runif(1, -1, 1),
+    sigma_p = runif(1, 0,01, 0.2),
     N = N,
     New_Y = Y, # Warning message if not included
-    New_y = y,
-    lambda_N = N #mean(N, na.rm = TRUE)
+    New_y = y
+    #lambda_N = N #mean(N, na.rm = TRUE)
   )
 }
 
@@ -53,12 +55,12 @@ Inits = function(){
 DoubleObsMultisiteModel <- nimbleModel(
   DoubleObsMultisiteCode_fence,
   constants = list(N_surv = length(N_sites), N_sites = N_sites, area = area), # 0.1 to 10 times point estimate
-  data = list(y=y, Y=Y), # area = area),
+  data = list(y=y, Y=Y),
   inits = Inits()
 )
 
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel)
-DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("p", "N_tot", "Dens", "Dens_tot", "Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y"))
+DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("mu_p", "sigma_p", "N_tot", "Dens", "Dens_tot", "Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y"))
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
 CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
 
@@ -76,6 +78,8 @@ plot(posterior_samples)
 
 summary(posterior_samples)
 
+#save(posterior_samples_fence_p, file = "posterior_samples_fence_p.RData")
+
 # # Posterior predictive checks
 #
 samp <- as.matrix(posterior_samples)
@@ -88,5 +92,3 @@ mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
 plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
 abline(0, 1, col="red")
 mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
-
-#save(posterior_samples_fence_p, file = "posterior_samples_fence_p.RData")
