@@ -23,7 +23,9 @@ Inits = function(){
   list(
     #mean_lambda = mean(lambdahat)*runif(length(mean(lambdahat)), 0.9, 1.1),
     #epsilon = matrix(rnorm(nrow(Y)*ncol(Y), 0, sigma) , nrow = nrow(Y), ncol = ncol(Y)),
-    p = exp(log(phat)*runif(2, 0.9, 1.1)),
+    #p = exp(log(phat)*runif(2, 0.9, 1.1)),
+    mu_p = runif(1, -1, 1),
+    sigma_p = runif(1, 0.01, 0.2),
     N = N,
     New_Y = nimbleData_Fence$data$Y, # Warning message if not included
     New_y = nimbleData_Fence$data$y,
@@ -40,14 +42,14 @@ DoubleObsMultisiteModel <- nimbleModel(
 )
 
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel)
-DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("p", "N_tot", "Dens", "Dens_tot", "Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y"))
+DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("mu_p", "sigma_p", "N_tot", "Dens", "Dens_tot", "Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y"))
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
 CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
 
 posterior_samples <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter=5000, #00,
-  nburnin=1000, #00,
+  niter = 10000,
+  nburnin = 2000,
   nchain=3,
   thin = 2,
   inits = Inits,
@@ -55,20 +57,19 @@ posterior_samples <- runMCMC(
 
 library(coda)
 plot(posterior_samples)
-
 summary(posterior_samples)
 
-# # Posterior predictive checks
-#
+# Posterior predictive checks
+# Wrt Y:
 samp <- as.matrix(posterior_samples)
 plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
 abline(0, 1, col="red")
 mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
 # OK!
 
-# Wrt y
+# Wrt y:
 plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
 abline(0, 1, col="red")
 mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
 
-#save(posterior_samples_fence_p, file = "posterior_samples_fence_p.RData")
+#save(posterior_samples, file = "posterior_samples_enclosure_N.RData")
