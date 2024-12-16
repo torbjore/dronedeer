@@ -1,0 +1,54 @@
+---
+title: "Description of SiteData"
+date: now
+format:
+  html:
+    embed-resources: true
+    theme: journal
+---
+
+```{r}
+#| echo: false
+#| output: false
+Sys.setlocale(locale='no_NB.utf8') # Include for using Norwegian letters in plots
+library(knitr)
+library(coda)
+source("../R/utilities.r")
+```
+
+The `SiteData.rda` file contains data.frame `SiteData` with the following variables:
+
+* `Survey`: <beskrivelse>
+* `Study_area`:
+* `Route`:
+* `Month`:
+* `Date `:
+* `Weather`:
+* `Temperature_C`:
+* `Snow`:
+* `File`:
+* `Area`:
+* `mean_x`:
+* `mean_y`:
+* `elevation_at_mean_pos`:
+* `mean_elevation`:
+* `min_elevation`:
+* `max_elevation`:
+* `proportion_no_field`:
+* `proportion_forest`:
+* `aspect_deg`:
+* `slope_deg`:
+* `field_dist_at_mean_pos`:
+* `mean_field_dist`:
+* `min_field_dist`:
+* `max_field_dist`:
+* `forest_dist_at_mean_pos`:
+* `mean_forest_dist`:
+* `min_forest_dist`:
+* `max_forest_dist`:
+* `Focal_image`:
+* `n_both`:
+* `n_only_ab`:
+* `n_only_jb`:
+* `Site`:
+`:
