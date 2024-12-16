@@ -8,7 +8,7 @@
 
 <meta name="dcterms.date" content="2024-12-16">
 
-<title>Description of SiteData</title>
+<title>Detailed model results</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -3034,21 +3034,54 @@ vertical-align: -.125em;
 
 </head>
 
-<body class="fullcontent">
+<body>
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#organization-of-the-data" id="toc-organization-of-the-data" class="nav-link active" data-scroll-target="#organization-of-the-data"><span class="header-section-number">1</span> Organization of the data</a></li>
+  <li><a href="#enclosures" id="toc-enclosures" class="nav-link" data-scroll-target="#enclosures"><span class="header-section-number">2</span> Enclosures</a>
+  <ul>
+  <li><a href="#posterior-predictive-checks" id="toc-posterior-predictive-checks" class="nav-link" data-scroll-target="#posterior-predictive-checks"><span class="header-section-number">2.1</span> Posterior predictive checks</a></li>
+  <li><a href="#deer-numbers" id="toc-deer-numbers" class="nav-link" data-scroll-target="#deer-numbers"><span class="header-section-number">2.2</span> Deer numbers</a></li>
+  <li><a href="#detection-probablities" id="toc-detection-probablities" class="nav-link" data-scroll-target="#detection-probablities"><span class="header-section-number">2.3</span> Detection probablities</a></li>
+  </ul></li>
+  <li><a href="#wild-deer" id="toc-wild-deer" class="nav-link" data-scroll-target="#wild-deer"><span class="header-section-number">3</span> Wild deer</a>
+  <ul>
+  <li><a href="#overview-of-data" id="toc-overview-of-data" class="nav-link" data-scroll-target="#overview-of-data"><span class="header-section-number">3.1</span> Overview of data</a></li>
+  <li><a href="#convergence-and-waic-of-candidate-models" id="toc-convergence-and-waic-of-candidate-models" class="nav-link" data-scroll-target="#convergence-and-waic-of-candidate-models"><span class="header-section-number">3.2</span> Convergence and WAIC of candidate models</a></li>
+  <li><a href="#waic-best-model" id="toc-waic-best-model" class="nav-link" data-scroll-target="#waic-best-model"><span class="header-section-number">3.3</span> WAIC-best model</a></li>
+  <li><a href="#posterior-predictive-checks-1" id="toc-posterior-predictive-checks-1" class="nav-link" data-scroll-target="#posterior-predictive-checks-1"><span class="header-section-number">3.4</span> Posterior predictive checks</a></li>
+  <li><a href="#predictions-from-best-model" id="toc-predictions-from-best-model" class="nav-link" data-scroll-target="#predictions-from-best-model"><span class="header-section-number">3.5</span> Predictions from best model</a>
+  <ul class="collapse">
+  <li><a href="#number-of-deer-at-the-sample-sites" id="toc-number-of-deer-at-the-sample-sites" class="nav-link" data-scroll-target="#number-of-deer-at-the-sample-sites"><span class="header-section-number">3.5.1</span> Number of deer at the sample sites</a></li>
+  <li><a href="#densities" id="toc-densities" class="nav-link" data-scroll-target="#densities"><span class="header-section-number">3.5.2</span> Densities</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Description of SiteData</h1>
+<h1 class="title">Detailed model results</h1>
+<p class="subtitle lead"><strong>Supplemental Information S2 for:</strong> Developing a protocol for estimation of red deer (<em>Cervus elaphus</em>) population density using drones in a steep and rugged terrain</p>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><to be inserted after peer-review> </to></p>
+          </div>
+  </div>
     
     <div>
     <div class="quarto-title-meta-heading">Published</div>
@@ -3065,42 +3098,57 @@ vertical-align: -.125em;
 </header>
 
 
-<p>The <code>SiteData.rda</code> file contains data.frame <code>SiteData</code> with the following variables:</p>
+<p>This document presents details about the model results, including convergence diagnostics, posterior predictive checks, tables and figures. The document is written in Quarto, and the source file containing all R code is available in the GitHub-repository accompanying the paper (zip-file provided for per review).</p>
+<section id="organization-of-the-data" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Organization of the data</h1>
+<p>All data are in the <code>data</code> folder of the repository. The data-files included here are:</p>
 <ul>
-<li><code>Survey</code>: <beskrivelse></beskrivelse></li>
-<li><code>Study_area</code>:</li>
-<li><code>Route</code>:</li>
-<li><code>Month</code>:</li>
-<li><code>Date</code>:</li>
-<li><code>Weather</code>:</li>
-<li><code>Temperature_C</code>:</li>
-<li><code>Snow</code>:</li>
-<li><code>File</code>:</li>
-<li><code>Area</code>:</li>
-<li><code>mean_x</code>:</li>
-<li><code>mean_y</code>:</li>
-<li><code>elevation_at_mean_pos</code>:</li>
-<li><code>mean_elevation</code>:</li>
-<li><code>min_elevation</code>:</li>
-<li><code>max_elevation</code>:</li>
-<li><code>proportion_no_field</code>:</li>
-<li><code>proportion_forest</code>:</li>
-<li><code>aspect_deg</code>:</li>
-<li><code>slope_deg</code>:</li>
-<li><code>field_dist_at_mean_pos</code>:</li>
-<li><code>mean_field_dist</code>:</li>
-<li><code>min_field_dist</code>:</li>
-<li><code>max_field_dist</code>:</li>
-<li><code>forest_dist_at_mean_pos</code>:</li>
-<li><code>mean_forest_dist</code>:</li>
-<li><code>min_forest_dist</code>:</li>
-<li><code>max_forest_dist</code>:</li>
-<li><code>Focal_image</code>:</li>
-<li><code>n_both</code>:</li>
-<li><code>n_only_ab</code>:</li>
-<li><code>n_only_jb</code>:</li>
-<li><code>Site</code>:</li>
+<li><code>SiteData.rda</code>: The full data from the study sites (excluding enclosure). See <code>SiteDataInfo.html</code> for description of the variables.</li>
+<li><code>CountData.rda</code>: Based on <code>SiteData.rda</code>, but includes only counts in a long format.</li>
+<li><code>CountData_Fence.rda</code>: Counts in a long format from the enclosure.</li>
+<li><code>nimbleData.rda</code>: Data from the study sites organized for NIMBLE models. File is produced by the script in <code>data\Make_nimbleData.R</code>.</li>
+<li><code>nimbleData_Fence.rda</code>: Data from the enclosure organized for NIMBLE models. File is produced by the script in <code>data\Make_nimbleData_Fence.R</code>.</li>
 </ul>
+</section>
+<section id="enclosures" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Enclosures</h1>
+<p>The enclosure contained a total of 117 red deer in a 5 hectare area. Two surveys (flights) were conducted over the enclosures, one at 40 m above ground and one at 60 meter above ground.</p>
+<section id="posterior-predictive-checks" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="posterior-predictive-checks"><span class="header-section-number">2.1</span> Posterior predictive checks</h2>
+</section>
+<section id="deer-numbers" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="deer-numbers"><span class="header-section-number">2.2</span> Deer numbers</h2>
+<p><bruk her full opprinnelig model></bruk></p>
+</section>
+<section id="detection-probablities" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="detection-probablities"><span class="header-section-number">2.3</span> Detection probablities</h2>
+<p><bruk som før></bruk></p>
+</section>
+</section>
+<section id="wild-deer" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Wild deer</h1>
+<section id="overview-of-data" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="overview-of-data"><span class="header-section-number">3.1</span> Overview of data</h2>
+</section>
+<section id="convergence-and-waic-of-candidate-models" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="convergence-and-waic-of-candidate-models"><span class="header-section-number">3.2</span> Convergence and WAIC of candidate models</h2>
+</section>
+<section id="waic-best-model" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="waic-best-model"><span class="header-section-number">3.3</span> WAIC-best model</h2>
+</section>
+<section id="posterior-predictive-checks-1" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="posterior-predictive-checks-1"><span class="header-section-number">3.4</span> Posterior predictive checks</h2>
+</section>
+<section id="predictions-from-best-model" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="predictions-from-best-model"><span class="header-section-number">3.5</span> Predictions from best model</h2>
+<section id="number-of-deer-at-the-sample-sites" class="level3" data-number="3.5.1">
+<h3 data-number="3.5.1" class="anchored" data-anchor-id="number-of-deer-at-the-sample-sites"><span class="header-section-number">3.5.1</span> Number of deer at the sample sites</h3>
+</section>
+<section id="densities" class="level3" data-number="3.5.2">
+<h3 data-number="3.5.2" class="anchored" data-anchor-id="densities"><span class="header-section-number">3.5.2</span> Densities</h3>
+</section>
+</section>
+</section>
 
 </main>
 <!-- /main column -->

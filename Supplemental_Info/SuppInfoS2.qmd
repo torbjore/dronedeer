@@ -3,7 +3,7 @@ title: "Detailed model results"
 subtitle: "**Supplemental Information S2 for:** Developing a protocol for estimation of red deer (*Cervus elaphus*) population density using drones in a steep and rugged terrain"
 # Sjekk hva endelig tittel blir
 date: now
-author: <to be inserted after peer-review>
+authors: <to be inserted after peer-review>
 number-sections: true
 toc: true
 toc-depth: 4
@@ -24,4 +24,42 @@ source("../R/utilities.r")
 
 This document presents details about the model results, including convergence diagnostics, posterior predictive checks, tables and figures. The document is written in Quarto, and the source file containing all R code is available in the GitHub-repository accompanying the paper (zip-file provided for per review).
 
-# HEADING 1
+# Organization of the data
+
+All data are in the `data` folder of the repository. The data-files included here are:
+
+-   `SiteData.rda`: The full data from the study sites (excluding enclosure). See `SiteDataInfo.html` for description of the variables.
+-   `CountData.rda`: Based on `SiteData.rda`, but includes only counts in a long format.
+-   `CountData_Fence.rda`: Counts in a long format from the enclosure.
+-   `nimbleData.rda`: Data from the study sites organized for NIMBLE models. File is produced by the script in `data\Make_nimbleData.R`.
+-   `nimbleData_Fence.rda`: Data from the enclosure organized for NIMBLE models. File is produced by the script in `data\Make_nimbleData_Fence.R`.
+
+# Enclosures
+
+The enclosure contained a total of 117 red deer in a 5 hectare area. Two surveys (flights) were conducted over the enclosures, one at 40 m above ground and one at 60 meter above ground.
+
+## Posterior predictive checks
+
+## Deer numbers
+
+<Bruk her full opprinnelig model>
+
+## Detection probablities
+
+<Bruk som før>
+
+# Wild deer
+
+## Overview of data
+
+## Convergence and WAIC of candidate models
+
+## WAIC-best model
+
+## Posterior predictive checks
+
+## Predictions from best model
+
+### Number of deer at the sample sites
+
+### Densities

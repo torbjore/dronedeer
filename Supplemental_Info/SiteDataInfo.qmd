@@ -51,4 +51,3 @@ The `SiteData.rda` file contains data.frame `SiteData` with the following variab
 * `n_only_ab`:
 * `n_only_jb`:
 * `Site`:
-`:
