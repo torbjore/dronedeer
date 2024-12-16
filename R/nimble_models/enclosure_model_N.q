@@ -1,5 +1,6 @@
 # MODEL FOR FENCED DEER
-# Modified from original to estimate N instead of density
+# For estimating N
+# WITHOUT random detection model
 
 library(nimble)
 
