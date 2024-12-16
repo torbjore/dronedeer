@@ -7,8 +7,8 @@ library(nimble)
 DoubleObsMultisiteCode_fence <- nimbleCode({
   # Model
   for(s in 1:N_surv){
-    logit_p1[s] ~ dnorm(mu_p, sd = sigma_p)
-    logit_p2[s] ~ dnorm(mu_p, sd = sigma_p)
+    logit_p1[s] ~ dnorm(mu_p[s], sd = sigma_p[s])
+    logit_p2[s] ~ dnorm(mu_p[s], sd = sigma_p[s])
     p1[s] <- exp(logit_p1[s])/(1+exp(logit_p1[s]))
     p2[s] <- exp(logit_p2[s])/(1+exp(logit_p2[s]))
     Psum[s] <- 1-(1-p1[s])*(1-p2[s])
@@ -24,8 +24,8 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
   
   # Priors
   for(s in 1:N_surv){
-    #sigma[s] ~ dunif(0, 5) # hist(rgamma(1000000, 0.1, 0.1))
-    #p[s] ~ dunif(0, 1)
+    mu_p[s] ~ dnorm(0, sd = 2) 
+    sigma_p[s] ~ dunif(0.1, 0.59)
     for(i in 1:N_sites[s]){
       N[s,i] ~ dpois(lambda_N[s,i]) # dflat() # dunif(0, 100)
       lambda_N[s,i] ~ dunif(0, 50)
@@ -35,15 +35,24 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
   #mean_lambda ~ dunif(lamblow, lambupp)
   #mean_lambda <- 117/5 # Deterministic! Not stochastic prior!
   
-  mu_p ~ dnorm(0, sd = 2) 
-  sigma_p ~ dunif(0.1, 0.59)
-  
   # Derived parameters
   for(s in 1:N_surv){
-    N_tot[s] <- sum(N[s, 1:N_sites[s]])
-    Dens[s] <- N_tot[s]/sum(area[s, 1:N_sites[s]])
+    N_tot[s] <- sum(N[s, 1:N_sites[s]]) # This is the total in the sites surveyed, not the entire enclosure
+    Dens[s] <- N_tot[s]/sum_area[s]
+    N_hat[s] <- Dens[s]*5 # Enclosure is 5 ha
+    var_N_hat[s] <- (N_sites[s]/(sum_area[s]/5) - N_sites[s])*(sd(N[s, 1:N_sites[s]])^2)/(sum_area[s]/5)
   }
-  Dens_tot <- sum(N_tot[1:2])/(sum(area[1, 1:N_sites[1]]) + sum(area[2, 1:N_sites[2]]))
+  Dens_tot <- sum(N_tot[1:N_surv])/(sum(sum_area[1:N_surv]))
+  
+  # lower and upper CI based on var_N_hat[s] and assuming normal distribution on a log-scale (central limit theorem)
+  
+  
+  # Based on adding a normal variable
+  for(s in 1:N_surv){
+    sd_C[s] <- sd(N[s, 1:N_sites[s]]) * sqrt((N_sites[s]/(sum_area[s]/5) - N_sites[s])/(sum_area[s]/5) - 1)
+    C[s] ~ dnorm(0, sd = sd_C[s])
+    N_hat_corrected[s] <- N_hat[s] + C[s]
+  }
   
   # For posterior predictive checks
   for(s in 1:N_surv){
