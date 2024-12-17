@@ -8,19 +8,13 @@ project:
   type: default
   execute-dir: project
 number-sections: true
-#crossref:
-section-title: "S"
-#  sec-title: "S"
-#  sec-labels: S
-# crossref:
-#   appendix-title: "App."
-#   appendix-delim: ":"
 toc: true
 toc-depth: 4
 format:
   html:
     embed-resources: true
     theme: journal
+bibliography: references.bib
 ---
 
 ```{r}
@@ -36,9 +30,9 @@ This document presents details about the model results, including convergence di
 
 # Detailed model formulation
 
-Deer densities were estimated using hierarchical state space models fitted by the use of Bayesian Markov Chain Monte Carlo (MCMC) sampling in NIMBLE ver. 1.1.0 (de Valpine et al. 2017, 2024). We combined a double-observer observation model with an overdispersed Poisson process model describing the variation in deer densities among sampling sites (focal images). We will here first derive the observation model and the process model, using a hierarchical formulation, and then provide details about the analysis. The NIMBLE model code, together with the data, are provided on GitHub (<URL will be inserted after peer-review; a zip-file is provided for peer-review>).
+Deer densities were estimated using hierarchical state space models fitted by the use of Bayesian Markov Chain Monte Carlo (MCMC) sampling in NIMBLE ver. 1.1.0 [@valpine_programming_2017; @devalpine2024]. We combined a double-observer observation model with an overdispersed Poisson process model describing the variation in deer densities among sampling sites (focal images). We will here first derive the observation model and the process model, using a hierarchical formulation, and then provide details about the analysis. The NIMBLE model code, together with the data, are provided on GitHub (\<URL will be inserted after peer-review; a zip-file is provided for peer-review\>).
 
-To estimate abundance and population density, one must account for the fact that not all individuals that are present will be observed (i.e., imperfect detection). We used a double observer protocol to estimate detection probabilities (Nichols et al. 2000, Williams et al. 2002). At each site (focal image) $i$ we have records of how many individuals that were seen by only observer 1 ($y_{10,i}$), how many individuals were seen by only observer 2 ($y_{01,i}$), and how many individuals were seen by both observers ($y_{11,i}$). We denote the observed data from each site by a vector $\mathbf{y}_i = \left[y_{01,i},y_{10,i},y_{11,i} \right]$, and the number of individuals seen by at least one observer is the sum of the elements in this vector, $\mathbf{Y}_i = y_{01,i} + y_{10,i} + y_{11,i}$. The observation model defined in the first section below describes the probability (likelihood) of getting these observed data, conditional on the number of individuals ($N_i$) present at each site; i.e. $L(\mathbf{y}_i |N_i)$. The number of individuals at each site, $N_i$, is unknown, and the stochastic model for this is described in the next section.
+To estimate abundance and population density, one must account for the fact that not all individuals that are present will be observed (i.e., imperfect detection). We used a double observer protocol to estimate detection probabilities [@nichols2000; @williams2002]. At each site (focal image) $i$ we have records of how many individuals that were seen by only observer 1 ($y_{10,i}$), how many individuals were seen by only observer 2 ($y_{01,i}$), and how many individuals were seen by both observers ($y_{11,i}$). We denote the observed data from each site by a vector $\mathbf{y}_i = \left[y_{01,i},y_{10,i},y_{11,i} \right]$, and the number of individuals seen by at least one observer is the sum of the elements in this vector, $\mathbf{Y}_i = y_{01,i} + y_{10,i} + y_{11,i}$. The observation model defined in the first section below describes the probability (likelihood) of getting these observed data, conditional on the number of individuals ($N_i$) present at each site; i.e. $L(\mathbf{y}_i |N_i)$. The number of individuals at each site, $N_i$, is unknown, and the stochastic model for this is described in the next section.
 
 ## Observation model
 
@@ -59,8 +53,7 @@ This initial observation model has only two top level parameters: the detection 
 
 ## Process model
 
-The number of individuals present at a site was modelled as an overdispersed Poisson process. Hence, we assume that number of individuals present at site $i$, $N_i$, is drawn from a Poisson distribution with expectation $\lambda_i a_i$, where $\lambda_i$ is the expectation per unit area (we used hectares) and $a_i$ is the area of the site,
-$$
+The number of individuals present at a site was modelled as an overdispersed Poisson process. Hence, we assume that number of individuals present at site $i$, $N_i$, is drawn from a Poisson distribution with expectation $\lambda_i a_i$, where $\lambda_i$ is the expectation per unit area (we used hectares) and $a_i$ is the area of the site, $$
 N_i  \sim \text{Poisson}(\lambda_i a_i)
 $$
 
@@ -68,16 +61,14 @@ Overdispersion was accommodated by modelling $\lambda_i$ as a random variable. A
 
 ### Log-normal expectation
 
-For the log-normal model we used a standard log-linear log-normal model,
-$$
+For the log-normal model we used a standard log-linear log-normal model, $$
 \begin{align}
 \log(\lambda_i) &\sim N(\mu_i, \sigma^2) \\
 \mu_i &= x_i \beta
 \end{align}
 $$
 
-where $x_i$ is a vector of site-covariates and $\beta$ is a vector of the linear coefficients (including an intercept).
-Mean deer density in the log-normal model is then $e^{\mu_i+\sigma^2/2}$ and the variance is $(e^{\sigma^2}-1) e^{2\mu_i+\sigma^2}$.
+where $x_i$ is a vector of site-covariates and $\beta$ is a vector of the linear coefficients (including an intercept). Mean deer density in the log-normal model is then $e^{\mu_i+\sigma^2/2}$ and the variance is $(e^{\sigma^2}-1) e^{2\mu_i+\sigma^2}$.
 
 ### Exponential expectation
 
@@ -95,7 +86,7 @@ Mean deer density in the exponential model thus becomes $e^{\mu_i}$ and the vari
 
 ### Gamma expectation
 
-The gamma distribution parameterized with a shape parameter $a$ and a rate parameter $b$ has probability density function $f(\lambda) = \frac{b^a}{\Gamma(a)} \lambda^{a-1} e^{-\beta\lambda}$, expectation $\frac{a}{b}$, and variance $\frac{a}{b^2}$  (the variance is proportional to the mean). We initially tried keeping the rate parameter constant and using a log-linear covariate model for the expectation (i.e., $a_i = be^{\mathbf{x}_i\boldsymbol{\beta}}$), but this model had very poor mixing, even when using blocked mcmc-sampling (perhaps because $b$ is a parent of $a$). Hence, we instead kept the shape parameter constant and let the rate parameter depend on $\mu_i$ and $\sigma$ in such a way that the variance-mean relationship is the same as in the log-normal model (the variance is proportional to the square of the mean),
+The gamma distribution parameterized with a shape parameter $a$ and a rate parameter $b$ has probability density function $f(\lambda) = \frac{b^a}{\Gamma(a)} \lambda^{a-1} e^{-\beta\lambda}$, expectation $\frac{a}{b}$, and variance $\frac{a}{b^2}$ (the variance is proportional to the mean). We initially tried keeping the rate parameter constant and using a log-linear covariate model for the expectation (i.e., $a_i = be^{\mathbf{x}_i\boldsymbol{\beta}}$), but this model had very poor mixing, even when using blocked mcmc-sampling (perhaps because $b$ is a parent of $a$). Hence, we instead kept the shape parameter constant and let the rate parameter depend on $\mu_i$ and $\sigma$ in such a way that the variance-mean relationship is the same as in the log-normal model (the variance is proportional to the square of the mean),
 
 $$
 \begin{align}
@@ -177,11 +168,11 @@ p_2 &= \frac{1}{1+e^{-\eta_2}} \\
 \end{align}
 $$
 
-Here, the standard deviations were conservatively increased by 20\% to account for the fact that detection probabilities inside and outside of the enclosure could be different.
+Here, the standard deviations were conservatively increased by 20% to account for the fact that detection probabilities inside and outside of the enclosure could be different.
 
 ## Posterior predictive checks and model modifications
 
-We performed posterior predictive checks (Gelman et al. 2004, Conn et al. 2018) with respect to both $Y_i$’s and $\mathbf{y}_i$’s by comparing the summed Pearson residuals for observed and simulated data in every step of the MCMC-chains. Bayesian p-values did not indicate any lack of fit with respect to $Y_i$’s ($p > 0.4$), but there appeared to be a lack of fit with respect to $\mathbf{y}_i$’s ($p < 0.03$), indicating that there were more variation in the counts from the two independent observers than expected if detection probability is constant across sites for each observer. To accommodate this variation in the model, we introduced random detection probabilities, assuming the logit-transformed detection probabilities to be normal. Hence, in our final observation model, we used
+We performed posterior predictive checks [@gelman2004; @conn2018] with respect to both $Y_i$’s and $\mathbf{y}_i$’s by comparing the summed Pearson residuals for observed and simulated data in every step of the MCMC-chains. Bayesian p-values did not indicate any lack of fit with respect to $Y_i$’s ($p > 0.4$), but there appeared to be a lack of fit with respect to $\mathbf{y}_i$’s ($p < 0.03$), indicating that there were more variation in the counts from the two independent observers than expected if detection probability is constant across sites for each observer. To accommodate this variation in the model, we introduced random detection probabilities, assuming the logit-transformed detection probabilities to be normal. Hence, in our final observation model, we used
 
 $$
 \begin{align}
@@ -192,7 +183,6 @@ p_{2,i} &= \frac{1}{1+e^{-\eta_2 + \epsilon_{2,i}}} \\
 \end{align}
 $$
 
-
 To facilitate model fitting, we used a somewhat informative prior for $\sigma_p$,
 
 $$
@@ -201,16 +191,15 @@ $$
 
 The lower bound of $0.1$ was set to avoid poor mixing when the chains entered flat parts of the likelihood surface, and the upper bound of $0.59$ was selected based on a prior assessment that detection at the 97.5 percentile site should have a maximum of 10 times higher odds than in the 2.5 percentile site ($\log(10)/(1.96 \times 2) \approx 0.59$)
 
-Bayesian p-values did not indicate any lack of fit of this final model with respect to $Y_i$’s ($p = 0.50$) or $\mathbf{y}_i$’s ($p = 0.20$). 
+Bayesian p-values did not indicate any lack of fit of this final model with respect to $Y_i$’s ($p = 0.50$) or $\mathbf{y}_i$’s ($p = 0.20$).
 
 ## Implementation and model selection
 
-The models were fitted by the use of Bayesian MCMC sampling in NIMBLE (v1.1.0; (de Valpine et al. 2017, 2024)). Convergence was assessed on three independent MCMC chains (with different start values) with the Gelman & Rubin (1992) diagnostics using the ‘gelman.diag-function’ in the ‘coda’ package ver. 0.19-4.1 (Plummer et al. 2006) in R ver. 4.3.3 (R Core Team 2024).
+The models were fitted by the use of Bayesian MCMC sampling in NIMBLE (v1.1.0; [@devalpine2024a; @valpine_programming_2017]). Convergence was assessed on three independent MCMC chains (with different start values) with the @gelman1992 diagnostics using the ‘gelman.diag-function’ in the ‘coda’ package ver. 0.19-4.1 [@plummer2006] in R ver. 4.3.3 [@rcoreteam2024].
 
-For each of the three models for the random Poisson expectation (log-normal, exponential and gamma), we fitted both linear and quadratic models for $\mu_i$ as a function of distance from the field, as well as a model with no covariate effects; hence obtaining 9 models. We selected the best model according to the Watanabe-Akaike (Widely Applicable) Information Criterion, WAIC (Watanabe 2010) for presentation of estimates and prediction (the criterion seeks to minimize the prediction error variance as an optimal trade-off between accuracy and precision of the fitted model predictions).
+For each of the three models for the random Poisson expectation (log-normal, exponential and gamma), we fitted both linear and quadratic models for $\mu_i$ as a function of distance from the field, as well as a model with no covariate effects; hence obtaining 9 models. We selected the best model according to the Watanabe-Akaike (Widely Applicable) Information Criterion, WAIC [@watanabe2010] for presentation of estimates and prediction (the criterion seeks to minimize the prediction error variance as an optimal trade-off between accuracy and precision of the fitted model predictions).
 
-We initially ran MCMC-sampling on each of the nine models with 3 chains with random and independent starting values for 180,000 iterations after a burn-in of 20,000 iterations and stored every 6^th^ posterior sample. Repeating this three times showed a consistent ranking of the models by the WAIC criterion. The models  with the lowest (best) WAIC values where then run for 1,080,000 samples after a burning of 20,000 iterations in 3 chains and stored every 18^th^ sample, obtaining in total 3 times 60,000 posterior samples used for inference. The upper 95% confidence limit for the Gelman & Rubin (1992) ‘potential scale reduction factor’ (psrf) was <1.025 for all parameters in the final models, and the multivariate psrf was less than 1.005.
-
+We initially ran MCMC-sampling on each of the nine models with 3 chains with random and independent starting values for 180,000 iterations after a burn-in of 20,000 iterations and stored every 6^th^ posterior sample. Repeating this three times showed a consistent ranking of the models by the WAIC criterion. The models with the lowest (best) WAIC values where then run for 1,080,000 samples after a burning of 20,000 iterations in 3 chains and stored every 18^th^ sample, obtaining in total 3 times 60,000 posterior samples used for inference. The upper 95% confidence limit for the [@gelman1992] ‘potential scale reduction factor’ (psrf) was \<1.025 for all parameters in the final models, and the multivariate psrf was less than 1.005.
 
 # Detailed analysis and results {#sec-S2}
 
@@ -228,7 +217,7 @@ All data are in the `data` folder of the repository. The data-files included her
 
 The enclosure contained a total of 117 red deer in a 5 hectare area of natural forest. Two surveys (flights) were conducted over the enclosures; one at 40 m above ground, and one at 60 meter above ground. We used these data to first test the method, and then to obtain information about detection probabilities, which we used to inform priors for detection probabilities in the models fitted to the wild deer data (see Supplemental Information S1).
 
-Since the focal images from the enclosure is not a random 
+Since the focal images from the enclosure is not a random
 
 ### Posterior predictive checks
 
@@ -255,3 +244,5 @@ Since the focal images from the enclosure is not a random
 #### Number of deer at the sample sites
 
 #### Densities
+
+## References {.unnumbered}
