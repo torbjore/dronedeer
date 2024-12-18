@@ -109,9 +109,34 @@ $$
 
 In principle, $\mathbf{x}_i$ can include both covariates that vary among sites within sampling areas and covariates that vary only among, and not within, sampling areas. However, it is important to realize that if $\mathbf{x}_i$ includes sampling area covariates, random effects of sampling areas would need to be included in order to avoid pseudoreplication (sites within sampling areas is not a random sample of sites with the same sampling area covariate value).
 
-## Densities at the specific sites included in each survey
+## Estimating densities at the specific sites included in each survey
 
-The estimators for mean density presented above assume that the sites are random samples of a large number of sites of the same characteristics, and the estimates apply to this statistical population of sites. We also computed estimates of density (at the time of flight) at the specific sites included in each survey as the estimated number of individuals present divided by the total area covered, $\sum \hat{N}_i/\sum a_i$ (the sums are over all sites in each survey).
+The estimators for mean density presented above assume that the sites are random samples of a large number of sites of the same characteristics, and the estimates apply to this statistical population of sites. We also computed estimates of density (at the time of flight) at the specific sites included in each survey as the estimated number of individuals present divided by the total area covered, $\bar{d}_s =\sum_{i=1}^n \hat{N}_i/\sum_{i=1}^n a_i$ (the sums are over all $n$ sites in the survey and the subscript $s$ in $\bar{d}_s$ indicates that the mean only applies to the specific sites sampled).
+
+## Estimating number of deer in a specific area
+
+When estimating number of deer in a specific area, such as in the deer enclosures, simply computing the posterior of $N_{\text{Tot}} = \bar{d}_s/q$ were $\bar{d}_s$ is the mean density at the surveyed sites (previous section) and $q$ is the proportion of the area included in survey, will underestimate the sampling variance (uncertainty) of the total number of deer in the area since density in the sampled and unsampled part of the area would not be exactly the same.
+
+To compute the sampling variance of mean number of deer at sample units, we must account for the fact that we sample from a finite area without replacement. It is not straightforward to do this in a Bayesian setting [@banerjee2024], and our case is further complicated by the fact that sample sites vary in size (particularly in the deer enclosures, where parts of the focal images were outside the enclosures). Hence, since we only have a finite sampling area in the deer enclosure, and we only estimate number of deer in the enclosure as a proof of concept, we took a more frequentist approach to the problem, ignoring the fact that sites are of different sizes:
+
+If $n$ sites are sampled from an area covering $K$ sites, the standard expression for the sampling variance of the mean number of deer in the $K$ sites is $$
+\text{Var}(\bar{N}) = \frac{K-n}{K} \frac{s^2}{n} 
+$$ where $s^2$ is is the empirical variance in number of individuals per site. The first factor is the proportion of the $K$ sites that are *not* included in the sample, and the variance becomes zero when we have counts of the entire area (when $n = K$).
+
+The total number of deer in the area is $N_{\text{Tot}} = K\bar{N}$ with sampling variance $\text{Var} \left( N_{\text{Tot}} \right) = K^2 \text{Var} \left( \bar{N} \right)$. Replacing with the proportion of the area covered in the sample, $q = n/K$ and inserting the expression for $\text{Var}(\bar{N})$, we get
+
+$$
+\text{Var} \left( N_{\text{Tot}} \right) = \left( \frac{n}{q} - n \right) \frac{s^2}{q}
+$$
+(see also @williams2002a chapt. 12.4.1).
+
+In our situation, we do not have exact counts of number of deer per site (due to imperfect detection), but instead we have posterior samples of $N_i$ at each site $i$. To assess the uncertainty in $N_{\text{Tot}}$, we computed posterior samples for lower and upper 95% confidence limits assuming a normal distribution (by the central limit theorem) at the log-scale, using the delta-method approximation,
+
+$$
+\text{CI} = \exp(\log(N_{\text{Tot}}) \pm 2 N_{\text{Tot}}^{-1}s)
+$$
+
+
 
 ## Specification of priors and starting values
 
@@ -127,7 +152,7 @@ For the log-normal and the gamma models, the prior distribution for $\sigma$ was
 
 In @sec-S2 <MORE DETAILED REF>, we present computed overlap between prior and posterior distributions for all parameters.
 
-## Making use of known density in deer enclosure to inform priors on detectability <må skrives om>
+## Making use of known density in deer enclosure to inform priors on detectability
 
 The deer density in the enclosure at the deer farm was known, and this may be used to inform the priors for detection probability. The enclosure surrounded a natural habitat with a similar forest type as at the sampling areas. It is therefore reasonable to assume that detection probabilities inside and outside the enclosure are similar. It is, however, not reasonable to assume that the variation in deer densities among sites (focal images) are similar because the enclosure had much higher density, much more females than males, many young individuals, and there were feeding stations where the deer tended to aggregate. Hence, to estimate posterior distributions for detection probabilities, we kept the same model structure as above with a log-normal expected density, but made $\mu$ a function of known mean density ($d$) and the unknown variance in density ($\sigma^2$). As density was modelled as a log-normal distribution, mean density is $d = e^{\mu+\sigma_\varepsilon^2/2}$, and hence we get $\mu = \log(d)-\sigma_\varepsilon^2 / 2$ (we did not model $\mu$ as a function of covariates since the habitat within the enclosure was very homogenous). Hence, we used the following hierarchical model:
 
@@ -225,7 +250,7 @@ Since the focal images from the enclosure is not a random
 
 <Bruk her full opprinnelig model>
 
-### Detection probablities
+### Detection probabilities
 
 <Bruk som før>
 
