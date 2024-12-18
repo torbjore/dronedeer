@@ -28,7 +28,7 @@ Inits = function(){
     #epsilon = matrix(rnorm(nrow(Y)*ncol(Y), 0, sigma) , nrow = nrow(Y), ncol = ncol(Y)),
     #p = exp(log(phat)*runif(2, 0.9, 1.1)),
     mu_p = runif(2, -1, 1),
-    sigma_p = runif(2, 0.01, 0.2),
+    sigma_p = runif(2, 0.1, 0.2),
     N = N,
     New_Y = nimbleData_Fence$data$Y, # Warning message if not included
     New_y = nimbleData_Fence$data$y,
@@ -45,21 +45,24 @@ DoubleObsMultisiteModel <- nimbleModel(
 )
 
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel)
-DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("mu_p", "sigma_p", "N_tot", "Dens", "Dens_tot", "Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "N_hat", "var_N_hat", "N_hat_corrected"))
+DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("mu_p", "sigma_p", "N_sum", "Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "N_tot", "var_N_tot", "N_lower", "N_upper"))
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
 CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
 
+#inits.list <- list(Inits(), Inits(), Inits())
+
 posterior_samples <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter = 10000,
+  niter = 20000,
   nburnin = 2000,
   nchain=3,
   thin = 2,
-  inits = Inits,
+  inits = Inits, #inits.list,
   samplesAsCodaMCMC = TRUE)
 
 library(coda)
-plot(posterior_samples)
+#plot(posterior_samples)
+#gelman.diag(posterior_samples)
 summary(posterior_samples)
 
 # Posterior predictive checks
@@ -75,4 +78,4 @@ plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
 abline(0, 1, col="red")
 mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
 
-#save(posterior_samples, file = "posterior_samples_enclosure_N.RData")
+save(posterior_samples, file = "data/posterior_samples/posterior_samples_enclosure_N.RData")

@@ -15,7 +15,6 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
     pi[s,1] <- p1[s]*(1-p2[s])/Psum[s]
     pi[s,2] <- (1-p1[s])*p2[s]/Psum[s]
     pi[s,3] <- p1[s]*p2[s]/Psum[s]
-    #mu[s] <- log(mean_lambda) - 0.5*sigma[s]*sigma[s]
     for(i in 1:N_sites[s]){
       Y[s,i] ~ dbin(Psum[s], N[s,i])
       y[s, i, 1:3] ~ dmulti(pi[s,1:3], Y[s,i])
@@ -27,7 +26,7 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
     mu_p[s] ~ dnorm(0, sd = 2) 
     sigma_p[s] ~ dunif(0.1, 0.59)
     for(i in 1:N_sites[s]){
-      N[s,i] ~ dpois(lambda_N[s,i]) # dflat() # dunif(0, 100)
+      N[s,i] ~ dpois(lambda_N[s,i]) # hierarchical prior
       lambda_N[s,i] ~ dunif(0, 50)
     }
   }
@@ -37,22 +36,23 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
   
   # Derived parameters
   for(s in 1:N_surv){
-    N_tot[s] <- sum(N[s, 1:N_sites[s]]) # This is the total in the sites surveyed, not the entire enclosure
-    Dens[s] <- N_tot[s]/sum_area[s]
-    N_hat[s] <- Dens[s]*5 # Enclosure is 5 ha
-    var_N_hat[s] <- (N_sites[s]/(sum_area[s]/5) - N_sites[s])*(sd(N[s, 1:N_sites[s]])^2)/(sum_area[s]/5)
+    N_sum[s] <- sum(N[s, 1:N_sites[s]]) # This is the total in the sites surveyed, not the entire enclosure
+    #Dens[s] <- N_sum[s]/sum_area[s]
+    N_tot[s] <- N_sum[s]/(sum_area[s]/5) # Enclosure is 5 ha
+    var_N_tot[s] <- (N_sites[s]/(sum_area[s]/5) - N_sites[s])*(sd(N[s, 1:N_sites[s]])^2)/(sum_area[s]/5)
+    # lower and upper CI based on var_N_tot[s] and assuming normal distribution on a log-scale (central limit theorem)
+    N_lower[s] <- exp(log(N_tot[s]) - 2*(N_tot[s]^(-1))*sqrt(var_N_tot[s]))
+    N_upper[s] <- exp(log(N_tot[s]) + 2*(N_tot[s]^(-1))*sqrt(var_N_tot[s]))
   }
-  Dens_tot <- sum(N_tot[1:N_surv])/(sum(sum_area[1:N_surv]))
-  
-  # lower and upper CI based on var_N_hat[s] and assuming normal distribution on a log-scale (central limit theorem)
-  
+ 
   
   # Based on adding a normal variable
-  for(s in 1:N_surv){
-    sd_C[s] <- sd(N[s, 1:N_sites[s]]) * sqrt((N_sites[s]/(sum_area[s]/5) - N_sites[s])/(sum_area[s]/5) - 1)
-    C[s] ~ dnorm(0, sd = sd_C[s])
-    N_hat_corrected[s] <- N_hat[s] + C[s]
-  }
+  # for(s in 1:N_surv){
+  #   sd_C[s] <- sd(N[s, 1:N_sites[s]]) * sqrt((N_sites[s]/(sum_area[s]/5) - N_sites[s])/(sum_area[s]/5) - N_sites[s])
+  #   C[s] ~ dnorm(0, sd = sd_C[s])
+  #   N_tot_corrected[s] <- N_tot[s] + C[s]
+  # }
+  # N_tot_corrected_mean <- mean(N_tot_corrected[1:N_surv])
   
   # For posterior predictive checks
   for(s in 1:N_surv){
