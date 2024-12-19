@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-12-18">
+<meta name="dcterms.date" content="2024-12-19">
 
 <title>Detailed model formulation, analysis, and results</title>
 <style>
@@ -3109,16 +3109,16 @@ window.Quarto = {
   <li><a href="#exponential-expectation" id="toc-exponential-expectation" class="nav-link" data-scroll-target="#exponential-expectation"><span class="header-section-number">1.2.2</span> Exponential expectation</a></li>
   <li><a href="#gamma-expectation" id="toc-gamma-expectation" class="nav-link" data-scroll-target="#gamma-expectation"><span class="header-section-number">1.2.3</span> Gamma expectation</a></li>
   </ul></li>
+  <li><a href="#modelling-of-covariate-effects" id="toc-modelling-of-covariate-effects" class="nav-link" data-scroll-target="#modelling-of-covariate-effects"><span class="header-section-number">1.3</span> Modelling of covariate effects</a></li>
   </ul></li>
   <li><a href="#modeling-focus-and-strategy" id="toc-modeling-focus-and-strategy" class="nav-link" data-scroll-target="#modeling-focus-and-strategy"><span class="header-section-number">2</span> Modeling focus and strategy</a>
   <ul>
-  <li><a href="#modelling-of-covariate-effects" id="toc-modelling-of-covariate-effects" class="nav-link" data-scroll-target="#modelling-of-covariate-effects"><span class="header-section-number">2.1</span> Modelling of covariate effects</a></li>
-  <li><a href="#sec-estimating_d" id="toc-sec-estimating_d" class="nav-link" data-scroll-target="#sec-estimating_d"><span class="header-section-number">2.2</span> Estimating densities at the specific sites included in each survey</a></li>
-  <li><a href="#sec-estimating_N" id="toc-sec-estimating_N" class="nav-link" data-scroll-target="#sec-estimating_N"><span class="header-section-number">2.3</span> Estimating number of deer in a specific area</a></li>
-  <li><a href="#specification-of-priors-and-starting-values" id="toc-specification-of-priors-and-starting-values" class="nav-link" data-scroll-target="#specification-of-priors-and-starting-values"><span class="header-section-number">2.4</span> Specification of priors and starting values</a></li>
-  <li><a href="#making-use-of-known-density-in-deer-enclosure-to-inform-priors-on-detectability" id="toc-making-use-of-known-density-in-deer-enclosure-to-inform-priors-on-detectability" class="nav-link" data-scroll-target="#making-use-of-known-density-in-deer-enclosure-to-inform-priors-on-detectability"><span class="header-section-number">2.5</span> Making use of known density in deer enclosure to inform priors on detectability</a></li>
-  <li><a href="#posterior-predictive-checks-and-model-modifications" id="toc-posterior-predictive-checks-and-model-modifications" class="nav-link" data-scroll-target="#posterior-predictive-checks-and-model-modifications"><span class="header-section-number">2.6</span> Posterior predictive checks and model modifications</a></li>
-  <li><a href="#implementation-and-model-selection" id="toc-implementation-and-model-selection" class="nav-link" data-scroll-target="#implementation-and-model-selection"><span class="header-section-number">2.7</span> Implementation and model selection</a></li>
+  <li><a href="#specification-of-priors-and-starting-values" id="toc-specification-of-priors-and-starting-values" class="nav-link" data-scroll-target="#specification-of-priors-and-starting-values"><span class="header-section-number">2.1</span> Specification of priors and starting values</a></li>
+  <li><a href="#sec-posterior_checks" id="toc-sec-posterior_checks" class="nav-link" data-scroll-target="#sec-posterior_checks"><span class="header-section-number">2.2</span> Posterior predictive checks and model modifications</a></li>
+  <li><a href="#sec-making_use_of" id="toc-sec-making_use_of" class="nav-link" data-scroll-target="#sec-making_use_of"><span class="header-section-number">2.3</span> Making use of known density in deer enclosure to inform priors on detectability</a></li>
+  <li><a href="#implementation-and-model-selection" id="toc-implementation-and-model-selection" class="nav-link" data-scroll-target="#implementation-and-model-selection"><span class="header-section-number">2.4</span> Implementation and model selection</a></li>
+  <li><a href="#sec-estimating_d" id="toc-sec-estimating_d" class="nav-link" data-scroll-target="#sec-estimating_d"><span class="header-section-number">2.5</span> Estimating densities at the specific sites included in each survey</a></li>
+  <li><a href="#sec-estimating_N" id="toc-sec-estimating_N" class="nav-link" data-scroll-target="#sec-estimating_N"><span class="header-section-number">2.6</span> Estimating number of deer in a specific area</a></li>
   </ul></li>
   <li><a href="#sec-results" id="toc-sec-results" class="nav-link" data-scroll-target="#sec-results"><span class="header-section-number">3</span> Detailed analysis and results</a>
   <ul>
@@ -3168,7 +3168,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">December 18, 2024</p>
+      <p class="date">December 19, 2024</p>
     </div>
   </div>
   
@@ -3240,23 +3240,84 @@ a &amp;= \frac{1}{e^{\sigma^2} - 1} \\
 <p>Hence, mean and variance of deer density in the gamma model has the same expressions as in the log-normal model, respectively <span class="math inline">\(\frac{a}{b} = e^{\mu_i+\sigma^2/2}\)</span> and <span class="math inline">\(a/b^2 = \left( e^{\sigma^2}-1 \right) e^{2\mu_i+\sigma^2 }\)</span>. Compared to the log-normal distribution with the same mean and variance, the gamma distribution has lower density far out in the tail of the distribution.</p>
 </section>
 </section>
-</section>
-<section id="modeling-focus-and-strategy" class="level1" data-number="2">
-<h1 data-number="2"><span class="header-section-number">2</span> Modeling focus and strategy</h1>
-<section id="modelling-of-covariate-effects" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="modelling-of-covariate-effects"><span class="header-section-number">2.1</span> Modelling of covariate effects</h2>
+<section id="modelling-of-covariate-effects" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="modelling-of-covariate-effects"><span class="header-section-number">1.3</span> Modelling of covariate effects</h2>
 <p>In our application, we included the distance from the agricultural field as the only site covariate in <span class="math inline">\(\mathbf{x}_i\)</span>. The covariate effect was the same in all sampling area-month combinations, but the intercept was allowed to vary across area-months. Denoting the index for the area-month that site <span class="math inline">\(i\)</span> belong to as <span class="math inline">\(j(i)\)</span>, we can formulate the covariate model as,</p>
 <p><span class="math display">\[
 \mu_i = \mu_{0,j(i)} + x_i \beta
 \]</span></p>
 <p>In principle, <span class="math inline">\(\mathbf{x}_i\)</span> can include both covariates that vary among sites within sampling areas and covariates that vary only among, and not within, sampling areas. However, it is important to realize that if <span class="math inline">\(\mathbf{x}_i\)</span> includes sampling area covariates, random effects of sampling areas would need to be included in order to avoid pseudoreplication (sites within sampling areas is not a random sample of sites with the same sampling area covariate value).</p>
 </section>
-<section id="sec-estimating_d" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="sec-estimating_d"><span class="header-section-number">2.2</span> Estimating densities at the specific sites included in each survey</h2>
+</section>
+<section id="modeling-focus-and-strategy" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Modeling focus and strategy</h1>
+<section id="specification-of-priors-and-starting-values" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="specification-of-priors-and-starting-values"><span class="header-section-number">2.1</span> Specification of priors and starting values</h2>
+<p>For the observation model parameters <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_2\)</span> (detection probabilities) we initially used <span class="math inline">\(\text{Uniform}(0,1)\)</span> priors. However, as posterior predeictive checks indicated that random effects on detection probabilities were required, we decided to use logit-normal priors for detection probabilities (see <a href="#sec-posterior_checks" class="quarto-xref">Section 2.2</a>). We also used data from trials at a deer enclosure in a natural habitat to inform the priors for these parameters (see <a href="#sec-making_use_of" class="quarto-xref">Section 2.3</a>).</p>
+<p>The covariate (distance from field) was normalized by subtracting the mean and dividing by the standard deviation prior to model fitting, and we used a <span class="math inline">\(\text{N}(0,\sigma=2)\)</span> prior for the covariate effect, <span class="math inline">\(\beta\)</span>.</p>
+<p>One approach to the modelling could have been to specify somewhat informative priors for the intercepts <span class="math inline">\(\mu_{0,j(i)}\)</span> based on prior knowledge of reasonable deer densities in the area. However, due to the methodological nature of our study, we decided to use essentially uninformative priors for <span class="math inline">\(\mu_{0,j(i)}\)</span>, <span class="math inline">\(\text{N}(0,\sigma=10)\)</span>.</p>
+<p>To find reasonable starting values for the MCMC-chains, we first computed estimates of <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_2\)</span> as the proportion of those individuals that were seen by observer 2 that were also seen by observer 1 and vice versa. Simplified estimates of population densities were then computed from the deer counts, the estimated areas of the sites, and the initial estimates of <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_2\)</span> (see code for details [link to GitHub repository will be inserted after peer review]).</p>
+<p>For the log-normal and the gamma models, the prior distribution for <span class="math inline">\(\sigma\)</span> was specified as <span class="math inline">\(\text{Uniform}(0.5,3)\)</span>. The lower bound of <span class="math inline">\(0.5\)</span> was set to prevent poor mixing when the mcmc-chains occasionally entered the lower tail of the posterior distribution. The chains never got close to the upper bound of <span class="math inline">\(3\)</span>.</p>
+<p>In <a href="#sec-results" class="quarto-xref">Section 3</a> <more detailed ref>, we present computed overlap between prior and posterior distributions for all parameters.</more></p>
+</section>
+<section id="sec-posterior_checks" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="sec-posterior_checks"><span class="header-section-number">2.2</span> Posterior predictive checks and model modifications</h2>
+<p>We performed posterior predictive checks <span class="citation" data-cites="gelman2004 conn2018">(<a href="#ref-gelman2004" role="doc-biblioref">Gelman et al. 2004</a>; <a href="#ref-conn2018" role="doc-biblioref">Conn et al. 2018</a>)</span> with respect to both <span class="math inline">\(Y_i\)</span>’s and <span class="math inline">\(\mathbf{y}_i\)</span>’s by comparing the summed Pearson residuals for observed and simulated data in every step of the MCMC-chains. Bayesian p-values (proportion of Pearson residuals that are larger for the simulated data than for the observed data) did not indicate any lack of fit with respect to <span class="math inline">\(Y_i\)</span>’s (<span class="math inline">\(p &gt; 0.4\)</span>), but there appeared to be a lack of fit with respect to <span class="math inline">\(\mathbf{y}_i\)</span>’s (<span class="math inline">\(p &lt; 0.03\)</span>), indicating that there were more variation in the counts from the two independent observers than expected if detection probability was constant across sites for each observer. To accommodate this variation in the model, we introduced random detection probabilities, assuming the logit-transformed detection probabilities to be normal. Hence, in our final observation model, we used</p>
+<p><span class="math display">\[
+\begin{align}
+p_{1,i} &amp;= \frac{1}{1+e^{-\eta_1 + \epsilon_{1,i}}} \\
+p_{2,i} &amp;= \frac{1}{1+e^{-\eta_2 + \epsilon_{2,i}}} \\
+\epsilon_{1,i} &amp;\sim \text{N}(0,\sigma_p)\\
+\epsilon_{2,i} &amp;\sim \text{N}(0,\sigma_p)\\
+\end{align}
+\]</span></p>
+<p>To facilitate model fitting, we used a somewhat informative prior for <span class="math inline">\(\sigma_p\)</span>,</p>
+<p><span class="math display">\[
+\sigma_p  \sim \text{Uniform}(0.1,0.59)
+\]</span></p>
+<p>The lower bound of <span class="math inline">\(0.1\)</span> was set to avoid poor mixing when the chains entered flat parts of the likelihood surface, and the upper bound of <span class="math inline">\(0.59\)</span> was selected based on a prior assessment that detection at the 97.5 percentile site should have a maximum of 10 times higher odds than in the 2.5 percentile site (<span class="math inline">\(\log(10)/(1.96 \times 2) \approx 0.59\)</span>)</p>
+<p>Bayesian p-values did not indicate any lack of fit of this final model with respect to <span class="math inline">\(Y_i\)</span>’s (<span class="math inline">\(p = 0.50\)</span>) or <span class="math inline">\(\mathbf{y}_i\)</span>’s (<span class="math inline">\(p = 0.20\)</span>).</p>
+</section>
+<section id="sec-making_use_of" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="sec-making_use_of"><span class="header-section-number">2.3</span> Making use of known density in deer enclosure to inform priors on detectability</h2>
+<p>The deer density in the enclosure at the deer farm was known, and this may be used to inform the priors for detection probability. The enclosure surrounded a natural habitat with a similar forest type as at the sampling areas. It is therefore reasonable to assume that detection probabilities inside and outside the enclosure are similar. It is, however, not reasonable to assume that the variation in deer densities among sites (focal images) are similar because the enclosure had much higher density, much more females than males, many young individuals, and there were feeding stations where the deer tended to aggregate. Hence, to estimate posterior distributions for detection probabilities, we kept the same model structure as above with a log-normal expected density, but made <span class="math inline">\(\mu\)</span> a function of known mean density (<span class="math inline">\(d\)</span>) and the unknown variance in density (<span class="math inline">\(\sigma^2\)</span>). Using a log-normal distribution, mean density is <span class="math inline">\(d = e^{\mu+\sigma_\varepsilon^2/2}\)</span>, and hence we get <span class="math inline">\(\mu = \log(d)-\sigma_\varepsilon^2 / 2\)</span> (we did not model <span class="math inline">\(\mu\)</span> as a function of covariates since the habitat within the enclosure was very homogenous). Hence, we used the following hierarchical model:</p>
+<p><span class="math display">\[
+\begin{align}
+\mathbf{y}_i  &amp;\sim \text{Multinomial}(\pi,Y_i) \\
+Y_i  &amp;\sim \text{Binomial}(p^*,N_i )  \\   
+N_i &amp;\sim \text{Poisson}(\lambda_i a_i) \\
+\log(\lambda_i) &amp;= \mu + \varepsilon_i \\
+\mu &amp;= \log⁡(d)-\sigma_\varepsilon^2/ 2\\
+\varepsilon_i &amp;\sim N(0,\sigma_\varepsilon)
+\end{align}
+\]</span></p>
+<p>As initial analysis showed that there was no significant difference in detection probability in the enclosures for the two observers, we simplified the observation model to have the same mean logit-scale detection probability for the two observers, <span class="math inline">\(\eta_1 = \eta_2 = \eta\)</span>. The model was then fitted with the following uninformative priors:</p>
+<p><span class="math display">\[
+\begin{align}
+\eta &amp;\sim \text{N}(0,2) \\
+\sigma_\varepsilon  &amp;\sim \text{Uniform}(0,5)
+\end{align}
+\]</span></p>
+<p>As priors for the mean logit-scale detection probability for the two observers, <span class="math inline">\(\eta_1 = \eta_2 = \eta\)</span>, when fitting the full model to the data from the sampling areas, we used</p>
+<p><span class="math display">\[
+\begin{align}
+\eta_1 &amp;\sim \text{N}\left(\text{mean}(\boldsymbol{\eta}), 1.2\text{sd}(\boldsymbol{\eta})\right) \\
+\eta_2 &amp;\sim \text{N}\left(\text{mean}(\boldsymbol{\eta}), 1.2\text{sd}(\boldsymbol{\eta})\right) \\
+\end{align}
+\]</span> where <span class="math inline">\(\text{mean}(\boldsymbol{\eta})\)</span> and <span class="math inline">\(\text{sd}(\boldsymbol{\eta})\)</span> refers to the mean and standard deviation of the posterior distribution for <span class="math inline">\(\eta\)</span> in the eclosure model. The posterior standard deviations were conservatively increased by 20% to account for the fact that detection probabilities inside and outside of the enclosure could be different.</p>
+</section>
+<section id="implementation-and-model-selection" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="implementation-and-model-selection"><span class="header-section-number">2.4</span> Implementation and model selection</h2>
+<p>The models were fitted by the use of Bayesian MCMC sampling in NIMBLE (v1.1.0; <span class="citation" data-cites="devalpine2024a valpine_programming_2017">(<a href="#ref-devalpine2024a" role="doc-biblioref">P. de Valpine et al. 2024</a>; <a href="#ref-valpine_programming_2017" role="doc-biblioref">Perry de Valpine et al. 2017</a>)</span>). Convergence was assessed on three independent MCMC chains (with different start values) with the <span class="citation" data-cites="gelman1992">Gelman and Rubin (<a href="#ref-gelman1992" role="doc-biblioref">1992</a>)</span> diagnostics using the ‘gelman.diag-function’ in the ‘coda’ package ver. 0.19-4.1 <span class="citation" data-cites="plummer2006">(<a href="#ref-plummer2006" role="doc-biblioref">Plummer et al. 2006</a>)</span> in R ver. 4.3.3 <span class="citation" data-cites="rcoreteam2024">(<a href="#ref-rcoreteam2024" role="doc-biblioref">R Core Team 2024</a>)</span>.</p>
+<p>For each of the three models for the random Poisson expectation (log-normal, exponential and gamma), we fitted both linear and quadratic models for <span class="math inline">\(\mu_i\)</span> as a function of distance from the field, as well as a model with no covariate effects; hence obtaining 9 models. We selected the best model according to the Watanabe-Akaike (Widely Applicable) Information Criterion, WAIC <span class="citation" data-cites="watanabe2010">(<a href="#ref-watanabe2010" role="doc-biblioref">Watanabe 2010</a>)</span> for presentation of estimates and prediction (the criterion seeks to minimize the prediction error variance as an optimal trade-off between accuracy and precision of the fitted model predictions).</p>
+<p>We initially ran MCMC-sampling on each of the nine models with 3 chains with random and independent starting values for 180,000 iterations after a burn-in of 20,000 iterations and stored every 6<sup>th</sup> posterior sample. Repeating this three times showed a consistent ranking of the models by the WAIC criterion. The models with the lowest (best) WAIC values where then run for 1,080,000 samples after a burning of 20,000 iterations in 3 chains and stored every 18<sup>th</sup> sample, obtaining in total 3 times 60,000 posterior samples used for inference. The upper 95% confidence limit for the <span class="citation" data-cites="gelman1992">(<a href="#ref-gelman1992" role="doc-biblioref">Gelman and Rubin 1992</a>)</span> ‘potential scale reduction factor’ (psrf) was &lt;1.025 for all parameters in the final models, and the multivariate psrf was less than 1.005.</p>
+</section>
+<section id="sec-estimating_d" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="sec-estimating_d"><span class="header-section-number">2.5</span> Estimating densities at the specific sites included in each survey</h2>
 <p>The estimators for mean density presented above assume that the sites are random samples of a large number of sites of the same characteristics, and the estimates apply to this statistical population of sites. We also computed estimates of density (at the time of flight) at the specific sites included in each survey as the estimated number of individuals present divided by the total area covered, <span class="math inline">\(\bar{d}_s =\sum_{i=1}^n \hat{N}_i/\sum_{i=1}^n a_i\)</span> (the sums are over all <span class="math inline">\(n\)</span> sites in the survey and the subscript <span class="math inline">\(s\)</span> in <span class="math inline">\(\bar{d}_s\)</span> indicates that the mean only applies to the specific sites sampled).</p>
 </section>
-<section id="sec-estimating_N" class="level2" data-number="2.3">
-<h2 data-number="2.3" class="anchored" data-anchor-id="sec-estimating_N"><span class="header-section-number">2.3</span> Estimating number of deer in a specific area</h2>
+<section id="sec-estimating_N" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="sec-estimating_N"><span class="header-section-number">2.6</span> Estimating number of deer in a specific area</h2>
 <p>When estimating number of deer in a specific area, such as in the deer enclosures, simply computing the posterior of <span class="math inline">\(N_{\text{Tot}} = \bar{d}_s/q\)</span> were <span class="math inline">\(\bar{d}_s\)</span> is the mean density at the surveyed sites (previous section) and <span class="math inline">\(q\)</span> is the proportion of the area included in survey, will underestimate the sampling variance (uncertainty) of the total number of deer in the area since density in the sampled and unsampled part of the area would not be exactly the same.</p>
 <p>To compute the sampling variance of mean number of deer at sample units, we must account for the fact that we sample from a finite area without replacement. It is not straightforward to do this in a Bayesian setting <span class="citation" data-cites="banerjee2024">(<a href="#ref-banerjee2024" role="doc-biblioref">Banerjee 2024</a>)</span>, and our case is further complicated by the fact that sample sites vary in size (particularly in the deer enclosures, where parts of the focal images were outside the enclosures). Hence, since we only have a finite sampling area in the deer enclosure, and we only estimate number of deer in the enclosure as a proof of concept, we took a more frequentist approach to the problem, ignoring the fact that sites are of different sizes:</p>
 <p>If <span class="math inline">\(n\)</span> sites are sampled from an area covering <span class="math inline">\(K\)</span> sites, the standard expression for the sampling variance of the mean number of deer in the <span class="math inline">\(K\)</span> sites is <span class="math display">\[
@@ -3277,74 +3338,6 @@ N_i &amp;\sim \text{Poisson}(\lambda_i) \\
 \lambda_i &amp;\sim \text{Uniform}(0, 50) \\
 \end{align}
 \]</span></p>
-</section>
-<section id="specification-of-priors-and-starting-values" class="level2" data-number="2.4">
-<h2 data-number="2.4" class="anchored" data-anchor-id="specification-of-priors-and-starting-values"><span class="header-section-number">2.4</span> Specification of priors and starting values</h2>
-<p>For the observation model parameters <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_2\)</span> (detection probabilities) it is natural to use uninformative priors such as <span class="math inline">\(\text{Uniform}(0,1)\)</span>. We made, however, use of data from trials at a deer enclosure in a natural habitat to inform the priors for these parameters (detailed below).</p>
-<p>The covariate (distance from field) was normalized by subtracting the mean and dividing by the standard deviation prior to model fitting, and we used a <span class="math inline">\(\text{N}(0,\sigma=2)\)</span> prior for the covariate effect, <span class="math inline">\(\beta\)</span>.</p>
-<p>One approach to the modelling could have been to specify somewhat informative priors for the intercepts <span class="math inline">\(\mu_{0,j(i)}\)</span> based on prior knowledge of reasonable deer densities in the area. However, due to the methodological nature of our study, we decided to use essentially uninformative priors for <span class="math inline">\(\mu_{0,j(i)}\)</span>, <span class="math inline">\(\text{N}(0,\sigma=10)\)</span>.</p>
-<p>To find reasonable starting values for the MCMC-chains, we first computed estimates of <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_2\)</span> as the proportion of those individuals that were seen by observer 2 that were also seen by observer 1 and vice versa. Simplified estimates of population densities were then computed from the deer counts, the estimated areas of the sites, and the initial estimates of <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_2\)</span> (see code for details <link to github repository will be inserted after peer review>).</p>
-<p>For the log-normal and the gamma models, the prior distribution for <span class="math inline">\(\sigma\)</span> was specified as <span class="math inline">\(\text{Uniform}(0.5,3)\)</span>. The lower bound of <span class="math inline">\(0.5\)</span> was set to prevent poor mixing when the mcmc-chains occasionally entered the lower tail of the posterior distribution. The chains never got close to the upper bound of <span class="math inline">\(3\)</span>.</p>
-<p>In <a href="#sec-results" class="quarto-xref">Section 3</a> <more detailed ref>, we present computed overlap between prior and posterior distributions for all parameters.</more></p>
-</section>
-<section id="making-use-of-known-density-in-deer-enclosure-to-inform-priors-on-detectability" class="level2" data-number="2.5">
-<h2 data-number="2.5" class="anchored" data-anchor-id="making-use-of-known-density-in-deer-enclosure-to-inform-priors-on-detectability"><span class="header-section-number">2.5</span> Making use of known density in deer enclosure to inform priors on detectability</h2>
-<p>The deer density in the enclosure at the deer farm was known, and this may be used to inform the priors for detection probability. The enclosure surrounded a natural habitat with a similar forest type as at the sampling areas. It is therefore reasonable to assume that detection probabilities inside and outside the enclosure are similar. It is, however, not reasonable to assume that the variation in deer densities among sites (focal images) are similar because the enclosure had much higher density, much more females than males, many young individuals, and there were feeding stations where the deer tended to aggregate. Hence, to estimate posterior distributions for detection probabilities, we kept the same model structure as above with a log-normal expected density, but made <span class="math inline">\(\mu\)</span> a function of known mean density (<span class="math inline">\(d\)</span>) and the unknown variance in density (<span class="math inline">\(\sigma^2\)</span>). As density was modelled as a log-normal distribution, mean density is <span class="math inline">\(d = e^{\mu+\sigma_\varepsilon^2/2}\)</span>, and hence we get <span class="math inline">\(\mu = \log(d)-\sigma_\varepsilon^2 / 2\)</span> (we did not model <span class="math inline">\(\mu\)</span> as a function of covariates since the habitat within the enclosure was very homogenous). Hence, we used the following hierarchical model:</p>
-<p><span class="math display">\[
-\begin{align}
-\mathbf{y}_i  &amp;\sim \text{Multinomial}(\pi,Y_i) \\
-Y_i  &amp;\sim \text{Binomial}(p^*,N_i )  \\   
-N_i &amp;\sim \text{Poisson}(\lambda_i a_i) \\
-\log(\lambda_i) &amp;= \mu + \varepsilon_i \\
-\mu &amp;= \log⁡(d)-\sigma_\varepsilon^2/ 2\\
-\varepsilon_i &amp;\sim N(0,\sigma_\varepsilon)
-\end{align}
-\]</span></p>
-<p>As initial analysis showed that there was no significant difference in detection probability for the two observers, we simplified the observation model to have the same detection probability for the two observers, <span class="math inline">\(p_1 = p_2 = p\)</span>. The model was then fitted with the following uninformative priors:</p>
-<p><span class="math display">\[
-\begin{align}
-p &amp;\sim \text{Uniform}(0,1) \\
-\sigma_\varepsilon  &amp;\sim \text{Uniform}(0,5)
-\end{align}
-\]</span></p>
-<p>To inform priors when fitting the full model to the data from the sampling areas, we first logit-transformed the posterior samples of <span class="math inline">\(p\)</span> (here denoting the vector of posterior samples as <span class="math inline">\(\mathbf{p}\)</span>),</p>
-<p><span class="math display">\[
-\boldsymbol{\eta} = \log \left( \frac{\mathbf{p}}{1-\mathbf{p}} \right)
-\]</span></p>
-<p>For the full model applied to data from the sampling areas, we then specified the priors for detection probability as</p>
-<p><span class="math display">\[
-\begin{align}
-\eta_1  &amp;\sim \text{N} \left( \text{mean}(\boldsymbol{\eta}),1.2\text{sd}(\boldsymbol{\eta}) \right) \\
-\eta_2  &amp;\sim \text{N} \left( \text{mean}(\boldsymbol{\eta}),1.2\text{sd}(\boldsymbol{\eta}) \right) \\
-p_1 &amp;= \frac{1}{1+e^{-\eta_1}} \\
-p_2 &amp;= \frac{1}{1+e^{-\eta_2}} \\
-\end{align}
-\]</span></p>
-<p>Here, the standard deviations were conservatively increased by 20% to account for the fact that detection probabilities inside and outside of the enclosure could be different.</p>
-</section>
-<section id="posterior-predictive-checks-and-model-modifications" class="level2" data-number="2.6">
-<h2 data-number="2.6" class="anchored" data-anchor-id="posterior-predictive-checks-and-model-modifications"><span class="header-section-number">2.6</span> Posterior predictive checks and model modifications</h2>
-<p>We performed posterior predictive checks <span class="citation" data-cites="gelman2004 conn2018">(<a href="#ref-gelman2004" role="doc-biblioref">Gelman et al. 2004</a>; <a href="#ref-conn2018" role="doc-biblioref">Conn et al. 2018</a>)</span> with respect to both <span class="math inline">\(Y_i\)</span>’s and <span class="math inline">\(\mathbf{y}_i\)</span>’s by comparing the summed Pearson residuals for observed and simulated data in every step of the MCMC-chains. Bayesian p-values did not indicate any lack of fit with respect to <span class="math inline">\(Y_i\)</span>’s (<span class="math inline">\(p &gt; 0.4\)</span>), but there appeared to be a lack of fit with respect to <span class="math inline">\(\mathbf{y}_i\)</span>’s (<span class="math inline">\(p &lt; 0.03\)</span>), indicating that there were more variation in the counts from the two independent observers than expected if detection probability is constant across sites for each observer. To accommodate this variation in the model, we introduced random detection probabilities, assuming the logit-transformed detection probabilities to be normal. Hence, in our final observation model, we used</p>
-<p><span class="math display">\[
-\begin{align}
-p_{1,i} &amp;= \frac{1}{1+e^{-\eta_1 + \epsilon_{1,i}}} \\
-p_{2,i} &amp;= \frac{1}{1+e^{-\eta_2 + \epsilon_{2,i}}} \\
-\epsilon_{1,i} &amp;\sim \text{N}(0,\sigma_p)\\
-\epsilon_{2,i} &amp;\sim \text{N}(0,\sigma_p)\\
-\end{align}
-\]</span></p>
-<p>To facilitate model fitting, we used a somewhat informative prior for <span class="math inline">\(\sigma_p\)</span>,</p>
-<p><span class="math display">\[
-\sigma_p  \sim \text{Uniform}(0.1,0.59)
-\]</span></p>
-<p>The lower bound of <span class="math inline">\(0.1\)</span> was set to avoid poor mixing when the chains entered flat parts of the likelihood surface, and the upper bound of <span class="math inline">\(0.59\)</span> was selected based on a prior assessment that detection at the 97.5 percentile site should have a maximum of 10 times higher odds than in the 2.5 percentile site (<span class="math inline">\(\log(10)/(1.96 \times 2) \approx 0.59\)</span>)</p>
-<p>Bayesian p-values did not indicate any lack of fit of this final model with respect to <span class="math inline">\(Y_i\)</span>’s (<span class="math inline">\(p = 0.50\)</span>) or <span class="math inline">\(\mathbf{y}_i\)</span>’s (<span class="math inline">\(p = 0.20\)</span>).</p>
-</section>
-<section id="implementation-and-model-selection" class="level2" data-number="2.7">
-<h2 data-number="2.7" class="anchored" data-anchor-id="implementation-and-model-selection"><span class="header-section-number">2.7</span> Implementation and model selection</h2>
-<p>The models were fitted by the use of Bayesian MCMC sampling in NIMBLE (v1.1.0; <span class="citation" data-cites="devalpine2024a valpine_programming_2017">(<a href="#ref-devalpine2024a" role="doc-biblioref">P. de Valpine et al. 2024</a>; <a href="#ref-valpine_programming_2017" role="doc-biblioref">Perry de Valpine et al. 2017</a>)</span>). Convergence was assessed on three independent MCMC chains (with different start values) with the <span class="citation" data-cites="gelman1992">Gelman and Rubin (<a href="#ref-gelman1992" role="doc-biblioref">1992</a>)</span> diagnostics using the ‘gelman.diag-function’ in the ‘coda’ package ver. 0.19-4.1 <span class="citation" data-cites="plummer2006">(<a href="#ref-plummer2006" role="doc-biblioref">Plummer et al. 2006</a>)</span> in R ver. 4.3.3 <span class="citation" data-cites="rcoreteam2024">(<a href="#ref-rcoreteam2024" role="doc-biblioref">R Core Team 2024</a>)</span>.</p>
-<p>For each of the three models for the random Poisson expectation (log-normal, exponential and gamma), we fitted both linear and quadratic models for <span class="math inline">\(\mu_i\)</span> as a function of distance from the field, as well as a model with no covariate effects; hence obtaining 9 models. We selected the best model according to the Watanabe-Akaike (Widely Applicable) Information Criterion, WAIC <span class="citation" data-cites="watanabe2010">(<a href="#ref-watanabe2010" role="doc-biblioref">Watanabe 2010</a>)</span> for presentation of estimates and prediction (the criterion seeks to minimize the prediction error variance as an optimal trade-off between accuracy and precision of the fitted model predictions).</p>
-<p>We initially ran MCMC-sampling on each of the nine models with 3 chains with random and independent starting values for 180,000 iterations after a burn-in of 20,000 iterations and stored every 6<sup>th</sup> posterior sample. Repeating this three times showed a consistent ranking of the models by the WAIC criterion. The models with the lowest (best) WAIC values where then run for 1,080,000 samples after a burning of 20,000 iterations in 3 chains and stored every 18<sup>th</sup> sample, obtaining in total 3 times 60,000 posterior samples used for inference. The upper 95% confidence limit for the <span class="citation" data-cites="gelman1992">(<a href="#ref-gelman1992" role="doc-biblioref">Gelman and Rubin 1992</a>)</span> ‘potential scale reduction factor’ (psrf) was &lt;1.025 for all parameters in the final models, and the multivariate psrf was less than 1.005.</p>
 </section>
 </section>
 <section id="sec-results" class="level1" data-number="3">
@@ -3401,7 +3394,7 @@ both    0 2 5 0 0 0 1 3 12  4</code></pre>
 </section>
 <section id="deer-numbers" class="level3" data-number="3.2.2">
 <h3 data-number="3.2.2" class="anchored" data-anchor-id="deer-numbers"><span class="header-section-number">3.2.2</span> Deer numbers</h3>
-<p>The NIMBLE-model to estimate total number of deer in the enclosure (see <a href="#sec-estimating_N" class="quarto-xref">Section 2.3</a>) is defined in <code>R/nimble_models/enclosure_model_N.q</code> and the model fitted with the script in <code>R/run_enclosure_model_N.R</code> (see the script for mcmc trace plots, convergence diagnostics and posterior predictive checks).</p>
+<p>The NIMBLE-model to estimate total number of deer in the enclosure (see <a href="#sec-estimating_N" class="quarto-xref">Section 2.6</a>) is defined in <code>R/nimble_models/enclosure_model_N.q</code> and the model fitted with the script in <code>R/run_enclosure_model_N.R</code> (see the script for mcmc trace plots, convergence diagnostics and posterior predictive checks).</p>
 <p><strong>Summary of posterior distributions:</strong></p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -3445,8 +3438,8 @@ sigma_p[1]   0.1090   0.1943   0.3005   0.4282   0.5726
 sigma_p[2]   0.1138   0.2310   0.3513   0.4687   0.5774</code></pre>
 </div>
 </div>
-<p>Here, the indices 1 or 2 in brackets represent survey at 40 m and 60 m respectively. <code>N_sum</code> is the sum of individuals in the surveyed sites (see section <a href="#sec-estimating_d" class="quarto-xref">Section 2.2</a>). <code>N_tot</code> is the estimated total number of deer in the enclusure, <span class="math inline">\(N_\text{Tot}\)</span>, as defined in section <a href="#sec-estimating_N" class="quarto-xref">Section 2.3</a>. The posterior distribution for this random variable is too narrow as it assume that density in the parts of the enclosure that has not been surveyed is exactly the same as in the surveyed part of the enclosure. <code>N_lower</code> and <code>N_upper</code> are the confidence limits derived in <a href="#sec-estimating_N" class="quarto-xref">Section 2.3</a>. Finally, the four last parameters are the mean and standard deviation of the logit scale detection probabilities.</p>
-<p>The approximate frequentist confidence intervals derived in <a href="#sec-estimating_N" class="quarto-xref">Section 2.3</a> cover the true known number of deer in the enclosure (117 deer). Even though the credible intervals for the number of deer at the surveyed sites (posterior distributions for <code>N_sum</code>) were not discouragingly wide, the confidence intervals for the total number of deer in the enclosure (based on <code>N_lower</code> and <code>N_upper</code>) were rather wide, particularly for the 60 m above ground survey. This is due to the clustured distribution of deer within the enclosure.</p>
+<p>Here, the indices 1 or 2 in brackets represent survey at 40 m and 60 m respectively. <code>N_sum</code> is the sum of individuals in the surveyed sites (see section <a href="#sec-estimating_d" class="quarto-xref">Section 2.5</a>). <code>N_tot</code> is the estimated total number of deer in the enclusure, <span class="math inline">\(N_\text{Tot}\)</span>, as defined in section <a href="#sec-estimating_N" class="quarto-xref">Section 2.6</a>. The posterior distribution for this random variable is too narrow as it assume that density in the parts of the enclosure that has not been surveyed is exactly the same as in the surveyed part of the enclosure. <code>N_lower</code> and <code>N_upper</code> are the confidence limits derived in <a href="#sec-estimating_N" class="quarto-xref">Section 2.6</a>. Finally, the four last parameters are the mean and standard deviation of the logit scale detection probabilities.</p>
+<p>The approximate frequentist confidence intervals derived in <a href="#sec-estimating_N" class="quarto-xref">Section 2.6</a> cover the true known number of deer in the enclosure (117 deer); judging by the posterior median, the confidence interval from the 40 m survey range from about 60 to 119 individuals, and the confidence interval from the 60 m survey range from about 68 to 278 individuals. Even though the credible intervals for the number of deer at the surveyed sites (posterior distributions for <code>N_sum</code>) were not discouragingly wide, the confidence intervals for the total number of deer in the enclosure (based on <code>N_lower</code> and <code>N_upper</code>) were rather wide, particularly for the 60 m above ground survey. This is due to the clustured distribution of deer within the enclosure, combined with somewhat limited sampling effort. Estimates from multiple surveys could have been combined to gain precision (not included here).</p>
 </section>
 <section id="detection-probabilities" class="level3" data-number="3.2.3">
 <h3 data-number="3.2.3" class="anchored" data-anchor-id="detection-probabilities"><span class="header-section-number">3.2.3</span> Detection probabilities</h3>
@@ -3509,7 +3502,7 @@ Gelman, Andrew, and Donald B. Rubin. 1992. <span>“Inference from Iterative Sim
 Nichols, James D., James E. Hines, John R. Sauer, Frederick W. Fallon, Jane E. Fallon, and Patricia J. Heglund. 2000. <span>“A Double-Observer Approach for Estimating Detection Probability and Abundance from Point Counts.”</span> <em>The Auk</em> 117 (2): 393–408. <a href="https://doi.org/10.1093/auk/117.2.393">https://doi.org/10.1093/auk/117.2.393</a>.
 </div>
 <div id="ref-plummer2006" class="csl-entry" role="listitem">
-Plummer, M, N Best, K Cowles, and K Vines. 2006. <span>“CODA: Convergence Diagnosis and Output Analysis for MCM.”</span> <em>R News</em> 6: 7–11.
+Plummer, M, N Best, K Cowles, and K Vines. 2006. <span>“CODA: Convergence Diagnosis and Output Analysis for MCMC.”</span> <em>R News</em> 6: 7–11.
 </div>
 <div id="ref-rcoreteam2024" class="csl-entry" role="listitem">
 R Core Team. 2024. <em>R: A Language and Environment for Statistical Computing</em>. R Foundation for Statistical Computing, Vienna, Austria.
