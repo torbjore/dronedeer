@@ -27,12 +27,12 @@ Inits = function(){
     #mean_lambda = mean(lambdahat)*runif(length(mean(lambdahat)), 0.9, 1.1),
     #epsilon = matrix(rnorm(nrow(Y)*ncol(Y), 0, sigma) , nrow = nrow(Y), ncol = ncol(Y)),
     #p = exp(log(phat)*runif(2, 0.9, 1.1)),
-    mu_p = runif(2, -1, 1),
-    sigma_p = runif(2, 0.1, 0.2),
+    eta = runif(2, -1, 1),
+    sigma_p = runif(1, 0.1, 0.2),
     N = N,
     New_Y = nimbleData_Fence$data$Y, # Warning message if not included
     New_y = nimbleData_Fence$data$y,
-    lambda_N = N #mean(N, na.rm = TRUE)
+    lambda_N = N 
   )
 }
 
@@ -45,7 +45,7 @@ DoubleObsMultisiteModel <- nimbleModel(
 )
 
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel)
-DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("mu_p", "sigma_p", "N_sum", "Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "N_tot", "var_N_tot", "N_lower", "N_upper"))
+DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, monitors = c("eta", "sigma_p", "N_sum", "Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "N_tot", "var_N_tot", "N_lower", "N_upper"))
 DoubleObsMultisiteMCMC <- buildMCMC(DoubleObsMultisiteConf)
 CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
 

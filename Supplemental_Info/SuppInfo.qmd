@@ -305,20 +305,21 @@ include <- c(
   "N_lower[2]",  
   "N_upper[1]", 
   "N_upper[2]",  
-  "mu_p[1]",     
-  "mu_p[2]",     
-  "sigma_p[1]",  
-  "sigma_p[2]"
+  "eta[1]",     
+  "eta[2]",     
+  "sigma_p"
 )
-summary(posterior_samples[,include])
+(sum <- summary(posterior_samples[,include]))
 ```
-Here, the indices 1 or 2 in brackets represent survey at 40 m and 60 m respectively. `N_sum` is the sum of individuals in the surveyed sites (see section @sec-estimating_d). `N_tot` is the estimated total number of deer in the enclusure, $N_\text{Tot}$, as defined in section @sec-estimating_N. The posterior distribution for this random variable is too narrow as it assume that density in the parts of the enclosure that has not been surveyed is exactly the same as in the surveyed part of the enclosure. `N_lower` and `N_upper` are the confidence limits derived in @sec-estimating_N. Finally, the four last parameters are the mean and standard deviation of the logit scale detection probabilities.
+Here, the indices 1 or 2 in brackets represent survey at 40 m and 60 m respectively. `N_sum` is the sum of individuals in the surveyed sites (see section @sec-estimating_d). `N_tot` is the estimated total number of deer in the enclusure, $N_\text{Tot}$, as defined in section @sec-estimating_N. The posterior distribution for this random variable is too narrow as it assume that density in the parts of the enclosure that has not been surveyed is exactly the same as in the surveyed part of the enclosure. `N_lower` and `N_upper` are the confidence limits derived in @sec-estimating_N. Finally, the three last parameters are the mean and standard deviation of the logit scale detection probabilities.
 
-The approximate frequentist confidence intervals derived in @sec-estimating_N cover the true known number of deer in the enclosure (117 deer); judging by the posterior median, the confidence interval from the 40 m survey range from about 60 to 119 individuals, and the confidence interval from the 60 m survey range from about 68 to 278 individuals. Even though the credible intervals for the number of deer at the surveyed sites (posterior distributions for `N_sum`) were not discouragingly wide, the confidence intervals for the total number of deer in the enclosure (based on `N_lower` and `N_upper`) were rather wide, particularly for the 60 m above ground survey. This is due to the clustured distribution of deer within the enclosure, combined with somewhat limited sampling effort. Estimates from multiple surveys could have been combined to gain precision (not included here).
+Judging by the posterior median, the approximate frequentist confidence intervals derived in @sec-estimating_N marginally fail to cover the true known number of deer in the enclosure (117 deer) in the 40 m above groud survey (confidence interval range from about `r round(sum$quantiles["N_lower[1]","50%"],0)` to `r round(sum$quantiles["N_upper[1]","50%"],0)` individuals). The true value is however included in the much wider confidence interval for the 60 m above ground survey (confidence interval range from about `r round(sum$quantiles["N_lower[2]","50%"],0)` to `r round(sum$quantiles["N_upper[2]","50%"])` individuals). Even though the credible intervals for the number of deer at the surveyed sites (posterior distributions for `N_sum`) were not discouragingly wide, the confidence intervals for the total number of deer in the enclosure (based on `N_lower` and `N_upper`) were rather wide, particularly for the 60 m above ground survey. This is due to the clustured distribution of deer within the enclosure, combined with somewhat limited sampling effort. Estimates from multiple surveys could have been combined to gain precision (not included here).
 
 ### Detection probabilities
 
-<Bruk som før>
+Det viste seg at modellen med kjent mean density ga omtrent samme estimater som modellen over (dvs. ingen gain i precision). Så da er det bare å bruke modellen over for å finne prior - eventuelt forenkle med å bare ha 1 eta - men konservativt å bare bruke den på 60 m - sjekk hva vi har brukt før.
+
+NB! Section 2 er ikke oppdatert mhp. dette.
 
 ## Wild deer
 

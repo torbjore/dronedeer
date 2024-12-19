@@ -3407,39 +3407,37 @@ Sample size per chain = 9000
 1. Empirical mean and standard deviation for each variable,
    plus standard error of the mean:
 
-               Mean      SD  Naive SE Time-series SE
-N_sum[1]    76.4456  3.3474 0.0203717       0.054861
-N_sum[2]    44.0169  2.5141 0.0153006       0.043316
-N_tot[1]    85.3246  3.7362 0.0227378       0.061233
-N_tot[2]   140.2988  8.0135 0.0487689       0.138065
-N_lower[1]  60.9257  2.8901 0.0175886       0.047116
-N_lower[2]  69.7535  4.8394 0.0294517       0.077675
-N_upper[1] 119.5030  4.9754 0.0302795       0.080598
-N_upper[2] 282.4229 16.7425 0.1018917       0.249814
-mu_p[1]      1.1786  0.3504 0.0021323       0.005430
-mu_p[2]      1.2333  0.4341 0.0026419       0.007448
-sigma_p[1]   0.3151  0.1381 0.0008403       0.001848
-sigma_p[2]   0.3496  0.1391 0.0008467       0.001923
+               Mean     SD  Naive SE Time-series SE
+N_sum[1]    74.0618 2.1945 0.0133551       0.060321
+N_sum[2]    42.6231 1.5734 0.0095753       0.040761
+N_tot[1]    82.6640 2.4493 0.0149062       0.067328
+N_tot[2]   135.8563 5.0150 0.0305201       0.129922
+N_lower[1]  59.1747 2.1150 0.0128712       0.059090
+N_lower[2]  67.9312 3.6286 0.0220828       0.088500
+N_upper[1] 115.4841 2.8333 0.0172431       0.072490
+N_upper[2] 271.8347 8.3428 0.0507724       0.161622
+eta[1]       1.2938 0.2934 0.0017857       0.014378
+eta[2]       1.4266 0.3652 0.0022223       0.015163
+sigma_p      0.3982 0.1367 0.0008318       0.009395
 
 2. Quantiles for each variable:
 
                2.5%      25%      50%      75%    97.5%
-N_sum[1]    72.0000  74.0000  76.0000  78.0000  84.0000
-N_sum[2]    41.0000  42.0000  43.0000  45.0000  50.0000
-N_tot[1]    80.3627  82.5950  84.8273  87.0596  93.7565
-N_tot[2]   130.6828 133.8702 137.0576 143.4323 159.3693
-N_lower[1]  56.9106  58.8897  60.4565  62.4690  67.8962
-N_lower[2]  64.4909  66.4608  68.4632  72.1498  81.9949
-N_upper[1] 112.4982 115.8426 118.6741 122.1928 131.3258
-N_upper[2] 264.8124 269.6509 278.2897 290.4371 325.6120
-mu_p[1]      0.4723   0.9541   1.1793   1.4059   1.8733
-mu_p[2]      0.3919   0.9428   1.2330   1.5160   2.1013
-sigma_p[1]   0.1090   0.1943   0.3005   0.4282   0.5726
-sigma_p[2]   0.1138   0.2310   0.3513   0.4687   0.5774</code></pre>
+N_sum[1]    71.0000  72.0000  74.0000  75.0000  79.0000
+N_sum[2]    41.0000  41.0000  42.0000  43.0000  47.0000
+N_tot[1]    79.2466  80.3627  82.5950  83.7111  88.1757
+N_tot[2]   130.6828 130.6828 133.8702 137.0576 149.8071
+N_lower[1]  56.2978  57.4068  58.8897  60.2981  64.3097
+N_lower[2]  64.4909  64.4909  67.1252  69.7929  77.2908
+N_upper[1] 111.5499 113.4792 114.9314 117.0914 122.2807
+N_upper[2] 264.8124 264.8124 269.1500 276.2757 292.9596
+eta[1]       0.7073   1.0966   1.2980   1.4970   1.8506
+eta[2]       0.7337   1.1741   1.4213   1.6730   2.1419
+sigma_p      0.1197   0.3001   0.4236   0.5158   0.5833</code></pre>
 </div>
 </div>
-<p>Here, the indices 1 or 2 in brackets represent survey at 40 m and 60 m respectively. <code>N_sum</code> is the sum of individuals in the surveyed sites (see section <a href="#sec-estimating_d" class="quarto-xref">Section 2.5</a>). <code>N_tot</code> is the estimated total number of deer in the enclusure, <span class="math inline">\(N_\text{Tot}\)</span>, as defined in section <a href="#sec-estimating_N" class="quarto-xref">Section 2.6</a>. The posterior distribution for this random variable is too narrow as it assume that density in the parts of the enclosure that has not been surveyed is exactly the same as in the surveyed part of the enclosure. <code>N_lower</code> and <code>N_upper</code> are the confidence limits derived in <a href="#sec-estimating_N" class="quarto-xref">Section 2.6</a>. Finally, the four last parameters are the mean and standard deviation of the logit scale detection probabilities.</p>
-<p>The approximate frequentist confidence intervals derived in <a href="#sec-estimating_N" class="quarto-xref">Section 2.6</a> cover the true known number of deer in the enclosure (117 deer); judging by the posterior median, the confidence interval from the 40 m survey range from about 60 to 119 individuals, and the confidence interval from the 60 m survey range from about 68 to 278 individuals. Even though the credible intervals for the number of deer at the surveyed sites (posterior distributions for <code>N_sum</code>) were not discouragingly wide, the confidence intervals for the total number of deer in the enclosure (based on <code>N_lower</code> and <code>N_upper</code>) were rather wide, particularly for the 60 m above ground survey. This is due to the clustured distribution of deer within the enclosure, combined with somewhat limited sampling effort. Estimates from multiple surveys could have been combined to gain precision (not included here).</p>
+<p>Here, the indices 1 or 2 in brackets represent survey at 40 m and 60 m respectively. <code>N_sum</code> is the sum of individuals in the surveyed sites (see section <a href="#sec-estimating_d" class="quarto-xref">Section 2.5</a>). <code>N_tot</code> is the estimated total number of deer in the enclusure, <span class="math inline">\(N_\text{Tot}\)</span>, as defined in section <a href="#sec-estimating_N" class="quarto-xref">Section 2.6</a>. The posterior distribution for this random variable is too narrow as it assume that density in the parts of the enclosure that has not been surveyed is exactly the same as in the surveyed part of the enclosure. <code>N_lower</code> and <code>N_upper</code> are the confidence limits derived in <a href="#sec-estimating_N" class="quarto-xref">Section 2.6</a>. Finally, the three last parameters are the mean and standard deviation of the logit scale detection probabilities.</p>
+<p>Judging by the posterior median, the approximate frequentist confidence intervals derived in <a href="#sec-estimating_N" class="quarto-xref">Section 2.6</a> marginally fail to cover the true known number of deer in the enclosure (117 deer) in the 40 m above groud survey (confidence interval range from about 59 to 115 individuals). The true value is however included in the much wider confidence interval for the 60 m above ground survey (confidence interval range from about 67 to 269 individuals). Even though the credible intervals for the number of deer at the surveyed sites (posterior distributions for <code>N_sum</code>) were not discouragingly wide, the confidence intervals for the total number of deer in the enclosure (based on <code>N_lower</code> and <code>N_upper</code>) were rather wide, particularly for the 60 m above ground survey. This is due to the clustured distribution of deer within the enclosure, combined with somewhat limited sampling effort. Estimates from multiple surveys could have been combined to gain precision (not included here).</p>
 </section>
 <section id="detection-probabilities" class="level3" data-number="3.2.3">
 <h3 data-number="3.2.3" class="anchored" data-anchor-id="detection-probabilities"><span class="header-section-number">3.2.3</span> Detection probabilities</h3>
