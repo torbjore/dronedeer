@@ -137,7 +137,7 @@ p_{2,i} &= \frac{1}{1+e^{-\eta_2 + \epsilon_{2,i}}} \\
 \end{align}
 $$
 
-To facilitate model fitting, we used a somewhat informative prior for $\sigma_p$,
+I model with a wide prior for $\sigma_p$ results in poor mixing and unreasonable high upper values; the high prevalence of $Y_i = 0$ in the data could be explained by either a high number of sites having very low expected densities (which is reasonable) or a high number of sites having very low detection probabilities (which is *not* reasonable). Hence, to facilitate model fitting, we used a somewhat informative prior for $\sigma_p$,
 
 $$
 \sigma_p  \sim \text{Uniform}(0.1,0.59)
@@ -317,9 +317,58 @@ Judging by the posterior median, the approximate frequentist confidence interval
 
 ### Detection probabilities
 
-Det viste seg at modellen med kjent mean density ga omtrent samme estimater som modellen over (dvs. ingen gain i precision). Så da er det bare å bruke modellen over for å finne prior - eventuelt forenkle med å bare ha 1 eta - men konservativt å bare bruke den på 60 m - sjekk hva vi har brukt før.
+<!-- Det viste seg at modellen med kjent mean density ga omtrent samme estimater som modellen over (dvs. ingen gain i precision). Så da er det bare å bruke modellen over for å finne prior - eventuelt forenkle med å bare ha 1 eta - men konservativt å bare bruke den på 60 m - sjekk hva vi har brukt før. -->
 
-NB! Section 2 er ikke oppdatert mhp. dette.
+<!-- NB! Section 2 er ikke oppdatert mhp. dette. -->
+
+<!-- NB! Chenge to consistent fudge factor! -->
+
+The surveys of the sampling sites in the wild population were conducted with flights at 60 m above ground. Hence, we used the posterior distribution of `eta[2]` to inform priors for detection probabilities in the models fitted to these data.
+
+The posterior distribution of `eta[2]` is plotted in Fig. XXXXX
+
+```{r}
+#| echo: false
+#| label: fig-eta
+#| fig-cap: "..caption"
+
+library(logitnorm) # for dlogitnorm
+
+fudge <- 1.5
+postmat <- as.matrix(posterior_samples)
+eta2 <- postmat[,"eta[2]"]
+xlow <- -1.5
+xhigh <- 4.5
+eta2x <- seq(xlow, xhigh, length.out = 120)
+postdens <- density(eta2)
+plot(postdens, main = "Posterior density", xlab = "Eta[2]", xlim = c(xlow, xhigh))
+lines(dnorm(eta2x, mean(eta2), sd(eta2)) ~ eta2x, col = "red")
+lines(dnorm(eta2x, mean(eta2), fudge*sd(eta2)) ~ eta2x, col = "blue")
+
+postdensP <- density(plogis(eta2))
+plot(postdensP, main = "Posterior density", xlab = "Detection probability @ median site", xlim = c(0, 1))
+Px <- seq(0, 1, length.out = 120)
+lines(dlogitnorm(Px, mean(eta2), sd(eta2)) ~ Px, col = "red")
+lines(dlogitnorm(Px, mean(eta2), fudge*sd(eta2)) ~ Px, col = "blue")
+
+plot(posterior_samples[,"sigma_p"])
+
+sigma_p <- postmat[,"sigma_p"]
+xlow <- 0.1
+xhigh <-0.59
+x <- seq(xlow, xhigh, length.out = 120)
+postdens <- density(sigma_p, from = xlow, to = xhigh)
+plot(postdens, main = "Posterior density", xlab = "sigma_p", xlim = c(xlow, xhigh))
+
+xlow <- exp(2*1.96*0.1)
+xhigh <- exp(2*1.96*0.59)
+x <- seq(xlow, xhigh, length.out = 120)
+postdens <- density(exp(2*1.96*sigma_p), from = xlow, to = xhigh)
+plot(postdens, main = "Posterior density", xlab = "Odds-ratio", xlim = c(xlow, xhigh))
+
+
+```
+
 
 ## Wild deer
 

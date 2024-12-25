@@ -1,5 +1,4 @@
 # MODEL FOR FENCED DEER
-# Modified from original to estimate N instead of density
 
 library(nimble)
 
@@ -31,7 +30,7 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
   # Priors
   for(s in 1:N_surv){
     sigma[s] ~ dunif(0, 5)
-    p[s] ~ dunif(0, 1)
+    #p[s] ~ dunif(0, 1)
     # for(i in 1:N_sites[s]){
     #   N[s,i] ~ dpois(lambda_N[s,i]) # dflat() # dunif(0, 100)
     #   lambda_N[s,i] ~ dunif(0, 50)
