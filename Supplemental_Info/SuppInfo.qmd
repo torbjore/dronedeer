@@ -113,7 +113,7 @@ In principle, $\mathbf{x}_i$ can include both covariates that vary among sites w
 
 ## Specification of priors and starting values
 
-For the observation model parameters $p_1$ and $p_2$ (detection probabilities) we initially used $\text{Uniform}(0,1)$ priors. However, as posterior predeictive checks indicated that random effects on detection probabilities were required, we decided to use logit-normal priors for detection probabilities (see @sec-posterior_checks). We also used data from trials at a deer enclosure in a natural habitat to inform the priors for these parameters (see @sec-making_use_of).
+For the observation model parameters $p_1$ and $p_2$ (detection probabilities) we initially used $\text{Uniform}(0,1)$ priors. However, as posterior predictive checks indicated that random effects on detection probabilities were required, we decided to use logit-normal priors for detection probabilities (see @sec-posterior_checks). We also used data from trials at a deer enclosure in a natural habitat to inform the priors for these parameters (see @sec-making_use_of).
 
 The covariate (distance from field) was normalized by subtracting the mean and dividing by the standard deviation prior to model fitting, and we used a $\text{N}(0,\sigma=2)$ prior for the covariate effect, $\beta$.
 
@@ -123,7 +123,7 @@ To find reasonable starting values for the MCMC-chains, we first computed estima
 
 For the log-normal and the gamma models, the prior distribution for $\sigma$ was specified as $\text{Uniform}(0.5,3)$. The lower bound of $0.5$ was set to prevent poor mixing when the mcmc-chains occasionally entered the lower tail of the posterior distribution. The chains never got close to the upper bound of $3$.
 
-In @sec-results <MORE DETAILED REF>, we present computed overlap between prior and posterior distributions for all parameters.
+In @sec-results <do we? MORE DETAILED REF>, we present computed overlap between prior and posterior distributions for all parameters.
 
 ## Posterior predictive checks and model modifications {#sec-posterior_checks}
 
@@ -131,14 +131,14 @@ We performed posterior predictive checks [@gelman2004; @conn2018] with respect t
 
 $$
 \begin{align}
-p_{1,i} &= \frac{1}{1+e^{-\eta_1 + \epsilon_{1,i}}} \\
-p_{2,i} &= \frac{1}{1+e^{-\eta_2 + \epsilon_{2,i}}} \\
+p_{1,i} &= \frac{1}{1+e^{-(\eta_1 + \epsilon_{1,i})}} \\
+p_{2,i} &= \frac{1}{1+e^{-(\eta_2 + \epsilon_{2,i})}} \\
 \epsilon_{1,i} &\sim \text{N}(0,\sigma_p)\\
 \epsilon_{2,i} &\sim \text{N}(0,\sigma_p)\\
 \end{align}
 $$
 
-I model with a wide prior for $\sigma_p$ results in poor mixing and unreasonable high upper values; the high prevalence of $Y_i = 0$ in the data could be explained by either a high number of sites having very low expected densities (which is reasonable) or a high number of sites having very low detection probabilities (which is *not* reasonable). Hence, to facilitate model fitting, we used a somewhat informative prior for $\sigma_p$,
+A model with a wide prior for $\sigma_p$ results in poor mixing and unreasonable high upper values; the high prevalence of $Y_i = 0$ in the data could be explained by either a high number of sites having very low expected densities (which is reasonable) or a high number of sites having very low detection probabilities (which is *not* reasonable). Hence, to facilitate model fitting, we used a somewhat informative prior for $\sigma_p$,
 
 $$
 \sigma_p  \sim \text{Uniform}(0.1,0.59)
@@ -149,6 +149,8 @@ The lower bound of $0.1$ was set to avoid poor mixing when the chains entered fl
 Bayesian p-values did not indicate any lack of fit of this final model with respect to $Y_i$’s ($p = 0.50$) or $\mathbf{y}_i$’s ($p = 0.20$).
 
 ## Making use of known density in deer enclosure to inform priors on detectability {#sec-making_use_of}
+
+THIS SUB-SECTION IS NOT UPDATED
 
 The deer density in the enclosure at the deer farm was known, and this may be used to inform the priors for detection probability. The enclosure surrounded a natural habitat with a similar forest type as at the sampling areas. It is therefore reasonable to assume that detection probabilities inside and outside the enclosure are similar. It is, however, not reasonable to assume that the variation in deer densities among sites (focal images) are similar because the enclosure had much higher density, much more females than males, many young individuals, and there were feeding stations where the deer tended to aggregate. Hence, to estimate posterior distributions for detection probabilities, we kept the same model structure as above with a log-normal expected density, but made $\mu$ a function of known mean density ($d$) and the unknown variance in density ($\sigma^2$). Using a log-normal distribution, mean density is $d = e^{\mu+\sigma_\varepsilon^2/2}$, and hence we get $\mu = \log(d)-\sigma_\varepsilon^2 / 2$ (we did not model $\mu$ as a function of covariates since the habitat within the enclosure was very homogenous). Hence, we used the following hierarchical model:
 
@@ -261,7 +263,7 @@ round(nimbleData_Fence$constants$area, 3)
 
 The reason why some sites cover a much smaller area than other sites is that large parts of these sites (focal images) were outside the enclosure. The survey from 40 m above ground contained data from 20 non-overlapping sites, covering a total of `r tot_area[1]` ha (`r prcnt_area[1]`% of the 5 ha enclosure). The survey from 60 m above ground contained data from 10 non-overlapping sites, covering a total of `r tot_area[2]` ha (`r prcnt_area[2]`% of the enclosure). The reason for the lower over all coverage from the 60 m survey is that larger proportions of the focal images from this survey covered ground outside of the enclosure.
 
-**Counts at 40 m,** $\mathbf{y}_i$ for each site (column) $i$ (first number of deer detected by only observer 1, then number of deer detected by only observer 2, and finally number of deer detected by both observers):
+**Counts at 40 m,** $\mathbf{y}_i$ for each site (column) $i$ (rows: first number of deer detected by only observer 1, then number of deer detected by only observer 2, and finally number of deer detected by both observers):
 
 ```{r}
 #| echo: false
@@ -284,7 +286,7 @@ t(nimbleData_Fence$data$y[2,1:10,])
 load("../data/posterior_samples/posterior_samples_enclosure_N.RData")
 ```
 
-The NIMBLE-model to estimate total number of deer in the enclosure (see @sec-estimating_N) is defined in `R/nimble_models/enclosure_model_N.q` and the model fitted with the script in `R/run_enclosure_model_N.R` (see the script for mcmc trace plots, convergence diagnostics and posterior predictive checks).
+The NIMBLE-model to estimate total number of deer in the enclosure (see @sec-estimating_N) is defined in `R/nimble_models/enclosure_model_N.q` and the model is fitted with the script in `R/run_enclosure_model_N.R` (see the script for mcmc trace plots, convergence diagnostics and posterior predictive checks).
 
 **Summary of posterior distributions:**
 
@@ -307,7 +309,7 @@ include <- c(
 (sum <- summary(posterior_samples[,include]))
 ```
 
-Here, the indices 1 or 2 in brackets represent survey at 40 m and 60 m respectively. `N_sum` is the sum of individuals in the surveyed sites (see section @sec-estimating_d). `N_tot` is the estimated total number of deer in the enclusure, $N_\text{Tot}$, as defined in section @sec-estimating_N. The posterior distribution for this random variable is too narrow as it assume that density in the parts of the enclosure that has not been surveyed is exactly the same as in the surveyed part of the enclosure. `N_lower` and `N_upper` are the confidence limits derived in @sec-estimating_N. Finally, the three last parameters are the mean and standard deviation of the logit scale detection probabilities.
+Here, the indices 1 or 2 in brackets represent survey at 40 m and 60 m respectively. `N_sum` is the sum of individuals in the surveyed sites (see section @sec-estimating_d). `N_tot` is the estimated total number of deer in the enclusure, $N_\text{Tot}$, as defined in section @sec-estimating_N. The posterior distribution for this random variable is too narrow as it assumes that density in the parts of the enclosure that has not been surveyed is exactly the same as in the surveyed part of the enclosure. `N_lower` and `N_upper` are the confidence limits derived in @sec-estimating_N. Finally, the three last parameters are the mean and standard deviation of the logit scale detection probabilities.
 
 Judging by the posterior median, the approximate frequentist confidence intervals derived in @sec-estimating_N marginally fail to cover the true known number of deer in the enclosure (117 deer) in the 40 m above groud survey (confidence interval range from about `r round(sum$quantiles["N_lower[1]","50%"],0)` to `r round(sum$quantiles["N_upper[1]","50%"],0)` individuals). The true value is however included in the much wider confidence interval for the 60 m above ground survey (confidence interval range from about `r round(sum$quantiles["N_lower[2]","50%"],0)` to `r round(sum$quantiles["N_upper[2]","50%"])` individuals). Even though the credible intervals for the number of deer at the surveyed sites (posterior distributions for `N_sum`) were not discouragingly wide, the confidence intervals for the total number of deer in the enclosure (based on `N_lower` and `N_upper`) were rather wide, particularly for the 60 m above ground survey. This is due to the clustured distribution of deer within the enclosure, combined with somewhat limited sampling effort. Estimates from multiple surveys could have been combined to gain precision (not included here).
 
@@ -321,14 +323,12 @@ Judging by the posterior median, the approximate frequentist confidence interval
 
 The surveys of the sampling sites in the wild population were conducted with flights at 60 m above ground. Hence, we used the posterior distribution of `eta[2]` to inform priors for detection probabilities in the models fitted to these data.
 
-The posterior distribution of `eta[2]` is plotted in Fig. XXXXX
+The posterior distribution of `eta[2]` is plotted in @fig-eta (black and red) and the corresponding posterior distribution for detection probability at the median site is plotted in @fig-p. As a prior for `eta[2]` in the analysis of the data from the sampling sites, we used a normal distribution with the same mean and 1.5 times the standard deviation of the posterior samples from the model fitted to the enclosure data (depicted in blue).
 
 ```{r}
 #| echo: false
 #| label: fig-eta
-#| fig-cap: "..caption"
-
-library(logitnorm) # for dlogitnorm
+#| fig-cap: "The distribution of the posterior samples of `eta[2]` (black), the normal distribution with the same mean and standard deviation as the posterior samples (red), and the normal distribution with the same mean and 1.5 times the standard deviation of the posterior samples (blue). The latter distribution (in blue) was used as a prior for `eta[2]` in the models fitted to the survey data from the wild populations."
 
 fudge <- 1.5
 postmat <- as.matrix(posterior_samples)
@@ -340,12 +340,24 @@ postdens <- density(eta2)
 plot(postdens, main = "Posterior density", xlab = "Eta[2]", xlim = c(xlow, xhigh))
 lines(dnorm(eta2x, mean(eta2), sd(eta2)) ~ eta2x, col = "red")
 lines(dnorm(eta2x, mean(eta2), fudge*sd(eta2)) ~ eta2x, col = "blue")
+```
+
+```{r}
+#| echo: false
+#| label: fig-p
+#| fig-cap: "The distributions of `eta[2]` transformed to the probability scale (i.e., detection probabiity at the median site). Colour codes are the same as in @fig-eta."
+
+library(logitnorm) # for dlogitnorm
 
 postdensP <- density(plogis(eta2))
-plot(postdensP, main = "Posterior density", xlab = "Detection probability @ median site", xlim = c(0, 1))
+plot(postdensP, main = "Posterior density", xlab = "Detection probability at median site", xlim = c(0, 1))
 Px <- seq(0, 1, length.out = 120)
 lines(dlogitnorm(Px, mean(eta2), sd(eta2)) ~ Px, col = "red")
 lines(dlogitnorm(Px, mean(eta2), fudge*sd(eta2)) ~ Px, col = "blue")
+```
+
+```{r}
+#| echo: false
 
 plot(posterior_samples[,"sigma_p"])
 
@@ -361,9 +373,9 @@ xhigh <- exp(2*1.96*0.59)
 x <- seq(xlow, xhigh, length.out = 120)
 postdens <- density(exp(2*1.96*sigma_p), from = xlow, to = xhigh)
 plot(postdens, main = "Posterior density", xlab = "Odds-ratio", xlim = c(xlow, xhigh))
-
-
 ```
+
+
 
 ## Wild deer
 
