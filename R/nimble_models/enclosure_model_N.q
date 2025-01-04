@@ -11,8 +11,8 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
     for(i in 1:N_sites[s]){
       logit_p1[s,i] ~ dnorm(eta[s], sd = sigma_p)
       logit_p2[s,i] ~ dnorm(eta[s], sd = sigma_p)
-      p1[s,i] <- exp(logit_p1[s,i])/(1+exp(logit_p1[s,i]))
-      p2[s,i] <- exp(logit_p2[s,i])/(1+exp(logit_p2[s,i]))
+      p1[s,i] <- 1/(1+exp(-logit_p1[s,i]))
+      p2[s,i] <- 1/(1+exp(-logit_p2[s,i]))
       Psum[s,i] <- 1-(1-p1[s,i])*(1-p2[s,i])
       pi[s,i,1] <- p1[s,i]*(1-p2[s,i])/Psum[s,i]
       pi[s,i,2] <- (1-p1[s,i])*p2[s,i]/Psum[s,i]
@@ -32,7 +32,7 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
   }
   #sigma_p ~ dunif(0.1, 0.59)
   #sigma_p ~ dunif(0, 0.28)
-  sigma_p ~ T(dgamma(1, 0.05), 0, 0.56)
+  sigma_p ~ T(dgamma(1, 0.05), 0, 0.59)
 
   
   
