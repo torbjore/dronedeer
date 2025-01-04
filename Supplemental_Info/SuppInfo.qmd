@@ -30,7 +30,9 @@ This document presents details about the model results, including convergence di
 
 Deer densities were estimated using hierarchical state space models fitted by the use of Bayesian Markov Chain Monte Carlo (MCMC) sampling in NIMBLE ver. 1.1.0 [@valpine_programming_2017; @devalpine2024]. We combined a double-observer observation model with an overdispersed Poisson process model describing the variation in deer densities among sampling sites (focal images). We will here first derive the observation model and the process model, using a hierarchical formulation, and then provide details about the analysis. The NIMBLE model code, together with the data, are provided on GitHub (\<URL will be inserted after peer-review; a zip-file is provided for peer-review\>).
 
-To estimate abundance and population density, one must account for the fact that not all individuals that are present will be observed (i.e., imperfect detection). We used a double observer protocol to estimate detection probabilities [@nichols2000; @williams2002]. At each site (focal image) $i$ we have records of how many individuals that were seen by only observer 1 ($y_{10,i}$), how many individuals were seen by only observer 2 ($y_{01,i}$), and how many individuals were seen by both observers ($y_{11,i}$). We denote the observed data from each site by a vector $\mathbf{y}_i = \left[y_{01,i},y_{10,i},y_{11,i} \right]$, and the number of individuals seen by at least one observer is the sum of the elements in this vector, $\mathbf{Y}_i = y_{01,i} + y_{10,i} + y_{11,i}$. The observation model defined in the first section below describes the probability (likelihood) of getting these observed data, conditional on the number of individuals ($N_i$) present at each site; i.e. $L(\mathbf{y}_i |N_i)$. The number of individuals at each site, $N_i$, is unknown, and the stochastic model for this is described in the next section.
+To estimate abundance and population density, one must account for the fact that not all individuals that are present will be observed (i.e., imperfect detection). Detection failure can be due to either individuals being hidden (e.g, under trees) and hence not available for registration in the images, or because they were missed by the observers while inspecting the images even though they were present (available for detection) in the images [@brack2018]. By comparing registrations from multiple overlapping images, we found that it was very unlikely that an individual would be completely hidden in all overlapping images (see main text), and hence we did not account for imperfect availability. However, it was not uncommon that an individual registered by one observer was missed by the other observer. Hence, we used a double observer protocol to estimate detection probabilities [@nichols2000; @williams2002]:
+
+At each site (focal image) $i$ we have records of how many individuals that were seen by only observer 1 ($y_{10,i}$), how many individuals were seen by only observer 2 ($y_{01,i}$), and how many individuals were seen by both observers ($y_{11,i}$). We denote the observed data from each site by a vector $\mathbf{y}_i = \left[y_{01,i},y_{10,i},y_{11,i} \right]$, and the number of individuals seen by at least one observer is the sum of the elements in this vector, $\mathbf{Y}_i = y_{01,i} + y_{10,i} + y_{11,i}$. The observation model defined in the first section below describes the probability (likelihood) of getting these observed data, conditional on the number of individuals ($N_i$) present at each site; i.e. $L(\mathbf{y}_i |N_i)$. The number of individuals at each site, $N_i$, is unknown, and the stochastic model for this is described in the next section.
 
 ## Observation model
 
@@ -107,7 +109,6 @@ $$
 
 In principle, $\mathbf{x}_i$ can include both covariates that vary among sites within sampling areas and covariates that vary only among, and not within, sampling areas. However, it is important to realize that if $\mathbf{x}_i$ includes sampling area covariates, random effects of sampling areas would need to be included in order to avoid pseudoreplication (sites within sampling areas is not a random sample of sites with the same sampling area covariate value).
 
-
 # Modeling focus and strategy
 
 ## Specification of priors and starting values
@@ -118,7 +119,7 @@ The covariate (distance from field) was normalized by subtracting the mean and d
 
 One approach to the modelling could have been to specify somewhat informative priors for the intercepts $\mu_{0,j(i)}$ based on prior knowledge of reasonable deer densities in the area. However, due to the methodological nature of our study, we decided to use essentially uninformative priors for $\mu_{0,j(i)}$, $\text{N}(0,\sigma=10)$.
 
-To find reasonable starting values for the MCMC-chains, we first computed estimates of $p_1$ and $p_2$ as the proportion of those individuals that were seen by observer 2 that were also seen by observer 1 and vice versa. Simplified estimates of population densities were then computed from the deer counts, the estimated areas of the sites, and the initial estimates of $p_1$ and $p_2$ (see code for details [link to GitHub repository will be inserted after peer review]).
+To find reasonable starting values for the MCMC-chains, we first computed estimates of $p_1$ and $p_2$ as the proportion of those individuals that were seen by observer 2 that were also seen by observer 1 and vice versa. Simplified estimates of population densities were then computed from the deer counts, the estimated areas of the sites, and the initial estimates of $p_1$ and $p_2$ (see code for details \[link to GitHub repository will be inserted after peer review\]).
 
 For the log-normal and the gamma models, the prior distribution for $\sigma$ was specified as $\text{Uniform}(0.5,3)$. The lower bound of $0.5$ was set to prevent poor mixing when the mcmc-chains occasionally entered the lower tail of the posterior distribution. The chains never got close to the upper bound of $3$.
 
@@ -171,16 +172,14 @@ $$
 \end{align}
 $$
 
-As priors for the mean logit-scale detection probability for the two observers, $\eta_1 = \eta_2 = \eta$,  when fitting the full model to the data from the sampling areas, we used
+As priors for the mean logit-scale detection probability for the two observers, $\eta_1 = \eta_2 = \eta$, when fitting the full model to the data from the sampling areas, we used
 
 $$
 \begin{align}
 \eta_1 &\sim \text{N}\left(\text{mean}(\boldsymbol{\eta}), 1.2\text{sd}(\boldsymbol{\eta})\right) \\
 \eta_2 &\sim \text{N}\left(\text{mean}(\boldsymbol{\eta}), 1.2\text{sd}(\boldsymbol{\eta})\right) \\
 \end{align}
-$$
-where $\text{mean}(\boldsymbol{\eta})$ and $\text{sd}(\boldsymbol{\eta})$ refers to the mean and standard deviation of the posterior distribution for $\eta$ in the eclosure model. The posterior standard deviations were conservatively increased by 20% to account for the fact that detection probabilities inside and outside of the enclosure could be different.
-
+$$ where $\text{mean}(\boldsymbol{\eta})$ and $\text{sd}(\boldsymbol{\eta})$ refers to the mean and standard deviation of the posterior distribution for $\eta$ in the eclosure model. The posterior standard deviations were conservatively increased by 20% to account for the fact that detection probabilities inside and outside of the enclosure could be different.
 
 ## Implementation and model selection
 
@@ -189,8 +188,6 @@ The models were fitted by the use of Bayesian MCMC sampling in NIMBLE (v1.1.0; [
 For each of the three models for the random Poisson expectation (log-normal, exponential and gamma), we fitted both linear and quadratic models for $\mu_i$ as a function of distance from the field, as well as a model with no covariate effects; hence obtaining 9 models. We selected the best model according to the Watanabe-Akaike (Widely Applicable) Information Criterion, WAIC [@watanabe2010] for presentation of estimates and prediction (the criterion seeks to minimize the prediction error variance as an optimal trade-off between accuracy and precision of the fitted model predictions).
 
 We initially ran MCMC-sampling on each of the nine models with 3 chains with random and independent starting values for 180,000 iterations after a burn-in of 20,000 iterations and stored every 6^th^ posterior sample. Repeating this three times showed a consistent ranking of the models by the WAIC criterion. The models with the lowest (best) WAIC values where then run for 1,080,000 samples after a burning of 20,000 iterations in 3 chains and stored every 18^th^ sample, obtaining in total 3 times 60,000 posterior samples used for inference. The upper 95% confidence limit for the [@gelman1992] ‘potential scale reduction factor’ (psrf) was \<1.025 for all parameters in the final models, and the multivariate psrf was less than 1.005.
-
-
 
 ## Estimating densities at the specific sites included in each survey {#sec-estimating_d}
 
@@ -210,8 +207,7 @@ The total number of deer in the area is $N_{\text{Tot}} = K\bar{N}$ with samplin
 
 $$
 \text{Var} \left( N_{\text{Tot}} \right) = \left( \frac{n}{q} - n \right) \frac{s^2}{q}
-$$
-(see also @williams2002a chapt. 12.4.1).
+$$ (see also @williams2002a chapt. 12.4.1).
 
 In our situation, we do not have exact counts of number of deer per site (due to imperfect detection), but instead we have posterior samples of $N_i$ at each site $i$. To assess the uncertainty in $N_{\text{Tot}}$, we computed posterior samples for lower and upper 95% confidence limits assuming a normal distribution (by the central limit theorem) at the log-scale, using the delta-method approximation,
 
@@ -227,9 +223,6 @@ N_i &\sim \text{Poisson}(\lambda_i) \\
 \lambda_i &\sim \text{Uniform}(0, 50) \\
 \end{align}
 $$
-
-
-
 
 # Detailed analysis and results {#sec-results}
 
@@ -258,6 +251,7 @@ load("../data/nimbleData_Fence.rda")
 tot_area <- round(apply(nimbleData_Fence$constants$area, 1, sum, na.rm= TRUE), 2)
 prcnt_area <- round(100*apply(nimbleData_Fence$constants$area, 1, sum, na.rm= TRUE)/5, 0)
 ```
+
 **Area of the sampling sites in hectare (ha); rows represent survey at 40 m and 60 m above ground respectively:**
 
 ```{r}
@@ -265,9 +259,9 @@ prcnt_area <- round(100*apply(nimbleData_Fence$constants$area, 1, sum, na.rm= TR
 round(nimbleData_Fence$constants$area, 3)
 ```
 
-The reason why some sites cover a much smaller area than other sites is that large parts of these sites (focal images) were outside the enclosure. The survey from 40 m above ground contained data from 20 non-overlapping sites, covering a total of `r tot_area[1]` ha (`r prcnt_area[1]`\% of the 5 ha enclosure).  The survey from 60 m above ground contained data from 10 non-overlapping sites, covering a total of `r tot_area[2]` ha (`r prcnt_area[2]`\% of the enclosure). The reason for the lower over all coverage from the 60 m survey is that larger proportions of the focal images from this survey covered ground outside of the enclosure.
+The reason why some sites cover a much smaller area than other sites is that large parts of these sites (focal images) were outside the enclosure. The survey from 40 m above ground contained data from 20 non-overlapping sites, covering a total of `r tot_area[1]` ha (`r prcnt_area[1]`% of the 5 ha enclosure). The survey from 60 m above ground contained data from 10 non-overlapping sites, covering a total of `r tot_area[2]` ha (`r prcnt_area[2]`% of the enclosure). The reason for the lower over all coverage from the 60 m survey is that larger proportions of the focal images from this survey covered ground outside of the enclosure.
 
-**Counts at 40 m, $\mathbf{y}_i$ for each site (column) $i$ (first number of deer detected by only observer 1, then number of deer detected by only observer 2, and finally number of deer detected by both observers):**
+**Counts at 40 m,** $\mathbf{y}_i$ for each site (column) $i$ (first number of deer detected by only observer 1, then number of deer detected by only observer 2, and finally number of deer detected by both observers):
 
 ```{r}
 #| echo: false
@@ -282,6 +276,7 @@ t(nimbleData_Fence$data$y[2,1:10,])
 ```
 
 ### Deer numbers
+
 ```{r}
 #| echo: false
 
@@ -311,6 +306,7 @@ include <- c(
 )
 (sum <- summary(posterior_samples[,include]))
 ```
+
 Here, the indices 1 or 2 in brackets represent survey at 40 m and 60 m respectively. `N_sum` is the sum of individuals in the surveyed sites (see section @sec-estimating_d). `N_tot` is the estimated total number of deer in the enclusure, $N_\text{Tot}$, as defined in section @sec-estimating_N. The posterior distribution for this random variable is too narrow as it assume that density in the parts of the enclosure that has not been surveyed is exactly the same as in the surveyed part of the enclosure. `N_lower` and `N_upper` are the confidence limits derived in @sec-estimating_N. Finally, the three last parameters are the mean and standard deviation of the logit scale detection probabilities.
 
 Judging by the posterior median, the approximate frequentist confidence intervals derived in @sec-estimating_N marginally fail to cover the true known number of deer in the enclosure (117 deer) in the 40 m above groud survey (confidence interval range from about `r round(sum$quantiles["N_lower[1]","50%"],0)` to `r round(sum$quantiles["N_upper[1]","50%"],0)` individuals). The true value is however included in the much wider confidence interval for the 60 m above ground survey (confidence interval range from about `r round(sum$quantiles["N_lower[2]","50%"],0)` to `r round(sum$quantiles["N_upper[2]","50%"])` individuals). Even though the credible intervals for the number of deer at the surveyed sites (posterior distributions for `N_sum`) were not discouragingly wide, the confidence intervals for the total number of deer in the enclosure (based on `N_lower` and `N_upper`) were rather wide, particularly for the 60 m above ground survey. This is due to the clustured distribution of deer within the enclosure, combined with somewhat limited sampling effort. Estimates from multiple surveys could have been combined to gain precision (not included here).
@@ -368,7 +364,6 @@ plot(postdens, main = "Posterior density", xlab = "Odds-ratio", xlim = c(xlow, x
 
 
 ```
-
 
 ## Wild deer
 
