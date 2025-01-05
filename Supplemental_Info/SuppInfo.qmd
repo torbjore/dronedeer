@@ -121,7 +121,11 @@ One approach to the modelling could have been to specify somewhat informative pr
 
 To find reasonable starting values for the MCMC-chains, we first computed estimates of $p_1$ and $p_2$ as the proportion of those individuals that were seen by observer 2 that were also seen by observer 1 and vice versa. Simplified estimates of population densities were then computed from the deer counts, the estimated areas of the sites, and the initial estimates of $p_1$ and $p_2$ (see code for details \[link to GitHub repository will be inserted after peer review\]).
 
-(HMM... JEG ER IKKE HELT SIKKER PÅ FORKLARINGEN HER - KANSKJE BRUK EN GAMMA-PRIOR ISTEDENFOR?) For the log-normal and the gamma models, the prior distribution for $\sigma$ was specified as $\text{Uniform}(0.5,3)$. The lower bound of $0.5$ was set to prevent poor mixing when the mcmc-chains occasionally entered the lower tail of the posterior distribution. The chains never got close to the upper bound of $3$.
+For the log-normal and the gamma models, the prior distribution for $\sigma$ was specified as
+
+$$
+\sigma \sim \text{Gamma}(\text{shape} = 0.01, \text{ rate} =  0.01)
+$$
 
 In @sec-results <do we? MORE DETAILED REF>, we present computed overlap between prior and posterior distributions for all parameters.
 
@@ -369,7 +373,7 @@ plot(posterior_samples[,"sigma_p"])
 ```{r}
 #| echo: false
 #| label: fig-sigma_odds
-#| fig-cap: "posterior distribution for the odds-ratio for detection at the 97.5 percentile site versus the 2.5 percentile site"
+#| fig-cap: "Posterior distribution for the odds-ratio for detection at the 97.5 percentile site versus the 2.5 percentile site"
 
 sigma_p <- postmat[,"sigma_p"]
 xlow <- exp(2*1.96*0)
