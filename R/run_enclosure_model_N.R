@@ -79,3 +79,13 @@ abline(0, 1, col="red")
 mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
 
 save(posterior_samples, file = "data/posterior_samples/posterior_samples_enclosure_N.RData")
+
+# Saving prior parameters for detection probabilities
+#load("data/posterior_samples/posterior_samples_enclosure_N.RData")
+eta <- as.matrix(posterior_samples)[,"eta[2]"]
+prior_parameters_for_p <- list(
+  mu_logit_p = mean(eta),
+  sigma_logit_p = sd(eta)
+)
+
+save(prior_parameters_for_p, file = "data/prior_parameters_for_p.rda")
