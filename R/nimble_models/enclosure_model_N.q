@@ -1,6 +1,4 @@
 # MODEL FOR FENCED DEER
-# For estimating N
-# TRYING DIFFERENT PRIOR FOR SIGMA
 
 library(nimble)
 
@@ -30,11 +28,7 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
       lambda_N[s,i] ~ dunif(0, 50)
     }
   }
-  #sigma_p ~ dunif(0.1, 0.59)
-  #sigma_p ~ dunif(0, 0.28)
   sigma_p ~ T(dgamma(1, 0.05), 0, 0.59)
-
-  
   
   # Derived parameters
   for(s in 1:N_surv){
@@ -47,15 +41,6 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
     N_upper[s] <- exp(log(N_tot[s]) + 2*(N_tot[s]^(-1))*sqrt(var_N_tot[s]))
   }
  
-  
-  # Based on adding a normal variable
-  # for(s in 1:N_surv){
-  #   sd_C[s] <- sd(N[s, 1:N_sites[s]]) * sqrt((N_sites[s]/(sum_area[s]/5) - N_sites[s])/(sum_area[s]/5) - N_sites[s])
-  #   C[s] ~ dnorm(0, sd = sd_C[s])
-  #   N_tot_corrected[s] <- N_tot[s] + C[s]
-  # }
-  # N_tot_corrected_mean <- mean(N_tot_corrected[1:N_surv])
-  
   # For posterior predictive checks
   for(s in 1:N_surv){
     for(i in 1:N_sites[s]){
@@ -84,13 +69,4 @@ DoubleObsMultisiteCode_fence <- nimbleCode({
   Disc_New_Y <- sum(Disc_New_Y_s[1:N_surv])
   Disc_y <- sum(Disc_y_s[1:N_surv])
   Disc_New_y <- sum(Disc_New_y_s[1:N_surv])
-  
-  
-  # for(s in 1:N_surv){
-  #   median_lambda[s] <- exp(mu[s])
-  #   # For check (should be the same): mean_lambda_site[s] <- exp(mu[s] + 0.5*sigma[s]^2)
-  # }
-  
-  # logit_p1 <- log(p1/(1-p1))
-  # logit_p2 <- log(p2/(1-p2))
 })

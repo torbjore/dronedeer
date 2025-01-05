@@ -53,10 +53,10 @@ CDoubleObsMultisiteMCMC <- compileNimble(DoubleObsMultisiteMCMC)
 
 posterior_samples <- runMCMC(
   CDoubleObsMultisiteMCMC,
-  niter = 20000,
-  nburnin = 2000,
+  niter = 85000,
+  nburnin = 5000,
   nchain=3,
-  thin = 2,
+  thin = 4,
   inits = Inits, #inits.list,
   samplesAsCodaMCMC = TRUE)
 
