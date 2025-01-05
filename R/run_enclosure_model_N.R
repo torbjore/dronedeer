@@ -84,8 +84,8 @@ save(posterior_samples, file = "data/posterior_samples/posterior_samples_enclosu
 #load("data/posterior_samples/posterior_samples_enclosure_N.RData")
 eta <- as.matrix(posterior_samples)[,"eta[2]"]
 prior_parameters_for_p <- list(
-  mu_logit_p = mean(eta),
-  sigma_logit_p = sd(eta)
+  mean_eta = mean(eta),
+  sd_eta = sd(eta)
 )
 
 save(prior_parameters_for_p, file = "data/prior_parameters_for_p.rda")
