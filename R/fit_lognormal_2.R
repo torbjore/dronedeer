@@ -56,8 +56,7 @@ Inits <- function(){
 # SETTING UP THE MCMC
 DoubleObsMultisiteModel <- nimbleModel(
   nimbleCode_DOMM_lognormal_2,
-  constants = list(#lamblow = 0.1*lambdahat,  # 0.1 to 10 times point estimate
-                   #lambupp = 10*lambdahat,
+  constants = list(
                    N_surv = length(nimbleData$const$N_sites),
                    N_sites = nimbleData$const$N_sites,
                    prior_mean_eta = prior_parameters_for_p$mean_eta,
