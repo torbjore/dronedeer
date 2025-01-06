@@ -1,11 +1,10 @@
-# Model with gamma distributed lambda and second order covariate effect
+# Double observer multi-site model with lognormal lambda and first order covariate effect
 
 # DEFINING THE MODEL
-nimbleCode_DOMM_gamma_2 <- nimbleCode({ # Double observer multi-site model (DOMM)
-
+nimbleCode_DOMM_lognormal_2 <- nimbleCode({
+  # Model
   for(s in 1:N_surv){
     for(i in 1:N_sites[s]){
-      
       # Random p's
       logit_p1[s,i] ~ dnorm(eta1, sd = sigma_p)
       logit_p2[s,i] ~ dnorm(eta2, sd = sigma_p)
@@ -23,13 +22,12 @@ nimbleCode_DOMM_gamma_2 <- nimbleCode({ # Double observer multi-site model (DOMM
       
       # Process model:
       N[s,i] ~ dpois(lambda[s,i]*area[s,i])
-      lambda[s,i] ~ dgamma(shape, rate[s,i])
-      rate[s,i] <- shape/exp(mu[s,i] + 0.5*sigma^2)
-      mu[s,i] <- mu0[sam[s]] + x[s,i]*beta[1] + x[s,i]^2*beta[2]     
-      
+      lambda[s,i] <- exp(mu[s,i] + epsilon[s,i])
+      mu[s,i] <- mu0[sam[s]] + x[s,i]*beta[1] + x[s,i]^2*beta[2]
+      epsilon[s,i] ~ dnorm(0, sd = sigma)
     }
   }
-
+  
   # Priors
   for(k in 1:N_sam){
     mu0[k] ~ dnorm(0, sd = 10)
@@ -49,7 +47,7 @@ nimbleCode_DOMM_gamma_2 <- nimbleCode({ # Double observer multi-site model (DOMM
   eta1 ~ dnorm(prior_mean_eta, sd = prior_sd_eta) 
   eta2 ~ dnorm(prior_mean_eta, sd = prior_sd_eta)
   sigma_p ~ T(dgamma(1, 0.05), 0, 0.59)
-
+  
   # Derived:  mean_ds
   for(s in 1:N_surv){
     N_tot[s] <- sum(N[s, 1:N_sites[s]])
@@ -57,6 +55,12 @@ nimbleCode_DOMM_gamma_2 <- nimbleCode({ # Double observer multi-site model (DOMM
   }
   for(k in 1:N_sam){
     mean_ds[k] <- sum(N_tot[S[1,k]:S[2,k]])/sum(sum_area[S[1,k]:S[2,k]])
+  }
+  
+  # Derived: Mean and median densities at mean x
+  for(k in 1:N_sam){
+    median_lambda[k] <- exp(mu0[k])
+    mean_lambda[k] <- exp(mu0[k] + 0.5*sigma^2)
   }
   
   # For posterior predictive checks

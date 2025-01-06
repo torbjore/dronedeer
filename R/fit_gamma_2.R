@@ -44,6 +44,7 @@ Inits <- function(){
     lambda = N + 0.01,
     beta = runif(2, -0.5, 0.5),
     sigma = runif(1, 0.5, 1),
+    sigma_p = sigma_p,
     New_Y = N, # Warning message if not included
     New_y = nimbleData$data$y
   )

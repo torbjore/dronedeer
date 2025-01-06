@@ -1,7 +1,7 @@
-# Model with gamma distributed lambda and second order covariate effect
+# Model with gamma distributed lambda and first order covariate effect
 
 # DEFINING THE MODEL
-nimbleCode_DOMM_gamma_2 <- nimbleCode({ # Double observer multi-site model (DOMM)
+nimbleCode_DOMM_gamma_1 <- nimbleCode({ # Double observer multi-site model (DOMM)
 
   for(s in 1:N_surv){
     for(i in 1:N_sites[s]){
@@ -25,7 +25,7 @@ nimbleCode_DOMM_gamma_2 <- nimbleCode({ # Double observer multi-site model (DOMM
       N[s,i] ~ dpois(lambda[s,i]*area[s,i])
       lambda[s,i] ~ dgamma(shape, rate[s,i])
       rate[s,i] <- shape/exp(mu[s,i] + 0.5*sigma^2)
-      mu[s,i] <- mu0[sam[s]] + x[s,i]*beta[1] + x[s,i]^2*beta[2]     
+      mu[s,i] <- mu0[sam[s]] + x[s,i]*beta   
       
     }
   }
@@ -34,10 +34,8 @@ nimbleCode_DOMM_gamma_2 <- nimbleCode({ # Double observer multi-site model (DOMM
   for(k in 1:N_sam){
     mu0[k] ~ dnorm(0, sd = 10)
   }
-  
-  for(i in 1:2){  
-    beta[i] ~ dnorm(0, sd=2) # assume that x is standardized (x_st = (x-mean(x))/sd(x))
-  }
+
+  beta ~ dnorm(0, sd=2)
   
   #sigma ~ dunif(0.5, 3)
   sigma ~ dgamma(0.01, 0.01)
@@ -49,8 +47,8 @@ nimbleCode_DOMM_gamma_2 <- nimbleCode({ # Double observer multi-site model (DOMM
   eta1 ~ dnorm(prior_mean_eta, sd = prior_sd_eta) 
   eta2 ~ dnorm(prior_mean_eta, sd = prior_sd_eta)
   sigma_p ~ T(dgamma(1, 0.05), 0, 0.59)
-
-  # Derived:  mean_ds
+  
+  # Derived parameters
   for(s in 1:N_surv){
     N_tot[s] <- sum(N[s, 1:N_sites[s]])
     sum_area[s] <- sum(area[s, 1:N_sites[s]])
@@ -82,7 +80,7 @@ nimbleCode_DOMM_gamma_2 <- nimbleCode({ # Double observer multi-site model (DOMM
     Disc_y_s[s] <- sum(DiscC_y[s, 1:N_sites[s]])
     Disc_New_y_s[s] <- sum(DiscC_New_y[s, 1:N_sites[s]])
   }
-  # Discrepancy statistics (Pearson chi-sq, but note many small expectations)
+  # Discrepancy statistics (summed Pearson residuals)
   Disc_Y <- sum(Disc_Y_s[1:N_surv])
   Disc_New_Y <- sum(Disc_New_Y_s[1:N_surv])
   Disc_y <- sum(Disc_y_s[1:N_surv])
