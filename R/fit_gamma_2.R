@@ -12,7 +12,7 @@ load(file = "data/prior_parameters_for_p.rda")
 load(file = "data/nimbleData.rda")
 
 # READING THE MODEL CODE
-source("R/nimble_models/nimbleCode_DOMM_gamma_2_with_N.q")
+source("R/nimble_models/nimbleCode_gamma_2.q")
 
 # CONSTANTS USED FOR INITIAL INITUAL VALUES AND FOR PRIORS
 colsumy <- apply(nimbleData$data$y, 3, sum, na.rm=TRUE)
@@ -126,7 +126,7 @@ t4-t3
 
 # Saving workspace
 #save(settings, out, file = "data/posterior_samples/gamma_2_LONGrun_with_N.RData")
-save(settings, out, file = "data/posterior_samples/gamma_2_with_N.RData")
+save(settings, out, file = "data/posterior_samples/gamma_2.RData")
 
 #plot(out$samples) # 1 = black, 2 = red, 3 = green
 # summary(out$samples)
@@ -134,16 +134,16 @@ save(settings, out, file = "data/posterior_samples/gamma_2_with_N.RData")
 
 # out$WAIC
 # 
-# # # Posterior predictive checks
-# # 
-# samp <- as.matrix(out$samples)
-# plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
-# abline(0, 1, col="red")
-# mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
-# # OK!
-# 
-# # Wrt y
-# plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
-# abline(0, 1, col="red")
-# mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
+# # Posterior predictive checks
+#
+samp <- as.matrix(out$samples)
+plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"])
+abline(0, 1, col="red")
+mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+# OK!
+
+# Wrt y
+plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"])
+abline(0, 1, col="red")
+mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
 
