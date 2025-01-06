@@ -12,17 +12,15 @@ load(file = "data/prior_parameters_for_p.rda")
 load(file = "data/LDDdata.rda")
 
 # READING THE MODEL CODE
-source("R/nimble_models/nimbleCode_DOMM_exponential_2.q")
+source("R/nimble_models/nimbleCode_DOMM_exponential_1.q")
 
 # CONSTANTS USED FOR INITIAL INITUAL VALUES AND FOR PRIORS
 colsumy <- apply(LDDdata$data$y, 3, sum, na.rm=TRUE)
 p1hat <- colsumy[3]/(colsumy[2]+colsumy[3])
 p2hat <- colsumy[3]/(colsumy[1]+colsumy[3])
 Nhat <- apply(LDDdata$data$Y, 1, sum, na.rm=TRUE)/(1-(1-p1hat)*(1-p2hat)) # For all sites combined
-# lambdahat_surv <- (Nhat/LDDdata$const$N_sites)/apply(LDDdata$const$area, 1, mean, na.rm=TRUE) + 0.01 # Adding a small value since we get -Inf from log(lambdahat=0)
-# lambdahat <- tapply(lambdahat_surv, list(LDDdata$const$sam), mean)
-lambdahat <- LDDdata$const$lambdahat
-
+lambdahat_surv <- (Nhat/LDDdata$const$N_sites)/apply(LDDdata$const$area, 1, mean, na.rm=TRUE) + 0.01 # Adding a small value since we get -Inf from log(lambdahat=0)
+lambdahat <- tapply(lambdahat_surv, list(LDDdata$const$sam), mean)
 N <- round(LDDdata$data$Y/(1-(1-p1hat)*(1-p2hat)), 0)
 N[is.na(N)] <- 0
 nrowY <- nrow(LDDdata$data$Y)
@@ -43,7 +41,7 @@ Inits <- function(){
     logit_p2 = matrix(rnorm(nrowY*ncolY, mu_p2, sigma_p/2) , nrow = nrowY, ncol = ncolY),
     N = N,
     sigma_p = sigma_p,
-    beta = runif(2, -0.5, 0.5),
+    beta = runif(1, -0.5, 0.5),
     New_Y = N, # Warning message if not included
     New_y = LDDdata$data$y
   )
@@ -51,9 +49,9 @@ Inits <- function(){
 
 # SETTING UP THE MCMC
 DoubleObsMultisiteModel <- nimbleModel(
-  nimbleCode_DOMM_exponential_2,
-  constants = list(#lamblow = 0.1*lambdahat,  # 0.1 to 10 times point estimate
-                   #lambupp = 10*lambdahat,
+  nimbleCode_DOMM_exponential_1,
+  constants = list(lamblow = 0.1*lambdahat,  # 0.1 to 10 times point estimate
+                   lambupp = 10*lambdahat,
                    N_surv = length(LDDdata$const$N_sites),
                    N_sites = LDDdata$const$N_sites,
                    prior_mu_logit_p = prior_parameters_for_p$mu_logit_p,
@@ -102,7 +100,7 @@ cat("Run time:")
 t4-t3
 
 # Saving workspace
-save(settings, out, file = "data/posterior_samples/exponential_2_run2.RData")
+save(settings, out, file = "data/posterior_samples/exponential_1.RData")
 
 #plot(out$samples) # 1 = black, 2 = red, 3 = green
 # summary(out$samples)

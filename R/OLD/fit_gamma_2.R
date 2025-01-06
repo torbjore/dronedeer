@@ -19,8 +19,10 @@ colsumy <- apply(LDDdata$data$y, 3, sum, na.rm=TRUE)
 p1hat <- colsumy[3]/(colsumy[2]+colsumy[3])
 p2hat <- colsumy[3]/(colsumy[1]+colsumy[3])
 Nhat <- apply(LDDdata$data$Y, 1, sum, na.rm=TRUE)/(1-(1-p1hat)*(1-p2hat)) # For all sites combined
-lambdahat_surv <- (Nhat/LDDdata$const$N_sites)/apply(LDDdata$const$area, 1, mean, na.rm=TRUE) + 0.01 # Adding a small value since we get -Inf from log(lambdahat=0)
-lambdahat <- tapply(lambdahat_surv, list(LDDdata$const$sam), mean)
+# lambdahat_surv <- (Nhat/LDDdata$const$N_sites)/apply(LDDdata$const$area, 1, mean, na.rm=TRUE) + 0.01 # Adding a small value since we get -Inf from log(lambdahat=0)
+# lambdahat <- tapply(lambdahat_surv, list(LDDdata$const$sam), mean)
+lambdahat <- LDDdata$const$lambdahat
+
 N <- round(LDDdata$data$Y/(1-(1-p1hat)*(1-p2hat)), 0)
 N[is.na(N)] <- 0
 nrowY <- nrow(LDDdata$data$Y)
@@ -51,8 +53,9 @@ Inits <- function(){
 # SETTING UP THE MCMC
 DoubleObsMultisiteModel <- nimbleModel(
   nimbleCode_DOMM_gamma_2,
-  constants = list(lamblow = 0.1*lambdahat,  # 0.1 to 10 times point estimate
-                   lambupp = 10*lambdahat,
+  constants = list(#lamblow = 0.1*lambdahat,  # 0.1 to 10 times point estimate
+                   #lambupp = 10*lambdahat,
+                   mu0hat = log(lambdahat/exp(0.5*1.47^2)),
                    N_surv = length(LDDdata$const$N_sites),
                    N_sites = LDDdata$const$N_sites,
                    prior_mu_logit_p = prior_parameters_for_p$mu_logit_p,
@@ -97,10 +100,10 @@ t2-t1
 t3 <- Sys.time()
 init.values <- list(Inits(), Inits(), Inits())
 settings <- list(
-  niter = 200000,
+  niter = 1100000,
   nburnin = 20000,
   nchain = 3,
-  thin = 6
+  thin = 18
 )
 out <- runMCMC(
   CDoubleObsMultisiteMCMC,
@@ -116,7 +119,7 @@ cat("Run time:")
 t4-t3
 
 # Saving workspace
-save(settings, out, file = "data/posterior_samples/gamma_2.RData")
+save(settings, out, file = "data/posterior_samples/gamma_2_LONGrun.RData")
 
 #plot(out$samples) # 1 = black, 2 = red, 3 = green
 # summary(out$samples)
