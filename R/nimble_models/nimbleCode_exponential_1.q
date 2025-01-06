@@ -1,7 +1,7 @@
-# Model with exponential lambda and second order covariate effect
+# Model with exponential lambda and first order covariate effect
 
 # DEFINING THE MODEL
-nimbleCode_DOMM_exponential_2 <- nimbleCode({
+nimbleCode_DOMM_exponential_1 <- nimbleCode({
   # Model
   
   for(s in 1:N_surv){
@@ -25,7 +25,7 @@ nimbleCode_DOMM_exponential_2 <- nimbleCode({
       N[s,i] ~ dpois(lambda[s,i]*area[s,i])
       lambda[s,i] ~ dexp(lamexp[s,i])
       lamexp[s,i] <- 1/exp(mu[s,i])
-      mu[s,i] <- mu0[sam[s]] + x[s,i]*beta[1] + x[s,i]^2*beta[2]
+      mu[s,i] <- mu0[sam[s]] + x[s,i]*beta
     }
   }
   
@@ -34,9 +34,7 @@ nimbleCode_DOMM_exponential_2 <- nimbleCode({
     mu0[k] ~ dnorm(0, sd = 10)
   }
   
-  for(i in 1:2){  
-    beta[i] ~ dnorm(0, sd=2) # assume that x is standardized (x_st = (x-mean(x))/sd(x))
-  }
+  beta ~ dnorm(0, sd=2) # assume that x is standardized (x_st = (x-mean(x))/sd(x))
   
   eta1 ~ dnorm(prior_mean_eta, sd = prior_sd_eta) 
   eta2 ~ dnorm(prior_mean_eta, sd = prior_sd_eta)
@@ -80,3 +78,4 @@ nimbleCode_DOMM_exponential_2 <- nimbleCode({
   Disc_y <- sum(Disc_y_s[1:N_surv])
   Disc_New_y <- sum(Disc_New_y_s[1:N_surv])
 })
+
