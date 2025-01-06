@@ -3,7 +3,7 @@
 library(nimble)
 
 # SOURCE THE MODEL CODE
-source("R/nimble_models/enclosure_model_N.q")
+source("R/nimble_models/enclosure_model.q")
 
 # Loading the data
 load("data/nimbleData_Fence.rda")
