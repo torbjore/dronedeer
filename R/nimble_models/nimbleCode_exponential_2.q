@@ -1,8 +1,9 @@
-# Model with lognormal lambda and no covariate effect
+# Model with exponential lambda and second order covariate effect
 
 # DEFINING THE MODEL
-nimbleCode_DOMM_lognormal_0 <- nimbleCode({
+nimbleCode_DOMM_exponential_2 <- nimbleCode({
   # Model
+  
   for(s in 1:N_surv){
     for(i in 1:N_sites[s]){
       # Random p's
@@ -22,22 +23,21 @@ nimbleCode_DOMM_lognormal_0 <- nimbleCode({
       
       # Process model:
       N[s,i] ~ dpois(lambda[s,i]*area[s,i])
-      lambda[s,i] <- exp(mu[s,i] + epsilon[s,i])
-      mu[s,i] <- mu0[sam[s]]
-      epsilon[s,i] ~ dnorm(0, sd = sigma)
+      lambda[s,i] ~ dexp(lamexp[s,i])
+      lamexp[s,i] <- 1/exp(mu[s,i])
+      mu[s,i] <- mu0[sam[s]] + x[s,i]*beta[1] + x[s,i]^2*beta[2]
     }
   }
   
   # Priors
   for(k in 1:N_sam){
+    #mu0[k] ~ dunif(log(lamblow[k]), log(lambupp[k]))
     mu0[k] ~ dnorm(0, sd = 10)
   }
   
-  #sigma ~ dunif(0.5, 3)
-  sigma ~ dgamma(0.01, 0.01)
-  # Seen with the dunif() prior: If sigma is allowed to be too small, chains sometimes hover around smaller values
-  # before jumping to the higher values (but not the other way it looks).
-  # I interpret this to mean that there is a local minimum with low sigma.
+  for(i in 1:2){  
+    beta[i] ~ dnorm(0, sd=2) # assume that x is standardized (x_st = (x-mean(x))/sd(x))
+  }
   
   eta1 ~ dnorm(prior_mean_eta, sd = prior_sd_eta) 
   eta2 ~ dnorm(prior_mean_eta, sd = prior_sd_eta)
@@ -50,12 +50,6 @@ nimbleCode_DOMM_lognormal_0 <- nimbleCode({
   }
   for(k in 1:N_sam){
     mean_ds[k] <- sum(N_tot[S[1,k]:S[2,k]])/sum(sum_area[S[1,k]:S[2,k]])
-  }
-  
-  # Derived: Mean and median densities at mean x
-  for(k in 1:N_sam){
-    median_lambda[k] <- exp(mu0[k])
-    mean_lambda[k] <- exp(mu0[k] + 0.5*sigma^2)
   }
   
   # For posterior predictive checks

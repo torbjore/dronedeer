@@ -39,7 +39,6 @@ nimbleCode_DOMM_lognormal_2 <- nimbleCode({
   
   #sigma ~ dunif(0.5, 3)
   sigma ~ dgamma(0.01, 0.01)
-  shape <- 1/(exp(sigma^2) - 1)
   # Seen with the dunif() prior: If sigma is allowed to be too small, chains sometimes hover around smaller values
   # before jumping to the higher values (but not the other way it looks).
   # I interpret this to mean that there is a local minimum with low sigma.
