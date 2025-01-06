@@ -101,8 +101,8 @@ t2-t1
 t3 <- Sys.time()
 init.values <- list(Inits(), Inits(), Inits())
 settings <- list(
-  niter = 2000,#00,
-  nburnin = 200,#00,
+  niter = 200000,
+  nburnin = 20000,
   nchain = 3,
   thin = 6
 )
@@ -120,7 +120,7 @@ cat("Run time:")
 t4-t3
 
 # Saving workspace
-#save(settings, out, file = "data/posterior_samples/gamma_1.RData")
+save(settings, out, file = "data/posterior_samples/gamma_1.RData")
 
 #plot(out$samples) # 1 = black, 2 = red, 3 = green
 # summary(out$samples)
