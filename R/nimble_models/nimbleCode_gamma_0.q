@@ -1,14 +1,14 @@
-# Model with gamma distributed lambda and second order covariate effect
+# Model with gamma distributed lambda and no covariate effect
 
 # DEFINING THE MODEL
-nimbleCode_DOMM_gamma_2 <- nimbleCode({
+nimbleCode_DOMM_gamma_0 <- nimbleCode({
 
   for(s in 1:N_surv){
     for(i in 1:N_sites[s]){
       
       # Random p's
-      logit_p1[s,i] ~ dnorm(eta1, sd = sigma_p)
-      logit_p2[s,i] ~ dnorm(eta2, sd = sigma_p)
+      logit_p1[s,i] ~ dnorm(mu_p1, sd = sigma_p)
+      logit_p2[s,i] ~ dnorm(mu_p2, sd = sigma_p)
       p1[s,i] <- 1/(1+exp(-logit_p1[s,i]))
       p2[s,i] <- 1/(1+exp(-logit_p2[s,i]))
       
@@ -25,8 +25,7 @@ nimbleCode_DOMM_gamma_2 <- nimbleCode({
       N[s,i] ~ dpois(lambda[s,i]*area[s,i])
       lambda[s,i] ~ dgamma(shape, rate[s,i])
       rate[s,i] <- shape/exp(mu[s,i] + 0.5*sigma^2)
-      mu[s,i] <- mu0[sam[s]] + x[s,i]*beta[1] + x[s,i]^2*beta[2]     
-      
+      mu[s,i] <- mu0[sam[s]] 
     }
   }
 
@@ -34,11 +33,7 @@ nimbleCode_DOMM_gamma_2 <- nimbleCode({
   for(k in 1:N_sam){
     mu0[k] ~ dnorm(0, sd = 10)
   }
-  
-  for(i in 1:2){  
-    beta[i] ~ dnorm(0, sd=2) # assume that x is standardized (x_st = (x-mean(x))/sd(x))
-  }
-  
+
   #sigma ~ dunif(0.5, 3)
   sigma ~ dgamma(0.01, 0.01)
   shape <- 1/(exp(sigma^2) - 1)
@@ -49,7 +44,7 @@ nimbleCode_DOMM_gamma_2 <- nimbleCode({
   eta1 ~ dnorm(prior_mean_eta, sd = prior_sd_eta) 
   eta2 ~ dnorm(prior_mean_eta, sd = prior_sd_eta)
   sigma_p ~ T(dgamma(1, 0.05), 0, 0.59)
-
+  
   # Derived parameters
   for(s in 1:N_surv){
     N_tot[s] <- sum(N[s, 1:N_sites[s]])
@@ -82,7 +77,7 @@ nimbleCode_DOMM_gamma_2 <- nimbleCode({
     Disc_y_s[s] <- sum(DiscC_y[s, 1:N_sites[s]])
     Disc_New_y_s[s] <- sum(DiscC_New_y[s, 1:N_sites[s]])
   }
-  # Discrepancy statistics (Pearson chi-sq, but note many small expectations)
+  # Discrepancy statistics (summed Pearson residuals)
   Disc_Y <- sum(Disc_Y_s[1:N_surv])
   Disc_New_Y <- sum(Disc_New_Y_s[1:N_surv])
   Disc_y <- sum(Disc_y_s[1:N_surv])

@@ -42,7 +42,6 @@ Inits <- function(){
     logit_p2 = matrix(rnorm(nrowY*ncolY, eta2, sigma_p/2) , nrow = nrowY, ncol = ncolY),
     N = N,
     lambda = N + 0.01,
-
     beta = runif(2, -0.5, 0.5),
     sigma = runif(1, 0.5, 1),
     New_Y = N, # Warning message if not included
