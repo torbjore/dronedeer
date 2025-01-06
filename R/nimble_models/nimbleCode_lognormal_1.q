@@ -1,4 +1,4 @@
-# Double observer multi-site model with lognormal lambda and first order covariate effect
+# Model with lognormal lambda and first order covariate effect
 
 # DEFINING THE MODEL
 nimbleCode_DOMM_lognormal_1 <- nimbleCode({
