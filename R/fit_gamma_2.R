@@ -125,8 +125,8 @@ cat("Run time:")
 t4-t3
 
 # Saving workspace
-#save(settings, out, file = "data/posterior_samples/gamma_2_LONGrun_with_N.RData")
-save(settings, out, file = "data/posterior_samples/gamma_2.RData")
+#save(settings, out, file = "posterior_samples/gamma_2_LONGrun_with_N.RData")
+save(settings, out, file = "posterior_samples/gamma_2.RData")
 
 #plot(out$samples) # 1 = black, 2 = red, 3 = green
 # summary(out$samples)
