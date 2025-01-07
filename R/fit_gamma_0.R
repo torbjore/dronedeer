@@ -32,14 +32,14 @@ Inits <- function(){
   sigma_p <- runif(1, 0.1, 0.4)
   p1 <- exp(log(p1hat)*runif(1, 0.9, 1.1))
   p2 <- exp(log(p2hat)*runif(1, 0.9, 1.1))
-  mu_p1 <- log(p1/(1-p1))
-  mu_p2 <- log(p2/(1-p2))
+  eta1 <- log(p1/(1-p1))
+  eta2 <- log(p2/(1-p2))
   list(
     mu0 = log(lambdahat*runif(length(lambdahat), 0.9, 1.1)),
-    mu_p1 = mu_p1,
-    mu_p2 = mu_p2,
-    logit_p1 = matrix(rnorm(nrowY*ncolY, mu_p1, sigma_p/2) , nrow = nrowY, ncol = ncolY),
-    logit_p2 = matrix(rnorm(nrowY*ncolY, mu_p2, sigma_p/2) , nrow = nrowY, ncol = ncolY),
+    eta1 = eta1,
+    eta2 = eta2,
+    logit_p1 = matrix(rnorm(nrowY*ncolY, eta1, sigma_p/2) , nrow = nrowY, ncol = ncolY),
+    logit_p2 = matrix(rnorm(nrowY*ncolY, eta2, sigma_p/2) , nrow = nrowY, ncol = ncolY),
     N = N,
     lambda = N + 0.01,
     sigma = runif(1, 0.5, 1),
@@ -70,7 +70,7 @@ DoubleObsMultisiteModel <- nimbleModel(
 t1 <- Sys.time()
 CDoubleObsMultisiteModel <- compileNimble(DoubleObsMultisiteModel) # Needs to be compiled for the last step
 DoubleObsMultisiteConf <- configureMCMC(DoubleObsMultisiteModel, 
-                                        monitors = c("Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "mu_p1", "mu_p2", "mu0", "sigma", "sigma_p", "mean_ds"),
+                                        monitors = c("Disc_New_Y", "Disc_Y", "Disc_New_y", "Disc_y", "eta1", "eta2", "mu0", "sigma", "sigma_p", "mean_ds"),
                                         enableWAIC = TRUE)
 
 # Setting up a block sampler (I've tried various combinations of blocking, chains often get stuck with any combination)
@@ -117,9 +117,11 @@ cat("Run time:")
 t4-t3
 
 # Saving workspace
-save(settings, out, file = "data/posterior_samples/gamma_0.RData")
+save(settings, out, file = "posterior_samples/gamma_0.RData")
 
-#plot(out$samples) # 1 = black, 2 = red, 3 = green
+
+load("posterior_samples/gamma_0.RData")
+# plot(out$samples) # 1 = black, 2 = red, 3 = green
 # summary(out$samples)
 # gelman.diag(out$samples)
 
