@@ -7,8 +7,8 @@ nimbleCode_DOMM_gamma_0 <- nimbleCode({
     for(i in 1:N_sites[s]){
       
       # Random p's
-      logit_p1[s,i] ~ dnorm(mu_p1, sd = sigma_p)
-      logit_p2[s,i] ~ dnorm(mu_p2, sd = sigma_p)
+      logit_p1[s,i] ~ dnorm(eta1, sd = sigma_p)
+      logit_p2[s,i] ~ dnorm(eta2, sd = sigma_p)
       p1[s,i] <- 1/(1+exp(-logit_p1[s,i]))
       p2[s,i] <- 1/(1+exp(-logit_p2[s,i]))
       
