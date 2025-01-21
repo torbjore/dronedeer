@@ -5,7 +5,7 @@
 ddensity <- function(x, dens) approx(x=dens$x, y=dens$y, xout=x)$y
 
 post_prior_overlap <- function(post_samp, prior_density_fun, plt = FALSE, plt.main = NULL, full = FALSE, ...){
-  post_density <- density(post_samp) #, bw = "sj")
+  post_density <- density(post_samp, cut = 0) #, bw = "sj") # cut = 0 for truncated distrubutions
   prior_density <- prior_density_fun(post_density$x, ...)
   if(plt){
     plot(post_density, main = plt.main)
@@ -80,7 +80,7 @@ pred_plots <- function(predfun = pred, x=X, x_st=X_st, PS, names = sam_names){
       #geom_line(aes(y=mean, color="Posterior mean"), color="#fe2323", linewidth=1.2) + 
       geom_line(aes(y=median, color="Posterior median"), color="#369bbe", linewidth=1.2) +
       geom_vline(aes(xintercept=mpv), color="#68754D", linetype="dashed", linewidth=1) +
-      geom_vline(aes(xintercept = pap), color="#68754D", linetype="dotted", linewidth=1 ) +
+      # geom_vline(aes(xintercept = pap), color="#68754D", linetype="dotted", linewidth=1 ) +
       
       # Adding legend
       # scale_fill_manual(name = "",
