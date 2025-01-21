@@ -37,7 +37,8 @@ nimbleCode_DOMM_lognormal_1 <- nimbleCode({
   
   # Priors
   for(k in 1:N_sam){
-    mu0[k] ~ dunif(log(lamblow[k]), log(lambupp[k]))
+    #mu0[k] ~ dunif(log(lamblow[k]), log(lambupp[k]))
+    mu0[k] ~ dnorm(0, sd = 10)
   }
   
   beta ~ dnorm(0, sd=2) # assume that x is standardized (x_st = (x-mean(x))/sd(x))
@@ -61,11 +62,11 @@ nimbleCode_DOMM_lognormal_1 <- nimbleCode({
   # before jumping to the higher values (but not the other way it looks).
   # I interpret this to mean that there is a local minimum with low sigma.
   
-  # Derived: Mean and median densities at mean x
-  for(k in 1:N_sam){
-    median_lambda[k] <- exp(mu0[k])
-    mean_lambda[k] <- exp(mu0[k] + 0.5*sigma^2)
-  }
+  # # Derived: Mean and median densities at mean x
+  # for(k in 1:N_sam){
+  #   median_lambda[k] <- exp(mu0[k])
+  #   mean_lambda[k] <- exp(mu0[k] + 0.5*sigma^2)
+  # }
   
   # For posterior predictive checks
   for(s in 1:N_surv){

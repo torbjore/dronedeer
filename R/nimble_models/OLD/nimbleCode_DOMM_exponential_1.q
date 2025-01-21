@@ -31,7 +31,8 @@ nimbleCode_DOMM_exponential_1 <- nimbleCode({
   
   # Priors
   for(k in 1:N_sam){
-    mu0[k] ~ dunif(log(lamblow[k]), log(lambupp[k]))
+    #mu0[k] ~ dunif(log(lamblow[k]), log(lambupp[k]))
+    mu0[k] ~ dnorm(0, sd = 10)
   }
   
   beta ~ dnorm(0, sd=2) # assume that x is standardized (x_st = (x-mean(x))/sd(x))
@@ -50,10 +51,10 @@ nimbleCode_DOMM_exponential_1 <- nimbleCode({
   # chains entered flat parts of the likelihood surface, we also set a lower
   # bound of 0.1.
   
-  # Derived: Mean and median densities at mean x
-  for(k in 1:N_sam){
-    mean_lambda[k] <- exp(mu0[k])
-  }
+  # # Derived: Mean and median densities at mean x
+  # for(k in 1:N_sam){
+  #   mean_lambda[k] <- exp(mu0[k])
+  # }
   
   # For posterior predictive checks
   for(s in 1:N_surv){
