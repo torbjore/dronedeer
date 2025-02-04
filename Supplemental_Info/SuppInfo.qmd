@@ -152,7 +152,7 @@ $$
 \sigma_p  \sim\text{T} \left[  \text{Gamma}(1,0.05), 0, 0.59 \right]
 $$
 
-The upper bound of $0.59$ was set based on a prior assessment that detection at the 97.5 percentile site should have a maximum of 10 times higher odds than in the 2.5 percentile site ($\log(10)/(1.96 \times 2) \approx 0.59$). In @sec-sens_sigma_p we investigate the sensitivity of our results with repect to the choice pf prior for $\sigma_p$.
+The upper bound of $0.59$ was set based on a prior assessment that detection at the 97.5 percentile site should have a maximum of 10 times higher odds than in the 2.5 percentile site ($\log(10)/(1.96 \times 2) \approx 0.59$). In @sec-sens_sigma_p we investigate the sensitivity of our results with respect to the choice pf prior for $\sigma_p$.
 
 Bayesian p-values did not indicate any lack of fit of this final model with respect to $Y_i$’s ($p = 0.50$) or $\mathbf{y}_i$’s ($p = 0.19$) (see @sec-ppc).
 
@@ -161,19 +161,6 @@ Bayesian p-values did not indicate any lack of fit of this final model with resp
 <!-- The deer density in the enclosure at the deer farm was known, and this may be used to inform the priors for detection probability. -->
 
 The enclosure surrounded a natural habitat with a similar forest type as at the sampling areas. It is therefore reasonable to assume that detection probabilities inside and outside the enclosure are similar. It is, however, not reasonable to assume that the variation in deer densities among sites (focal images) are similar because the enclosure had much higher density, much more females than males, many young individuals, and there were feeding stations where the deer tended to aggregate.
-
-<!-- Hence, to estimate posterior distributions for detection probabilities, we kept the same model structure as above with a log-normal expected density, but made $\mu$ a function of known mean density ($d$) and the unknown variance in density ($\sigma^2$). Using a log-normal distribution, mean density is $d = e^{\mu+\sigma_\varepsilon^2/2}$, and hence we get $\mu = \log(d)-\sigma_\varepsilon^2 / 2$ (we did not model $\mu$ as a function of covariates since the habitat within the enclosure was very homogeneous). Hence, we used the following hierarchical model: -->
-
-<!-- $$ -->
-<!-- \begin{align} -->
-<!-- \mathbf{y}_i  &\sim \text{Multinomial}(\pi,Y_i) \\ -->
-<!-- Y_i  &\sim \text{Binomial}(p^*,N_i )  \\    -->
-<!-- N_i &\sim \text{Poisson}(\lambda_i a_i) \\ -->
-<!-- \log(\lambda_i) &= \mu + \varepsilon_i \\ -->
-<!-- \mu &= \log⁡(d)-\sigma_\varepsilon^2/ 2\\ -->
-<!-- \varepsilon_i &\sim N(0,\sigma_\varepsilon) -->
-<!-- \end{align} -->
-<!-- $$ -->
 
 Initial analysis showed that there was no significant difference in detection probability in the enclosures for the two observers, and we hence simplified the observation model to have the same mean logit-scale detection probability for the two observers, $\eta_1 = \eta_2 = \eta$. The model was then fitted with the following uninformative prior:
 
@@ -197,7 +184,7 @@ The models were fitted by the use of Bayesian MCMC sampling in NIMBLE (v1.3.0; [
 
 For each of the three models for the random Poisson expectation (log-normal, exponential and gamma), we fitted both linear and quadratic models for $\mu_i$ as a function of distance from the field, as well as a model with no covariate effects; hence obtaining 9 models. We selected the best model according to the Watanabe-Akaike (Widely Applicable) Information Criterion, WAIC [@watanabe2010] for presentation of estimates and prediction (the criterion seeks to minimize the prediction error variance as an optimal trade-off between accuracy and precision of the fitted model predictions).
 
-(OPPDATER DETTE:) We initially ran MCMC-sampling on each of the nine models with 3 chains with random and independent starting values for 180,000 iterations after a burn-in of 20,000 iterations and stored every 6^th^ posterior sample. Repeating this three times showed a consistent ranking of the models by the WAIC criterion. The models with the lowest (best) WAIC values where then run for 1,080,000 samples after a burning of 20,000 iterations in 3 chains and stored every 18^th^ sample, obtaining in total 3 times 60,000 posterior samples used for inference. The upper 95% confidence limit for the [@gelman1992] ‘potential scale reduction factor’ (psrf) was \<1.025 for all parameters in the final models, and the multivariate psrf was less than 1.005.
+We ran MCMC-sampling on each of the nine models with 3 chains with random and independent starting values for 180,000 iterations after a burn-in of 20,000 iterations and stored every 6^th^ posterior sample (obtaining a total of 90,000 samples for inference). Satisfactory convergence was confirmed by the [@gelman1992] ‘potential scale reduction factor’ (psrf) being \<1.05 for all parameters (see @sec-conv).
 
 ## Estimating densities at the specific sites included in each survey {#sec-estimating_d}
 
@@ -322,9 +309,6 @@ Here, the indices 1 or 2 in brackets represent survey at 40 m and 60 m respectiv
 Judging by the posterior median, the approximate frequentist confidence intervals derived in @sec-estimating_N marginally fail to cover the true known number of deer in the enclosure (117 deer) in the 40 m above ground survey (confidence interval range from about `r round(sum$quantiles["N_lower[1]","50%"],0)` to `r round(sum$quantiles["N_upper[1]","50%"],0)` individuals). The true value is however included in the much wider confidence interval for the 60 m above ground survey (confidence interval range from about `r round(sum$quantiles["N_lower[2]","50%"],0)` to `r round(sum$quantiles["N_upper[2]","50%"])` individuals). Even though the credible intervals for the number of deer at the surveyed sites (posterior distributions for `N_sum`) were not discouragingly wide, the confidence intervals for the total number of deer in the enclosure (based on `N_lower` and `N_upper`) were rather wide, particularly for the 60 m above ground survey. This is due to the clustered distribution of deer within the enclosure, combined with somewhat limited sampling effort. Estimates from multiple surveys could have been combined to gain precision (not included here).
 
 ### Detection probabilities {#sec-encl_detection}
-
-<!-- Det viste seg at modellen med kjent mean density ga omtrent samme estimater som modellen over (dvs. ingen gain i precision). Så da er det bare å bruke modellen over for å finne prior. -->
-
 
 The surveys of the sampling sites in the wild population were conducted with flights at 60 m above ground. Hence, we used the posterior distribution of `eta[2]` to inform priors for detection probabilities in the models fitted to these data.
 
@@ -515,12 +499,11 @@ summary(gamma0[, c(15:23, 5:6, 24)])
 summary(gamma2[, c(17:24, 5:6, 25, 7:8, 26)])
 ```
 
-### Trace plots, posterior distribution plots, and convergence ststistics
+### Trace plots, posterior distribution plots, and convergence ststistics {#sec-conv}
 
-Here, only showing for the `gamma_2` model.
+Here, showing trace-plots and posterior density plots for the `gamma_2` model only:
 
 ```{r}
-#| eval: false
 #| echo: false
 #| fig-height: 8
 
