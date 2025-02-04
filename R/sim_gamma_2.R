@@ -9,29 +9,32 @@ standardize <- function(x) (x-mean(x, na.rm=TRUE))/sd(x, na.rm=TRUE)
 load(file = "data/prior_parameters_for_p.rda")
 
 # Loading data
-load(file = "data/LDDdata.rda")
+load(file = "data/nimbleData.rda")
 
 # READING THE MODEL CODE
-source("R/nimble_models/nimbleCode_DOMM_gamma_2_noPPC.q")
+source("R/nimble_models/nimbleCode_gamma_2_noPPC.q")
 
 # Setting parameter values
-Path <- "data/posterior_samples"
-files <- dir(path = Path)
-best <- "gamma_2"
-fls <- files[grep(best, files)]
-best_postsamp <- NULL
-for(fl in fls){
-  load(paste0("data/posterior_samples/", fl))
-  best_postsamp <- c(best_postsamp, out$samples)
-}
-best_postsamp <- as.mcmc.list(best_postsamp)
-samp <- as.matrix(best_postsamp)[,-(1:4)]
+# Path <- "posterior_samples"
+# files <- dir(path = Path)
+# best <- "gamma_2"
+# fls <- files[grep(best, files)]
+# best_postsamp <- NULL
+# for(fl in fls){
+#   load(paste0("data/posterior_samples/", fl))
+#   best_postsamp <- c(best_postsamp, out$samples)
+# }
+
+load("posterior_samples/gamma_2.RData")
+postsamp <- out$samples
+#best_postsamp <- as.mcmc.list(best_postsamp)
+samp <- as.matrix(postsamp)[,-c(1:4, 9:16)]
 p <- apply(samp, 2, median)
 truepar <- list(
   beta = p[1:2],
-  mu0 = p[3:10],
-  mu_p1 = p[11],
-  mu_p2 = p[12],
+  eta1 = p[3],
+  eta2 = p[4],
+  mu0 = p[5:12],
   sigma = p[13],
   sigma_p = p[14]
 )
@@ -39,19 +42,19 @@ truepar <- list(
 # Setting up constants to be used for both simulation and model fitting
 N_surv <- length(truepar$mu0)
 n_sim_sites <- 500 # Number of sites in each survey
-area_val <- as.vector(LDDdata$const$area)
+area_val <- as.vector(nimbleData$const$area)
 area_val <- area_val[!is.na(area_val)]
-x_val <- as.vector(standardize(LDDdata$const$mean_field_dist))
+x_val <- as.vector(standardize(nimbleData$const$mean_field_dist))
 x_val <- x_val[!is.na(x_val)]
-constants <- list(mu0hat = log(LDDdata$const$lambdahat/exp(0.5*1.47^2)),
-                 N_surv = N_surv,
-                 N_sites = rep(n_sim_sites, N_surv),
-                 prior_mu_logit_p = prior_parameters_for_p$mu_logit_p,
-                 prior_sigma_logit_p = prior_parameters_for_p$sigma_logit_p,
-                 sam = 1:N_surv,
-                 N_sam = N_surv,
-                 area = array(sample(area_val, N_surv*n_sim_sites, replace = TRUE), dim = c(N_surv, n_sim_sites)),
-                 x = array(sample(x_val, N_surv*n_sim_sites, replace = TRUE), dim = c(N_surv, n_sim_sites))
+constants <- list(
+  N_surv = N_surv,
+  N_sites = rep(n_sim_sites, N_surv),
+  prior_mean_eta = prior_parameters_for_p$mean_eta,
+  prior_sd_eta = prior_parameters_for_p$sd_eta,
+  sam = 1:N_surv,
+  N_sam = N_surv,
+  area = array(sample(area_val, N_surv*n_sim_sites, replace = TRUE), dim = c(N_surv, n_sim_sites)),
+  x = array(sample(x_val, N_surv*n_sim_sites, replace = TRUE), dim = c(N_surv, n_sim_sites))
 )
 
 # Building model
@@ -88,13 +91,14 @@ phat_simple <- 1 - (1-p1hat)*(1-p2hat)
 # Area per sam
 area_per_sam <- apply(constants$area, 1, sum, na.rm=TRUE) |> tapply(INDEX = constants$sam, sum)
 
-# Simple estimates of density
-lambdahat <- (Y_per_sam/phat_simple)/area_per_sam
-
-# For the sam's with zero detentions (see prior_zero_sites.R)
-lambdahat[3] <- 0.0066 # Raa (April)
-lambdahat[4] <- 0.0046 # Raa (March)
-lambdahat[7] <- 0.0047 # Sprakehaug (April)
+lambdahat <- nimbleData$const$lambdahat
+# # Simple estimates of density
+# lambdahat <- (Y_per_sam/phat_simple)/area_per_sam
+# 
+# # For the sam's with zero detentions (see prior_zero_sites.R)
+# lambdahat[3] <- 0.0066 # Raa (April)
+# lambdahat[4] <- 0.0046 # Raa (March)
+# lambdahat[7] <- 0.0047 # Sprakehaug (April)
 
 N <- round(sim_Y/(1-(1-p1hat)*(1-p2hat)), 0)
 N[is.na(N)] <- 0
@@ -105,21 +109,22 @@ Inits <- function(){
   sigma_p <- runif(1, 0.1, 0.4)
   p1 <- exp(log(p1hat)*runif(1, 0.9, 1.1))
   p2 <- exp(log(p2hat)*runif(1, 0.9, 1.1))
-  mu_p1 <- log(p1/(1-p1))
-  mu_p2 <- log(p2/(1-p2))
+  eta1 <- log(p1/(1-p1))
+  eta2 <- log(p2/(1-p2))
   list(
     mu0 = log(lambdahat*runif(length(lambdahat), 0.9, 1.1)),
-    mu_p1 = mu_p1,
-    mu_p2 = mu_p2,
-    logit_p1 = matrix(rnorm(nrowY*ncolY, mu_p1, sigma_p/2) , nrow = nrowY, ncol = ncolY),
-    logit_p2 = matrix(rnorm(nrowY*ncolY, mu_p2, sigma_p/2) , nrow = nrowY, ncol = ncolY),
+    eta1 = eta1,
+    eta2 = eta2,
+    logit_p1 = matrix(rnorm(nrowY*ncolY, eta1, sigma_p/2) , nrow = nrowY, ncol = ncolY),
+    logit_p2 = matrix(rnorm(nrowY*ncolY, eta2, sigma_p/2) , nrow = nrowY, ncol = ncolY),
     N = N,
     lambda = N + 0.01,
-    
     beta = runif(2, -0.5, 0.5),
-    sigma = runif(1, 0.5, 1)
+    sigma = runif(1, 0.5, 1),
+    sigma_p = sigma_p
   )
 }
+
 
 init.values <- list(Inits(), Inits(), Inits())
 settings <- list(
@@ -140,4 +145,4 @@ out <- runMCMC(
   )
 
 # Saving workspace
-save(settings, out, file = "data/posterior_samples/sim_gamma_2_500_sites.RData")
+save(settings, out, file = "posterior_samples/sim_gamma_2_500_sites.RData")

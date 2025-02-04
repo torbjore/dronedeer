@@ -146,13 +146,13 @@ p_{2,i} &= \frac{1}{1+e^{-(\eta_2 + \epsilon_{2,i})}} \\
 \end{align}
 $$
 
-A model with a wide prior for $\sigma_p$ results in poor mixing and unreasonable high upper values; the high prevalence of $Y_i = 0$ in the data could be explained by either a high number of sites having very low expected densities (which is reasonable) or a high number of sites having very low detection probabilities (which is *not* reasonable). Hence, to facilitate model fitting, we used a somewhat informative prior for $\sigma_p$; a Gamma-prior truncated at an upper bound of 0.59,
+A model with a wide prior for $\sigma_p$ results unreasonable high upper values; the high prevalence of $Y_i = 0$ in the data could be explained by either a high number of sites having very low expected densities (which is reasonable) or a high number of sites having very low detection probabilities (which is *not* reasonable). Hence, to facilitate model fitting, we used a somewhat informative prior for $\sigma_p$; a Gamma-prior truncated at an upper bound of 0.59,
 
 $$
 \sigma_p  \sim\text{T} \left[  \text{Gamma}(1,0.05), 0, 0.59 \right]
 $$
 
-The upper bound of $0.59$ was set based on a prior assessment that detection at the 97.5 percentile site should have a maximum of 10 times higher odds than in the 2.5 percentile site ($\log(10)/(1.96 \times 2) \approx 0.59$)
+The upper bound of $0.59$ was set based on a prior assessment that detection at the 97.5 percentile site should have a maximum of 10 times higher odds than in the 2.5 percentile site ($\log(10)/(1.96 \times 2) \approx 0.59$). In @sec-sens_sigma_p we investigate the sensitivity of our results with repect to the choice pf prior for $\sigma_p$.
 
 Bayesian p-values did not indicate any lack of fit of this final model with respect to $Y_i$’s ($p = 0.50$) or $\mathbf{y}_i$’s ($p = 0.19$) (see @sec-ppc).
 
@@ -452,7 +452,7 @@ Simple density estimates based on number of deer seen divided by total area, cor
 (lambdahat <- (Y_per_sam/phat_simple)/area_per_sam)
 ```
 
-### WAIC model selection
+### WAIC model selection {#sec-waic}
 
 @tbl-waic shows the WAIC values for the nine candidate models (see @sec-process_model). The log-normal and gamma models give a significantly better fit to the data than the exponential models. The gamma models are slightly better (lower WAIC) than the log-normal models, but there is very little difference between the three gamma models. We will focus our inference on the `gamma_0` (no covariate effect) and `gamma_2` (a quadratic covariate effect) models.
 
@@ -463,9 +463,9 @@ Simple density estimates based on number of deer seen divided by total area, cor
 
 # WAIC can be used even when we have different observation models: https://discourse.mc-stan.org/t/can-waic-looic-be-used-to-compare-models-with-different-likelihoods/7380
 
+# See Results.qmd for a code version that allows several sets of posterior samples (multiple runs) from the same model
+
 Path <- "../posterior_samples"
-files_all <- dir(path = Path)
-files <- files_all[grep(pattern = "pos|LONG", files_all, invert=TRUE)]
 models <- c(
   "exponential_0",
   "exponential_1",
@@ -480,25 +480,9 @@ models <- c(
 
 df <- data.frame(model = models, WAIC = rep(NA, length(models)))
 for(mod in models){
-  #cat("\n **", mod, "**\n")
-  fls <- files[grep(mod, files)]
-  postsamp <- WAIC <- pWAIC <- NULL
-  for(fl in fls){
-    load(paste0("../posterior_samples/", fl))
-    postsamp <- c(postsamp, out$samples)
-    WAIC <- c(WAIC, out$WAIC$WAIC)
-    pWAIC <- c(pWAIC, out$WAIC$pWAIC)
-  }
-  postsamp <- as.mcmc.list(postsamp)
-  #cat("Number of runs:", length(fls), "\n")
-  #cat("Settings for each run:\n")
-  #print(unlist(settings))
-  #cat("\nConvergence diagnostics for all chains combined:\n")
-  #try(print(gelman.diag(postsamp)))
-  #cat("\nWIAC in each run:", WAIC)
-  #cat("\nMean WAIC:", mean(WAIC), "\n")
-  df$WAIC[df$model == mod] <- mean(WAIC)
-  #df$k[df$model == mod] <- mean(pWAIC)
+  fl <- paste0(mod, ".RData")
+  load(paste0("../posterior_samples/", fl))
+  df$WAIC[df$model == mod] <- out$WAIC$WAIC
 }
 
 kable(df, digits = 2)
@@ -773,6 +757,208 @@ kable(df,
 
 ### Some sensitivity assessment
 
-### Proof of concept - Identifiability assessment by data cloning
+#### Choice of radom distribution for $\lambda$
 
-## References {.unnumbered}
+To assess the sensitivity of the model predictions to the choice of random distribution of the Poisson expectation, $\lambda$, across sites, predictions from each of the nine candidate models at mean distance from field at Haugen in March are shown in @tbl-sens_distr. The exponential models give the most precise estimates, but have a substantially lower support by WAIC (@sec-waic). The log-normal models, which have marginally less support by WAIC than the gamma models, give substantially higher posterior mean and 97.5 percentile (upper 95\% credible limit) than the gamma models (the posterior medians, and to a smaller degree the 2.5 percentile, are also somewhat higher). This is because the log-normal distribution has a heavier tail then the gamma-distribution with the same median and variance. The similarities in the WAIC values reflect that we have little information about the exact shape of the random distribution in the data (other than having evidence that the exponential distribution fits the data less well compared to the other two candidate distributions). In conclusion, we recognize that the upper 95\% credible limits are highly model dependent, but have higher confidence in the lower 95\% credible limits and the posterior medians.
+
+```{r}
+#| echo: false
+#| label: tbl-sens_distr
+#| tab-cap: "Posterior summaries for deer density (individuals per km$^2$) from each of the nine candidate models at mean distance from field at Haugen in March (WAIC values (@sec-waic) are given in the 2$^{\\text{nd}}$ column)"
+
+Path <- "../posterior_samples"
+models <- c(
+  "exponential_0",
+  "exponential_1",
+  "exponential_2",
+  "lognormal_0",
+  "lognormal_1",
+  "lognormal_2",
+  "gamma_0",
+  "gamma_1",
+  "gamma_2"
+  )
+
+i <- 0
+df <- data.frame(model = models, WAIC = NA, mean = NA, median = NA, lwr = NA, upr = NA)
+for(mod in models){
+  i <- i+1
+  fl <- paste0(mod, ".RData")
+  load(paste0("../posterior_samples/", fl))
+  postsamp <- out$samples |> as.matrix()
+  y <- pred(x=0, PS = postsamp, sam = 2)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$WAIC[i] <- out$WAIC$WAIC
+  df$mean[i] <- mean(y)
+  df$median[i] <- Q[2]
+  df$lwr[i] <- Q[1]
+  df$upr[i] <- Q[3]
+}
+
+kable(df, digits = 2,
+      col.names = c("Model", "WAIC", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I."))
+```
+
+#### Sensitivity to prior for $\sigma_p$ {#sec-sens_sigma_p}
+
+We used a somewhat informative prior for $\sigma_p$ (`sigma_p`) (@sec-posterior_checks and @sec-overlap). To assess the sensitivity of the model results to this prior, we also fitted a model with a $\text{Uniform}(0, 10)$ prior for $\sigma_p$. The summary of this model is shown below and posterior summaries from this model are compared to the summaries from the original model in @fig-compare.
+
+Despite the substantially higher posterior values for $\sigma_p$ with the wider prior, the posterior distributions for other parameters are little affected (@fig-compare). There are no strong correlations between posterior samples of the the parameters for either of the two models (@tbl-cor_orig and @tbl-cor_wide). We conclude that our results are not sensitive to the choice of prior for $\sigma_p$.
+
+```{r}
+#| echo: FALSE
+
+load("../posterior_samples/gamma_2_no_Trunc_uniform_sigma_p.RData")
+gamma2_wide <- out$samples[, c(17:24, 5:6, 25, 7:8, 26)]
+gamma2_orig <- gamma2[, c(17:24, 5:6, 25, 7:8, 26)]
+summary(gamma2_wide)
+summary(gamma2_orig)
+```
+
+```{r}
+#| echo: FALSE
+#| label: fig-compare
+#| fig-height: 8
+#| fig-cap: "Posterior medians and 95% credible intervals for the parameters in `gamma2` model; orignal model in blue and model with wider $\\text{Uniform}(0, 10)$ prior for $\\sigma_p$ (`sigma_p`) in red."
+
+library(plotrix)
+
+Q_wide <- apply(as.matrix(gamma2_wide), 2, quantile, probs = c(0.025, 0.5, 0.975))
+Q_orig <- apply(as.matrix(gamma2_orig), 2, quantile, probs = c(0.025, 0.5, 0.975))
+
+offset <- 0.15
+npar <- ncol(Q_wide)
+plotCI(Q_wide[2,], npar:1 + offset, li = Q_wide[1,], ui = Q_wide[3,], err = "x", col = "red", axes = FALSE, ylab = "", xlab = "Parameter value")
+plotCI(Q_orig[2,], npar:1 - offset, li = Q_orig[1,], ui = Q_orig[3,], err = "x", add = TRUE, col = "blue")
+box()
+axis(1)
+axis(2, at = npar:1, labels = dimnames(gamma2_wide[[1]])[[2]], las = 1)
+```
+
+```{r}
+#| echo: FALSE
+#| label: tbl-cor_orig
+#| tab-cap: "Correlation matrix for posterior samples in the original 'gamma2' model."
+
+kable(cor(as.matrix(gamma2_orig)), digits = 3)
+```
+
+```{r}
+#| echo: FALSE
+#| label: tbl-cor_wide
+#| tab-cap: "Correlation matrix for posterior samples in the 'gamma2' mode with wider $\\text{Uniform}(0, 10)$ prior for $\\sigma_p$ (`sigma_p`)"
+
+kable(cor(as.matrix(gamma2_wide)), digits = 3)
+```
+
+
+### Proof of concept - Identifiability assessment by simulations
+
+To check that there are no inherent identifiability problems with the model, we fitted the model to simulated data; 8 areas with 500 sites. Parameters were set to posterior mean of original fit, and we used the same prior distributions as in the original fit. Posterior summaries of parameters are shown below, overlap between prior and posterior distributions are shown in @tbl-overlap_sim, predicted densities are plotted in @fig-dens_sim, and predicted densities at mean distance from the field are shown in @tbl-dens_sim.
+
+With this much data (8 areas with 500 sites each), we obtain substantially higher precision of the estimates, as well as lower overlap between posterior and prior distributions. This shows that that there are no inherent identifiability problems in the model. One would perhaps expect higher precision (narrower credible intervals) when having 8 $\times$ 500 sites but the high variation in number of deer per sites contributes to much uncertainty, and since the average area of sites is just under 0.6 ha (0.6% of a km$^2$), the expected counts per km$^2$ is quite small.
+
+```{r}
+#| echo: false
+
+load("../posterior_samples/sim/sim_gamma_2_500_sites.RData")
+#gelman.diag(out)
+#plot(out$samples)
+summary(out)
+```
+
+```{r}
+#| echo: false
+#| label: fig-dens_sim
+#| fig-height: 8
+#| fig-cap: "Simulation results: Plots of posterior summaries of deer density when sample size has increased to 500 sites per area and month, with model parameters set to posterior median of original fit. Compare with @fig-dens."
+
+samp <- as.matrix(out)
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]],
+          plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]], ncol = 2)
+```
+
+
+```{r}
+#| echo: FALSE
+#| message: FALSE
+#| label: tbl-overlap_sim
+#| tab-cap: "Simulation results: Overlap between prior and posterior distributions for the parameters when sample size has been increased to 500 sites per study area and month. Compare with @tbl-overlap."
+
+load(file = "../data/prior_parameters_for_p.rda")
+
+# samp <- as.matrix(gamma2)
+# 
+samp <- samp[, c("beta[1]", "beta[2]", "mu_p1", "mu_p2", "mu0[1]", "mu0[2]", "mu0[3]", "mu0[4]", "mu0[5]", "mu0[6]", "mu0[7]", "mu0[8]", "sigma", "sigma_p")]
+dimnames(samp)[[2]][3:4] <- c("eta1", "eta2")
+df = data.frame(par = dimnames(samp)[[2]],
+                sam = c(rep("", 4), sam_names, rep("", 2)),
+                prior = c(
+                  rep("N(0, sd = 2)", 2),
+                  rep(paste0("N(", round(prior_parameters_for_p$mean_eta, 2), ", sd = ", round(prior_parameters_for_p$sd_eta, 2), ")" ), 2),
+                  rep("N(0, sd = 10)", 8),
+                  "Gamma(shape = 0.01, rate = 0.01)",
+                  "T[Gamma(shape = 1, rate = 0.05), 0, 0.59]"
+                ),
+                overlap = 0)
+
+#1-2 (beta):
+lambdahat <- nimbleData$const$lambdahat
+for(i in 1:2){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 2)
+}
+
+#3-4 (eta1 and eta2)
+for(i in 3:4){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = prior_parameters_for_p$mean_eta, sd = prior_parameters_for_p$sd_eta)
+}
+
+#5-12 (mu0):
+for(i in 5:12){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 10)
+}
+
+#13 (sigma)
+df$overlap[13] <- post_prior_overlap(samp[,13], dgamma, shape = 0.01, rate = 0.01)
+
+#14 (sigma_p)
+# Truncated distribution
+library(LaplacesDemon)
+df$overlap[14] <- post_prior_overlap(samp[,14], dtrunc, spec = "gamma", shape = 1, rate = 0.05, a = 0, b = 0.59)
+
+df$overlap <- round(df$overlap, 3)
+kable(df, 
+       col.names = c("Parameter", "Sampling area and month", "Prior distribution", "Overlap"))
+```
+
+
+```{r}
+#| echo: FALSE
+#| label: tbl-dens_sim
+#| tab-cap: "Simulation results: Summary for posterior distribution for estimated deer densities at mean distance from the field (162 meters; stipled lines in @fig-dens_sim) when sample size has been increased to 500 sites per area and moth. Compare with @tbl-dens2."
+
+df <- data.frame(SAM = sam_names, x = mpv)
+mpv_st <- (mpv - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(mpv_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+```
+
+# References {.unnumbered}
