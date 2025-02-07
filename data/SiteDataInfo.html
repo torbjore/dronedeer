@@ -3076,39 +3076,39 @@ vertical-align: -.125em;
 
 <p>The <code>SiteData.rda</code> file contains data.frame <code>SiteData</code> with the following variables:</p>
 <ul>
-<li><code>Survey</code>: A single flight conducted using a UAV to collect data over a designated area. A total of 31 survey flights were conducted in this study.</li>
-<li><code>Study_area</code>: A specific geographic location selected for conducting surveys. For this study, four sampling areas were selected: Haugen, Rå, Sprakehaug, and Søre Bjørkum.</li>
-<li><code>Route</code>: A predetermined flight path followed by the UAV during a survey. In this study, each sampling area contained between three and five routes, and each route was surveyed between one and three times.</li>
-<li><code>Month</code>: The month during which a survey was conducted (e.g., March or April).</li>
-<li><code>Date</code>: The specific date a survey was conducted.</li>
-<li><code>Weather</code>: The weather conditions during a survey as noted by Yr and confirmed by observations, such as clear, mostly clear, mostly overcast, mostly sunny, overcast, slightly overcast, or sunny.</li>
-<li><code>Temperature_C</code>: The temperature (in degrees Celsius) at the end of a survey.</li>
-<li><code>Snow</code>: Whether the survey area was covered with snow during the survey (yes or no). A survey area was considered snow-covered if more than 50% of the aerial images displayed snow-covered surfaces.</li>
-<li><code>Focal_image</code>: An aerial image selected for further analysis. All focal images are non-overlapping with other focal images from the same survey.</li>
-<li><code>Site</code>: The specific geographic region/physical landscape captured within the frame of a single focal image.</li>
-<li><code>File</code>: A collection of file names within a specific survey folder, representing the focal images associated with that survey. This list of files is retrieved from the folder directory and used for processing each focal image to extract relevant site data. Each file corresponds to a raster image that is analyzed in the context of the study.</li>
-<li><code>Area</code>: The total area (in square meters) covered by a site within a focal image.</li>
-<li><code>mean_x</code>: The mean x-coordinate of all pixels within a focal image, representing the average horizontal position across the entire image.</li>
-<li><code>mean_y</code>: The mean y-coordinate of all pixels within a focal image, representing the average vertical position across the entire image.</li>
-<li><code>elevation_at_mean_pos</code>: The elevation at the average horizontal and vertical position of a site, derived from a DEM at the geographic location corresponding to the mean x and mean y coordinates.</li>
-<li><code>mean_elevation</code>: The average elevation (in meters above sea level) of a site, calculated as the mean of all elevation values within the site, derived from a DEM.</li>
-<li><code>min_elevation</code>: The lowest elevation (in meters above sea level) within a site, derived from a DEM.</li>
-<li><code>max_elevation</code>: The highest elevation (in meters above sea level) within a site, derived from a DEM.</li>
-<li><code>proportion_no_field</code>: The proportion of a site that does not consist of fields. Calculated as the area of non-field land cover (e.g., forest, water, bare ground) divided by the total area of the site, derived from a polygon file.</li>
-<li><code>field_dist_at_mean_pos</code>: The distance (in meters) from the average horizontal and vertical position of a site to the nearest field, derived from a DEM at the geographic location corresponding to the mean x and mean y coordinates and a polygon file.</li>
-<li><code>mean_field_dist</code>: The average distance (in meters) from all points within a site to the nearest field, calculated as the mean of all distance values within the site, derived from a DEM and a polygon file.</li>
-<li><code>min_field_dist</code>: The shortest distance (in meters) from any point within a site to the nearest field, derived from a DEM and a polygon file.</li>
-<li><code>max_field_dist</code>: The longest distance (in meters) from any point within a site to the nearest field, derived from a DEM and a polygon file.</li>
-<li><code>proportion_forest</code>: The proportion of a site that consists of forested land, calculated as the area of forest cover divided by the total area of the site, derived from a polygon file.</li>
-<li><code>forest_dist_at_mean_pos</code>: The distance (in meters) from the average horizontal and vertical position of a site to the nearest forested area, derived from a DEM at the geographic location corresponding to the mean x and mean y coordinates and a polygon file.</li>
-<li><code>mean_forest_dist</code>: The average distance (in meters) from all points within a site to the nearest forested area, calculated as the mean of all distance values within the site, derived from a DEM and a polygon file.</li>
-<li><code>min_forest_dist</code>: The shortest distance (in meters) from any point within a site to the nearest forested area, derived from a DEM and a polygon file.</li>
-<li><code>max_forest_dist</code>: The longest distance (in meters) from any point within a site to the nearest forested area, derived from a DEM and a polygon file.</li>
-<li><code>aspect_deg</code>: The average compass direction (in degrees) of the slope within a site, calculated as the mean of all aspect values within the site, derived from a DEM. Aspect is measured from 0° (or 360° for north) to 360°, where 0° represents north, 90° represents east, 180° represents south, and 270° represents west.</li>
-<li><code>slope_deg</code>: The average steepness (in degrees) of the terrain within a site, calculated as the mean of all slope values within the site, derived from a DEM. Slope represents the angle between the ground surface and a horizontal plane, with 0° indicating flat terrain and higher values indicating steeper slopes.</li>
-<li><code>n_both</code>: The number of red deer detected by both observer 1 and observer 2 within a site.</li>
-<li><code>n_only_ab</code>: The number of red deer detected only by observer 1 within a site.</li>
-<li><code>n_only_jb</code>: The number of red deer detected only by observer 2 within a site.</li>
+<li><p><code>Survey</code>: A single flight conducted using a UAV to collect data over a designated area. A total of 31 survey flights were conducted in this study.</p></li>
+<li><p><code>Study_area</code>: A specific geographic location selected for conducting surveys. For this study, four sampling areas were selected: Haugen, Rå, Sprakehaug, and Søre Bjørkum.</p></li>
+<li><p><code>Route</code>: A predetermined flight path followed by the UAV during a survey. In this study, each sampling area contained between three and five routes, and each route was surveyed between one and three times.</p></li>
+<li><p><code>Month</code>: The month during which a survey was conducted (March or April).</p></li>
+<li><p><code>Date</code>: The specific date a survey was conducted (R Date format).</p></li>
+<li><p><code>Focal_image</code>: Unique identifier for the focal image constituting the <code>Site</code>. All focal images are non-overlapping with other focal images from the same survey.</p></li>
+<li><p><code>Site</code>: Site number within <code>Survey</code> (numbered consecutively from 1 within each <code>Survey</code>).</p></li>
+<li><p><code>File</code>: File name for the <code>Folcal image</code>. Each file name corresponds to a raster image used for extracting information such as mean elevation, distance to the field, etc. from a Digital Elevation Model (DEM) (see variables below).</p></li>
+<li><p><code>Weather</code>: The weather conditions during a survey as noted by Yr.no and confirmed by observations, such as clear, mostly clear, mostly overcast, mostly sunny, overcast, slightly overcast, or sunny.</p></li>
+<li><p><code>Temperature_C</code>: The temperature (in degrees Celsius) at the end of a survey.</p></li>
+<li><p><code>Snow</code>: Whether the survey area was covered with snow during the survey (yes or no). A survey area was considered snow-covered if more than 50% of the aerial images displayed snow-covered surfaces.</p></li>
+<li><p><code>Area</code>: The total area (in square meters) covered by a site within a focal image.</p></li>
+<li><p><code>mean_x</code>: The mean UTM x-coordinate (east) of all pixels within a focal image, representing the average horizontal position across the entire image.</p></li>
+<li><p><code>mean_y</code>: The mean UTM y-coordinate (north) of all pixels within a focal image, representing the average vertical position across the entire image.</p></li>
+<li><p><code>elevation_at_mean_pos</code>: The elevation at the average east (x) and north (y) UTM coordinate of the site, derived from a DEM.</p></li>
+<li><p><code>mean_elevation</code>: The average elevation (in meters above sea level) of a site, calculated as the mean of all elevation values within the site, derived from a DEM.</p></li>
+<li><p><code>min_elevation</code>: The lowest elevation (in meters above sea level) within the site, derived from a DEM.</p></li>
+<li><p><code>max_elevation</code>: The highest elevation (in meters above sea level) within the site, derived from a DEM.</p></li>
+<li><p><code>proportion_no_field</code>: The proportion of the site that does not consist of fields. Calculated as the area of non-field land cover (e.g., forest, water, bare ground) divided by the total area of the site, derived from a polygon file.</p></li>
+<li><p><code>field_dist_at_mean_pos</code>: The distance (in meters) from the average east (x) and north (y) UTM coordinate of the site to the nearest field, derived from a DEM and a habitat polygon file.</p></li>
+<li><p><code>mean_field_dist</code>: The average distance (in meters) from all points within a site to the nearest field, calculated as the mean of all distance values within the site, derived from a DEM and a habitat polygon file.</p></li>
+<li><p><code>min_field_dist</code>: The shortest distance (in meters) from any point within a site to the nearest field, derived from a DEM and a habitat polygon file.</p></li>
+<li><p><code>max_field_dist</code>: The longest distance (in meters) from any point within a site to the nearest field, derived from a DEM and a habitat polygon file.</p></li>
+<li><p><code>proportion_forest</code>: The proportion of a site that consists of forested land, calculated as the area of forest cover divided by the total area of the site, derived from a habitat polygon file.</p></li>
+<li><p><code>forest_dist_at_mean_pos</code>: The distance (in meters) from the average east (x) and north (y) UTM coordinate of a site to the nearest forested area, derived from a DEM and a habitat polygon file.</p></li>
+<li><p><code>mean_forest_dist</code>: The average distance (in meters) from all points within a site to the nearest forested area, calculated as the mean of all distance values within the site, derived from a DEM and a habitat polygon file.</p></li>
+<li><p><code>min_forest_dist</code>: The shortest distance (in meters) from any point within a site to the nearest forested area, derived from a DEM and a habitat polygon file.</p></li>
+<li><p><code>max_forest_dist</code>: The longest distance (in meters) from any point within a site to the nearest forested area, derived from a DEM and a habitat polygon file.</p></li>
+<li><p><code>aspect_deg</code>: The average compass direction (in degrees) of the slope within a site, calculated as the mean of all aspect values within the site, derived from a DEM. Aspect is measured as degree north from 0° to 360°, where 0° represents north, 90° represents east, 180° represents south, and 270° represents west.</p></li>
+<li><p><code>slope_deg</code>: The average steepness (in degrees) of the terrain within a site, calculated as the mean of all slope values within the site, derived from a DEM. Slope represents the angle between the ground surface and a horizontal plane, with 0° indicating flat terrain and higher values indicating steeper slopes.</p></li>
+<li><p><code>n_both</code>: The number of red deer detected by both observer 1 and observer 2 within the site.</p></li>
+<li><p><code>n_only_ab</code>: The number of red deer detected only by observer 1 within the site.</p></li>
+<li><p><code>n_only_jb</code>: The number of red deer detected only by observer 2 within the site.</p></li>
 </ul>
 
 </main>
