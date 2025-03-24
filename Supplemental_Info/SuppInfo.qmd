@@ -1,6 +1,6 @@
 ---
 title: "Detailed model formulation, analysis, and results"
-subtitle: "**Supplemental Information for:** Developing a protocol for estimation of red deer (*Cervus elaphus*) population density using drones in a steep and rugged terrain"
+subtitle: "**Supporting Information for:** Developing a protocol for estimation of red deer (*Cervus elaphus*) population density using drones in a steep and rugged terrain"
 # Sjekk hva endelig tittel blir
 date: now
 authors: <to be inserted after peer-review>
@@ -146,7 +146,7 @@ p_{2,i} &= \frac{1}{1+e^{-(\eta_2 + \epsilon_{2,i})}} \\
 \end{align}
 $$
 
-A model with a wide prior for $\sigma_p$ results unreasonable high upper values; the high prevalence of $Y_i = 0$ in the data could be explained by either a high number of sites having very low expected densities (which is reasonable) or a high number of sites having very low detection probabilities (which is *not* reasonable). Hence, to facilitate model fitting, we used a somewhat informative prior for $\sigma_p$; a Gamma-prior truncated at an upper bound of 0.59,
+A model with a wide prior for $\sigma_p$ resulted in unreasonable high upper values; the high prevalence of $Y_i = 0$ in the data could be explained by either a high number of sites having very low expected densities (which is reasonable) or a high number of sites having very low detection probabilities (which is *not* reasonable). Hence, to facilitate model fitting, we used a somewhat informative prior for $\sigma_p$; a Gamma-prior truncated at an upper bound of 0.59,
 
 $$
 \sigma_p  \sim\text{T} \left[  \text{Gamma}(1,0.05), 0, 0.59 \right]
@@ -188,7 +188,7 @@ We ran MCMC-sampling on each of the nine models with 3 chains with random and in
 
 ## Estimating densities at the specific sites included in each survey {#sec-estimating_d}
 
-The estimators for mean density presented above assume that the sites are random samples of a large number of sites of the same characteristics, and the estimates apply to this statistical population of sites. We also computed estimates of density (at the time of flight) at the specific sites included in each survey as the estimated number of individuals present divided by the total area covered, $\bar{d}_s =\sum_{i=1}^n \hat{N}_i/\sum_{i=1}^n a_i$ (the sums are over all $n$ sites in the survey and the subscript $s$ in $\bar{d}_s$ indicates that the mean only applies to the specific sites sampled).
+The estimators for mean density presented in @sec-process_model assume that the sites are random samples of a large number of sites of the same characteristics, and the estimates apply to this statistical population of sites. We also computed estimates of density (at the time of flight) at the specific sites included in each survey as the estimated number of individuals present divided by the total area covered, $\bar{d}_s =\sum_{i=1}^n \hat{N}_i/\sum_{i=1}^n a_i$ (the sums are over all $n$ sites in the survey and the subscript $s$ in $\bar{d}_s$ indicates that the mean only applies to the specific sites sampled).
 
 ## Estimating number of deer in a specific area {#sec-estimating_N}
 
@@ -402,6 +402,17 @@ Total area per sample-area-and-month (unit: hectare = 1/100 km$^2$)
 area_per_sam
 ```
 
+Due to the steep and rugged terrain, there was a considerable variation in the area covered by the survey sites (@fig-area).
+
+```{r}
+#| echo: false
+#| label: fig-area
+#| fig-cap: "Histogram of area of of the sampling sites."
+
+hist(nimbleData$const$area, xlab = "Area (ha)")
+```
+
+
 Numbers of deer seen per 'sample-area-and-month' ('sam'):
 
 ```{r}
@@ -420,7 +431,9 @@ table(nimbleData$data$Y)
 ```
 (I.e, there were `r tab[1]` sites with zero deer seen, `r tab[2]` sites with 1 deer, and so on)
 
-Simple point estimate of detectability based on how many of those seen by obs1 is seen by obs2 and vice versa:
+### Simple estimates for MCMC staring values
+
+Simple point estimate of detectability based on how many of those seen by obs1 is seen by obs2 and vice versa can be computed as follows:
 
 ```{r}
 colsumy <- apply(nimbleData$data$y, 3, sum, na.rm=TRUE)
@@ -551,7 +564,7 @@ While the main focus of the modelling was to estimate density where the sampled 
 ```{r}
 #| echo: false
 #| label: tbl-mean_ds0
-#| tab-cap: "Summary for posterior distribution (`gamma0` model) for deer densities at the sampled sites during each sample area and month. Units are number of deer per hectare (1/100 km$^2$)."
+#| tab-cap: "Summary for posterior distribution (`gamma0` model) for deer densities at the sampled sites during each sample area and month. Units are number of deer per hectare (1/100 km$^2$). The three rightmost columns show the 50%, the 2.5% and the 97.5% quantiles (in the three cases where no deer were observed (at Raa and at Sprakehaug in April) the mean is higher than the 97.5% quantile due to the low median and high variance of the posterior distribution)."
 
 samp <- as.matrix(gamma0)
 samp_mean_ds <- samp[, paste0("mean_ds[", 1:8, "]")]
@@ -573,7 +586,7 @@ kable(D[c(2,1,4,3,6,5,8,7), ], digits = 4, row.names = FALSE,
 ```{r}
 #| echo: false
 #| label: tbl-mean_ds2
-#| tab-cap: "Summary for posterior distribution  (`gamma2` model) for deer densities at the sampled sites during each sample area and month. Units are number of deer per hectare (1/100 km$^2$)."
+#| tab-cap: "Summary for posterior distribution  (`gamma2` model) for deer densities at the sampled sites during each sample area and month. Units are number of deer per hectare (1/100 km$^2$). The three rightmost columns show the 50%, the 2.5% and the 97.5% quantiles (in the three cases where no deer were observed (at Raa and at Sprakehaug in April) the mean is higher than the 97.5% quantile due to the low median and high variance of the posterior distribution)."
 
 samp <- as.matrix(gamma2)
 samp_mean_ds <- samp[, paste0("mean_ds[", 1:8, "]")]
@@ -742,7 +755,7 @@ kable(df,
 
 #### Choice of radom distribution for $\lambda$
 
-To assess the sensitivity of the model predictions to the choice of random distribution of the Poisson expectation, $\lambda$, across sites, predictions from each of the nine candidate models at mean distance from field at Haugen in March are shown in @tbl-sens_distr. The exponential models give the most precise estimates, but have a substantially lower support by WAIC (@sec-waic). The log-normal models, which have marginally less support by WAIC than the gamma models, give substantially higher posterior mean and 97.5 percentile (upper 95\% credible limit) than the gamma models (the posterior medians, and to a smaller degree the 2.5 percentile, are also somewhat higher). This is because the log-normal distribution has a heavier tail then the gamma-distribution with the same median and variance. The similarities in the WAIC values reflect that we have little information about the exact shape of the random distribution in the data (other than having evidence that the exponential distribution fits the data less well compared to the other two candidate distributions). In conclusion, we recognize that the upper 95\% credible limits are highly model dependent, but have higher confidence in the lower 95\% credible limits and the posterior medians.
+To assess the sensitivity of the model predictions to the choice of random distribution of the Poisson expectation, $\lambda$, across sites, predictions from each of the nine candidate models at mean distance from field at Haugen in March are shown in @tbl-sens_distr. The exponential models give the most precise estimates, but have a substantially lower support by WAIC (@sec-waic). The log-normal models, which have marginally less support by WAIC than the gamma models, give substantially higher posterior mean and 97.5 percentile (upper 95\% credible limit) than the gamma models (the posterior medians, and to a smaller degree the 2.5 percentile, are also somewhat higher). This is because the log-normal distribution has a heavier tail than the gamma-distribution with the same median and variance. The similarities in the WAIC values reflect that we have little information about the exact shape of the random distribution in the data (other than having evidence that the exponential distribution fits the data less well compared to the other two candidate distributions). In conclusion, we recognize that the upper 95\% credible limits are highly model dependent, but have higher confidence in the lower 95\% credible limits and the posterior medians.
 
 ```{r}
 #| echo: false
@@ -839,7 +852,7 @@ kable(cor(as.matrix(gamma2_wide)), digits = 3)
 
 To check that there are no inherent identifiability problems with the model, we fitted the model to simulated data; 8 areas with 500 sites. Parameters were set to posterior mean of original fit, and we used the same prior distributions as in the original fit. Posterior summaries of parameters are shown below, overlap between prior and posterior distributions are shown in @tbl-overlap_sim, predicted densities are plotted in @fig-dens_sim, and predicted densities at mean distance from the field are shown in @tbl-dens_sim.
 
-With this much data (8 areas with 500 sites each), we obtain substantially higher precision of the estimates, as well as lower overlap between posterior and prior distributions. This shows that that there are no inherent identifiability problems in the model. One would perhaps expect higher precision (narrower credible intervals) when having 8 $\times$ 500 sites but the high variation in number of deer per sites contributes to much uncertainty, and since the average area of sites is just under 0.6 ha (0.6% of a km$^2$), the expected counts per km$^2$ is quite small.
+With this much data (8 areas with 500 sites each), we obtain substantially higher precision of the estimates, as well as lower overlap between posterior and prior distributions. This shows that that there are no inherent identifiability problems in the model. One would perhaps expect higher precision (narrower credible intervals) when having 8 $\times$ 500 sites but the high variation in number of deer per sites contributes to much uncertainty, and since the average area of sites is just under 0.6 ha (0.6% of a km$^2$), the expected counts per site is quite small.
 
 ```{r}
 #| echo: false
