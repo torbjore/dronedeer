@@ -101,7 +101,7 @@ a &= \frac{1}{e^{\sigma^2} - 1} \\
 \end{align}
 $$
 
-Hence, mean and variance of deer density in the gamma model has the same expressions as in the log-normal model, respectively $\frac{a}{b} = e^{\mu_i+\sigma^2/2}$ and $a/b^2 = \left( e^{\sigma^2}-1 \right) e^{2\mu_i+\sigma^2 }$. Compared to the log-normal distribution with the same mean and variance, the gamma distribution has lower density far out in the tail of the distribution.
+Hence, mean and variance of deer density in the gamma model has the same expressions as in the log-normal model, respectively $\frac{a}{b} = e^{\mu_i+\sigma^2/2}$ and $a/b^2 = \left( e^{\sigma^2}-1 \right) e^{2\mu_i+\sigma^2 }$. Compared to the log-normal distribution with the same mean and variance, the gamma distribution has a higher density close to zero and a lower density far out in the tail of the distribution.
 
 ## Modelling of covariate effects
 
@@ -235,7 +235,7 @@ All data are in the `data` folder of the repository. The data-files included her
 
 ## Enclosures
 
-The enclosure contained a total of 117 red deer in a 5 hectare area of natural forest. Two survey flights were conducted over the enclosures; one at 40 m above ground, and one at 60 meter above ground. We used these data to first test the method, and then to obtain information about detection probabilities, which we used to inform priors for detection probabilities in the models fitted to the wild deer data (see Supplemental Information S1).
+The enclosure contained a total of 117 red deer in a 5 hectare area of natural forest. Two survey flights were conducted over the enclosures; one at 40 m above ground, and one at 60 meter above ground. We used these data to first test the method, and then to obtain information about detection probabilities, which we used to inform priors for detection probabilities in the models fitted to the wild deer data.
 
 ### Overview of data
 
@@ -310,7 +310,14 @@ Judging by the posterior median, the approximate frequentist confidence interval
 
 ### Detection probabilities {#sec-encl_detection}
 
-The surveys of the sampling sites in the wild population were conducted with flights at 60 m above ground. Hence, we used the posterior distribution of `eta[2]` to inform priors for detection probabilities in the models fitted to these data.
+```{r}
+#| echo: false
+postmat <- as.matrix(posterior_samples)
+eta2 <- postmat[,"eta[2]"]
+cri <- quantile(plogis(eta2), c(0.5, 0.025, 0.975))
+```
+
+The surveys of the sampling sites in the wild population were conducted with flights at 60 m above ground. Hence, we used the posterior distribution of `eta[2]` to inform priors for detection probabilities in the models fitted to these data. Transforming `eta[2]` to the probability scale gives a posterior median detection probability of `r sprintf("%.2f", cri[1])` and a 95% credible interval ranging from `r sprintf("%.2f", cri[2])` to `r sprintf("%.2f", cri[3])` (see also @fig-p).
 
 The posterior distribution of `eta[2]` is plotted in @fig-eta (black and red) and the corresponding posterior distribution for detection probability at the median site is plotted in @fig-p. As a prior for `eta[2]` in the analysis of the wild deer data from the sampling sites (blue lines), we used a normal distribution with the same mean and 1.5 times the standard deviation of the posterior samples from the model fitted to the enclosure data.
 
@@ -320,8 +327,6 @@ The posterior distribution of `eta[2]` is plotted in @fig-eta (black and red) an
 #| fig-cap: "The distribution of the posterior samples of `eta[2]` (black), the normal distribution with the same mean and standard deviation as the posterior samples (red), and the normal distribution with the same mean and 1.5 times the standard deviation of the posterior samples (blue). The latter distribution (in blue) was used as a prior for `eta[2]` in the models fitted to the survey data from the wild populations."
 
 fudge <- 1.5
-postmat <- as.matrix(posterior_samples)
-eta2 <- postmat[,"eta[2]"]
 xlow <- -1.5
 xhigh <- 4.5
 eta2x <- seq(xlow, xhigh, length.out = 120)
@@ -334,7 +339,7 @@ lines(dnorm(eta2x, mean(eta2), fudge*sd(eta2)) ~ eta2x, col = "blue")
 ```{r}
 #| echo: false
 #| label: fig-p
-#| fig-cap: "The distributions of `eta[2]` transformed to the probability scale (i.e., detection probabiity at the median site). Colour codes are the same as in @fig-eta."
+#| fig-cap: "The distributions of `eta[2]` transformed to the probability scale (i.e., detection probabiity at the median site). Colour codes are the same as in @fig-eta. "
 
 library(logitnorm) # for dlogitnorm
 
@@ -343,6 +348,8 @@ plot(postdensP, main = "Posterior density", xlab = "Detection probability at med
 Px <- seq(0, 1, length.out = 120)
 lines(dlogitnorm(Px, mean(eta2), sd(eta2)) ~ Px, col = "red")
 lines(dlogitnorm(Px, mean(eta2), fudge*sd(eta2)) ~ Px, col = "blue")
+
+cri <- quantile(plogis(eta2), c(0.5, 0.025, 0.975))
 ```
 
 The posterior distribution of `sigma_p` is shown in @fig-sigma_p (note that there is a prior upper bound at 0.59; see @sec-posterior_checks for prior specification). In @fig-sigma_odds, this posterior distribution is transformed to the posterior distribution for the odds-ratio for detection at the 97.5 percentile site versus the 2.5 percentile site.
@@ -564,7 +571,7 @@ While the main focus of the modelling was to estimate density where the sampled 
 ```{r}
 #| echo: false
 #| label: tbl-mean_ds0
-#| tab-cap: "Summary for posterior distribution (`gamma0` model) for deer densities at the sampled sites during each sample area and month. Units are number of deer per hectare (1/100 km$^2$). The three rightmost columns show the 50%, the 2.5% and the 97.5% quantiles (in the three cases where no deer were observed (at Raa and at Sprakehaug in April) the mean is higher than the 97.5% quantile due to the low median and high variance of the posterior distribution)."
+#| tab-cap: "Summary for posterior distribution (`gamma0` model) for deer densities at the sampled sites at each sample area and month. Units are number of deer per hectare (1/100 km$^2$). The three rightmost columns show the 50%, the 2.5% and the 97.5% quantiles (in the three cases where no deer were observed (at Raa and at Sprakehaug in April) the mean is higher than the 97.5% quantile due to the low median and high variance of the posterior distribution)."
 
 samp <- as.matrix(gamma0)
 samp_mean_ds <- samp[, paste0("mean_ds[", 1:8, "]")]
@@ -586,7 +593,7 @@ kable(D[c(2,1,4,3,6,5,8,7), ], digits = 4, row.names = FALSE,
 ```{r}
 #| echo: false
 #| label: tbl-mean_ds2
-#| tab-cap: "Summary for posterior distribution  (`gamma2` model) for deer densities at the sampled sites during each sample area and month. Units are number of deer per hectare (1/100 km$^2$). The three rightmost columns show the 50%, the 2.5% and the 97.5% quantiles (in the three cases where no deer were observed (at Raa and at Sprakehaug in April) the mean is higher than the 97.5% quantile due to the low median and high variance of the posterior distribution)."
+#| tab-cap: "Summary for posterior distribution  (`gamma2` model) for deer densities at the sampled sites at each sample area and month. Units are number of deer per hectare (1/100 km$^2$). The three rightmost columns show the 50%, the 2.5% and the 97.5% quantiles (in the three cases where no deer were observed (at Raa and at Sprakehaug in April) the mean is higher than the 97.5% quantile due to the low median and high variance of the posterior distribution)."
 
 samp <- as.matrix(gamma2)
 samp_mean_ds <- samp[, paste0("mean_ds[", 1:8, "]")]
@@ -673,6 +680,9 @@ for(SAM in 1:length(sam_names)){
 kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
       col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
       ))
+
+# Computing marginal mean density (in ha^(-1)) for later:
+marginal_mean_density <- mean(df$mean)/100
 ```
 
 ```{r}
@@ -696,6 +706,84 @@ kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
       col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
       ))
 ```
+
+#### Process variation anomg sites
+
+To interpret the parameter $\sigma$ (`sigma`) which describes the variation in deer densities ($\lambda$) among sites, we plot quantiles of the fitted gamma-distribution in @fig-process. Since the variance is high compared to the mean, the median of the distribution is close to zero. 
+
+```{r}
+#| echo: FALSE
+#| label: fig-process
+#| fig-cap: "Summary of the process variation among sites. **Left:** Quantiles of the distribution of deer densities (ha$^{-1}$) among sites as a function of mean deer density. **Right:** The gamma distribution describing the variation in deer density among sites at the marginal mean deer density across sampling areas and months, indicated by the vertical stippled line in both panels. Shaded areas show 95% credible intervals for the quantiles. Note that the median (in red) is close to zero (at 0.008 in the right panel)."
+
+# Quantiles
+qs <- function(mean, sigma, p){
+  a <- 1/(exp(sigma^2) - 1)
+  b <- a/mean
+  qgamma(p, shape = a, rate = b)
+}
+
+samp <- as.matrix(gamma2)
+
+mean <- seq(0.00001, 2, 0.1)
+Q.50 <- outer(mean, samp[, "sigma"], qs, p = 0.5)
+Q.90 <- outer(mean, samp[, "sigma"], qs, p = 0.9)
+Q.975 <- outer(mean, samp[, "sigma"], qs, p = 0.975)
+
+qQ.50 <- apply(Q.50, 1, quantile, probs = c(0.025, 0.5, 0.975))
+qQ.90 <- apply(Q.90, 1, quantile, probs = c(0.025, 0.5, 0.975))
+qQ.975 <- apply(Q.975, 1, quantile, probs = c(0.025, 0.5, 0.975))
+
+par(mfrow = c(1,2))
+plot(mean, qQ.975["50%",], type = "n", col = "blue", ylim = c(0, max(qQ.975)),
+     xlab = "Mean deer density (E[X])",
+     ylab = "Deer density (x)")
+
+polygon(c(mean, rev(mean)), c(qQ.975[1,], rev(qQ.975[3,])), col ='lightblue', border = NA)
+polygon(c(mean, rev(mean)), c(qQ.90[1,], rev(qQ.90[3,])), col ='lightgreen', border = NA)
+polygon(c(mean, rev(mean)), c(qQ.50[1,], rev(qQ.50[3,])), col ='pink', border = NA)
+lines(mean, qQ.975["50%",], type = "l", col = "blue")
+lines(mean, qQ.90["50%",], type = "l", col = "darkgreen")
+lines(mean, qQ.50["50%",], type = "l", col = "red")
+abline(v = marginal_mean_density, lty = 2)
+legend("topleft",
+       lty = 1,
+       col = c("blue", "darkgreen", "red"),
+       legend = c("97.5% quantile", "90.0% quantile", "50.0% quantile"),
+       cex = 0.8
+       )
+
+sigma <- median(samp[, "sigma"])
+a <- 1/(exp(sigma^2) - 1)
+b <- a/marginal_mean_density
+
+Median <- qs(marginal_mean_density, sigma, p = 0.5)
+Q90 <- qs(marginal_mean_density, sigma, p = 0.9)
+Q975 <- qs(marginal_mean_density, sigma, p = 0.975)
+Median.CI <- qs(marginal_mean_density, samp[, "sigma"], p = 0.5) |> quantile(probs = c(0.025, 0.975))
+Q90.CI <- qs(marginal_mean_density, samp[, "sigma"], p = 0.9) |> quantile(probs = c(0.025, 0.975))
+Q975.CI <- qs(marginal_mean_density, samp[, "sigma"], p = 0.975) |> quantile(probs = c(0.025, 0.975))
+
+x <- seq(Median, 4.5, length.out = 100)
+plot(dgamma(x, a, b) ~ x, type = "n", xlab = "Deer density (x)", ylab = "f(x)", xaxs = "i", yaxs = "i", xlim = c(0,4.5))
+polygon(c(Q975.CI, rev(Q975.CI)), c(0, 0, 10, 10), col = "lightblue", border = NA)
+polygon(c(Q90.CI, rev(Q90.CI)), c(0, 0, 10, 10), col = "lightgreen", border = NA)
+polygon(c(Median.CI, rev(Median.CI)), c(0, 0, 10, 10), col = "pink", border = NA)
+box(col = "grey")
+lines(dgamma(x, a, b) ~ x, lwd = 2)
+abline(v = Median, col = "red")
+abline(v = Q90, col = "darkgreen")
+abline(v = Q975, col = "blue")
+abline(v = a/b, lty = 2)
+legend("topright",
+       lty = 1,
+       col = c("blue", "darkgreen", "red"),
+       legend = c("97.5% quantile", "90.0% quantile", "50.0% quantile"),
+       cex = 0.8
+       )
+
+```
+
 
 ### Overlap with prior {#sec-overlap}
 
