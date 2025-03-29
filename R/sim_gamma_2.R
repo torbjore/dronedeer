@@ -14,17 +14,6 @@ load(file = "data/nimbleData.rda")
 # READING THE MODEL CODE
 source("R/nimble_models/nimbleCode_gamma_2_noPPC.q")
 
-# Setting parameter values
-# Path <- "posterior_samples"
-# files <- dir(path = Path)
-# best <- "gamma_2"
-# fls <- files[grep(best, files)]
-# best_postsamp <- NULL
-# for(fl in fls){
-#   load(paste0("data/posterior_samples/", fl))
-#   best_postsamp <- c(best_postsamp, out$samples)
-# }
-
 load("posterior_samples/gamma_2.RData")
 postsamp <- out$samples
 #best_postsamp <- as.mcmc.list(best_postsamp)
