@@ -134,4 +134,4 @@ out <- runMCMC(
   )
 
 # Saving workspace
-save(settings, out, file = "posterior_samples/sim_gamma_2_500_sites.RData")
+save(settings, out, file = "posterior_samples/sim/sim_gamma_2_500_sites.RData")
