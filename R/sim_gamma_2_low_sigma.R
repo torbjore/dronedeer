@@ -24,9 +24,15 @@ truepar <- list(
   eta1 = p[3],
   eta2 = p[4],
   mu0 = p[5:12],
-  sigma = p[13]/10, # Reducing sigma to one 10th
+  sigma = p[13],
   sigma_p = p[14]
 )
+
+# REDUCING sigma
+alpha <- 1/20
+truepar$mu0 <- truepar$mu0 + truepar$sigma^2*(1 - alpha^2)/2 # NB! using old sigma, so must come first
+truepar$sigma <- truepar$sigma*alpha #NB! Run only once
+
 
 ### remaking plot from Supp Inf with modified sigma #####
 qs <- function(mean, sigma, p){
@@ -39,7 +45,7 @@ mean <- seq(0.00001, 2, 0.1)
 sigma <- truepar$sigma
 a <- 1/(exp(sigma^2) - 1)
 b <- a/mean
-marginal_mean_density <- 0.3768764
+marginal_mean_density <- 0.2621269
 
 qQ.50 <- qs(mean, sigma, 0.5)
 qQ.90 <- qs(mean, sigma, 0.9)
@@ -66,7 +72,7 @@ Median <- qs(marginal_mean_density, sigma, p = 0.5)
 Q90 <- qs(marginal_mean_density, sigma, p = 0.9)
 Q975 <- qs(marginal_mean_density, sigma, p = 0.975)
 
-x <- seq(0.0001, 0.8, length.out = 100)
+x <- seq(0.0001, 0.45, length.out = 100)
 plot(dgamma(x, a, b) ~ x, type = "n", xlab = "Deer density (x)", ylab = "f(x)", xaxs = "i", yaxs = "i", xlim = c(0,max(x)), ylim = c(0, 1.1*max(dgamma(x, a, b))))
 box(col = "grey")
 lines(dgamma(x, a, b) ~ x, lwd = 2)

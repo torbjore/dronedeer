@@ -682,7 +682,8 @@ kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
       ))
 
 # Computing marginal mean density (in ha^(-1)) for later:
-marginal_mean_density <- mean(df$mean)/100
+marginal_mean_density <- mean(df$median)/100 #mean(df$mean)/100
+mean_densities <- df$median/100 # Using the posterior medians of the mean
 ```
 
 ```{r}
@@ -714,7 +715,7 @@ To interpret the parameter $\sigma$ (`sigma`) which describes the variation in d
 ```{r}
 #| echo: FALSE
 #| label: fig-process
-#| fig-cap: "Summary of the process variation among sites. **Left:** Quantiles of the distribution of deer densities (ha$^{-1}$) among sites as a function of mean deer density. **Right:** The gamma distribution describing the variation in deer density among sites at the marginal mean deer density across sampling areas and months, indicated by the vertical stippled line in both panels. Shaded areas show 95% credible intervals for the quantiles. Note that the median (in red) is close to zero (at 0.008 in the right panel)."
+#| fig-cap: "Summary of the process variation among sites. **Left:** Quantiles of the distribution of deer densities (ha$^{-1}$) among sites as a function of mean deer density. **Right:** The gamma distribution describing the variation in deer density among sites at the marginal mean deer density across sampling areas and months, indicated by the vertical stippled line in both panels (based on the posterior median of mean deer densities; second column of @tbl-dens2). The rug in the left plot shows the estimated mean densities (posterior medians) at the eitht samling area-months. Shaded areas show 95% credible intervals for the quantiles. Note that the median (in red) is close to zero (posterior median at 0.008)."
 
 # Quantiles
 qs <- function(mean, sigma, p){
@@ -746,6 +747,7 @@ lines(mean, qQ.975["50%",], type = "l", col = "blue")
 lines(mean, qQ.90["50%",], type = "l", col = "darkgreen")
 lines(mean, qQ.50["50%",], type = "l", col = "red")
 abline(v = marginal_mean_density, lty = 2)
+rug(mean_densities)
 legend("topleft",
        lty = 1,
        col = c("blue", "darkgreen", "red"),
@@ -764,8 +766,8 @@ Median.CI <- qs(marginal_mean_density, samp[, "sigma"], p = 0.5) |> quantile(pro
 Q90.CI <- qs(marginal_mean_density, samp[, "sigma"], p = 0.9) |> quantile(probs = c(0.025, 0.975))
 Q975.CI <- qs(marginal_mean_density, samp[, "sigma"], p = 0.975) |> quantile(probs = c(0.025, 0.975))
 
-x <- seq(Median, 4.5, length.out = 100)
-plot(dgamma(x, a, b) ~ x, type = "n", xlab = "Deer density (x)", ylab = "f(x)", xaxs = "i", yaxs = "i", xlim = c(0,4.5))
+x <- seq(Median, 3.3, length.out = 100)
+plot(dgamma(x, a, b) ~ x, type = "n", xlab = "Deer density (x)", ylab = "f(x)", xaxs = "i", yaxs = "i", xlim = c(0,3.3), ylim = c(0,10))
 polygon(c(Q975.CI, rev(Q975.CI)), c(0, 0, 10, 10), col = "lightblue", border = NA)
 polygon(c(Q90.CI, rev(Q90.CI)), c(0, 0, 10, 10), col = "lightgreen", border = NA)
 polygon(c(Median.CI, rev(Median.CI)), c(0, 0, 10, 10), col = "pink", border = NA)
@@ -887,7 +889,7 @@ kable(df, digits = 2,
 
 We used a somewhat informative prior for $\sigma_p$ (`sigma_p`) (@sec-posterior_checks and @sec-overlap). To assess the sensitivity of the model results to this prior, we also fitted a model with a $\text{Uniform}(0, 10)$ prior for $\sigma_p$. The summary of this model is shown below and posterior summaries from this model are compared to the summaries from the original model in @fig-compare.
 
-Despite the substantially higher posterior values for $\sigma_p$ with the wider prior, the posterior distributions for other parameters are little affected (@fig-compare). There are no strong correlations between posterior samples of the the parameters for either of the two models (@tbl-cor_orig and @tbl-cor_wide). We conclude that our results are not sensitive to the choice of prior for $\sigma_p$.
+Despite the substantially higher posterior values for $\sigma_p$ with the wider prior, the posterior distributions for other parameters are little affected (@fig-compare). There are no strong correlations between posterior samples of the the parameters for neither the original model (@tbl-cor_orig) nor the model with the wider prior for $\sigma_p$ (@tbl-cor_wide). We conclude that our results are not sensitive to the choice of prior for $\sigma_p$.
 
 ```{r}
 #| echo: FALSE
@@ -903,7 +905,7 @@ summary(gamma2_orig)
 #| echo: FALSE
 #| label: fig-compare
 #| fig-height: 8
-#| fig-cap: "Posterior medians and 95% credible intervals for the parameters in `gamma2` model; orignal model in blue and model with wider $\\text{Uniform}(0, 10)$ prior for $\\sigma_p$ (`sigma_p`) in red."
+#| fig-cap: "Posterior medians and 95% credible intervals for the parameters in `gamma2` model; orignal model in blue and model with wider $\\text{Uniform}(0, 10)$ prior for $\\sigma_p$ (`sigma_p`) in red. The lower credible bounds for $\\mu_0$ where no deer has been seen (`mu0[3]`, `mu0[4]`, and `mu0[7]`) are naturally sensitive to priors as it impossible to tell how close to zero the densities may be - on the arithmetic scale, the density estimates for these area-months are essentially zero."
 
 library(plotrix)
 
@@ -938,9 +940,13 @@ kable(cor(as.matrix(gamma2_wide)), digits = 3)
 
 ### Proof of concept - Identifiability assessment by simulations
 
-To check that there are no inherent identifiability problems with the model, we fitted the model to simulated data; 8 areas with 500 sites. Parameters were set to posterior mean of original fit, and we used the same prior distributions as in the original fit. Posterior summaries of parameters are shown below, overlap between prior and posterior distributions are shown in @tbl-overlap_sim, predicted densities are plotted in @fig-dens_sim, and predicted densities at mean distance from the field are shown in @tbl-dens_sim.
+To check that there are no inherent identifiability problems with the model, we fitted the model to two different sets of simulated data. In the first simulation, we set parameters to the posterior mean of the original fit and just boosted sample size to 500 sites within each of the area-month combinations. Then, in the second simulation, we also reduced the parameter $\sigma$ (`sigma`) describing the among site variation in density to 5% of the estimated value (posterior median), in addition to boosting sample size. The same prior distributions as in the original fit was used in both simulations.
 
-With this much data (8 areas with 500 sites each), we obtain substantially higher precision of the estimates, as well as lower overlap between posterior and prior distributions. This shows that that there are no inherent identifiability problems in the model. One would perhaps expect higher precision (narrower credible intervals) when having 8 $\times$ 500 sites but the high variation in number of deer per sites contributes to much uncertainty, and since the average area of sites is just under 0.6 ha (0.6% of a km$^2$), the expected counts per site is quite small.
+#### Boosting sample size
+
+Posterior summaries from the model fitted to the boosted data are shown below, overlap between prior and posterior distributions are shown in @tbl-overlap_sim, predicted densities are plotted in @fig-dens_sim, and predicted densities at mean distance from the field are shown in @tbl-dens_sim.
+
+With this much data (8 areas with 500 sites each), we obtain substantially higher precision of the estimates, as well as lower overlap between posterior and prior distributions. This shows that that there are no inherent identifiability problems in the model. One would perhaps expect higher precision (narrower credible intervals) when having 8 $\times$ 500 sites, but the high variation in number of deer per sites contributes to much uncertainty, and since the average area of sites is just under 0.6 ha (0.6% of a km$^2$), the expected counts per site is quite small. In the next simulation, we also reduced the random variation among sites within areas.
 
 ```{r}
 #| echo: false
@@ -981,8 +987,8 @@ load(file = "../data/prior_parameters_for_p.rda")
 
 # samp <- as.matrix(gamma2)
 # 
-samp <- samp[, c("beta[1]", "beta[2]", "mu_p1", "mu_p2", "mu0[1]", "mu0[2]", "mu0[3]", "mu0[4]", "mu0[5]", "mu0[6]", "mu0[7]", "mu0[8]", "sigma", "sigma_p")]
-dimnames(samp)[[2]][3:4] <- c("eta1", "eta2")
+samp <- samp[, c("beta[1]", "beta[2]", "eta1", "eta2", "mu0[1]", "mu0[2]", "mu0[3]", "mu0[4]", "mu0[5]", "mu0[6]", "mu0[7]", "mu0[8]", "sigma", "sigma_p")]
+#dimnames(samp)[[2]][3:4] <- c("eta1", "eta2")
 df = data.frame(par = dimnames(samp)[[2]],
                 sam = c(rep("", 4), sam_names, rep("", 2)),
                 prior = c(
@@ -1044,5 +1050,191 @@ kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
       col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
       ))
 ```
+
+#### Boosting sample size and reducing $\sigma$
+
+To investigate the impact of variation in density within sampling areas, we reduced $\sigma$ to 5% of the estimated value while keeping the mean densities the same. This entails changing $\sigma$ to $\sigma'=\alpha\sigma$ and $\mu_{0,j}$ to $\mu_{0,j}'= \mu_{0,j} + \sigma^2(1-\alpha^2)/2$ where $\alpha = 0.05$. The resulting variation in density among sites is shown in @fig-process_low.
+
+```{r}
+#| echo: FALSE
+#| label: fig-process_low
+#| fig-cap: "Summary of the process variation among sites in the simulation where $\\sigma$ has been reduced to 5% of the estimated value while keeping the mean densities the same. **Left:** Quantiles of the distribution of deer densities (ha$^{-1}$) among sites as a function of mean deer density. **Right:** The gamma distribution describing the variation in deer density among sites at the marginal mean deer density across sampling areas and months, indicated by the vertical stippled line in both panels (based on the posterior median of mean deer densities; second column of @tbl-dens2). Compare with the estimated distribution shown in @fig-process"
+
+load("../posterior_samples/gamma_2.RData")
+postsamp <- out$samples
+#best_postsamp <- as.mcmc.list(best_postsamp)
+samp <- as.matrix(postsamp)[,-c(1:4, 9:16)]
+p <- apply(samp, 2, median)
+truepar <- list(
+  mu0 = p[5:12],
+    sigma = p[13]
+)
+
+# REDUCING sigma
+alpha <- 1/20
+truepar$mu0 <- truepar$mu0 + truepar$sigma^2*(1 - alpha^2)/2 # NB! using old sigma, so must come first
+truepar$sigma <- truepar$sigma*alpha #NB! Run only once
+
+
+### remaking plot from Supp Inf with modified sigma #####
+qs <- function(mean, sigma, p){
+  a <- 1/(exp(sigma^2) - 1)
+  b <- a/mean
+  qgamma(p, shape = a, rate = b)
+}
+
+mean <- seq(0.00001, 2, 0.1)
+sigma <- truepar$sigma
+a <- 1/(exp(sigma^2) - 1)
+b <- a/mean
+marginal_mean_density <- 0.2621269
+
+qQ.025 <- qs(mean, sigma, 0.025)
+qQ.50 <- qs(mean, sigma, 0.5)
+qQ.975 <- qs(mean, sigma, 0.975)
+
+par(mfrow = c(1,2))
+plot(mean, qQ.975, type = "n", col = "blue", ylim = c(0, max(qQ.975)),
+     xlab = "Mean deer density (E[X])",
+     ylab = "Deer density (x)")
+
+lines(mean, qQ.975, type = "l", col = "blue")
+lines(mean, qQ.025, type = "l", col = "orange")
+lines(mean, qQ.50, type = "l", col = "red")
+abline(v = marginal_mean_density, lty = 2)
+legend("topleft",
+       lty = 1,
+       col = c("blue", "red", "orange"),
+       legend = c("97.5% quantile", "50.0% quantile", "2.5% quantile"),
+       cex = 0.8
+)
+
+b <- a/marginal_mean_density
+Median <- qs(marginal_mean_density, sigma, p = 0.5)
+Q025 <- qs(marginal_mean_density, sigma, p = 0.025)
+Q975 <- qs(marginal_mean_density, sigma, p = 0.975)
+
+x <- seq(0.0001, 0.45, length.out = 100)
+plot(dgamma(x, a, b) ~ x, type = "n", xlab = "Deer density (x)", ylab = "f(x)", xaxs = "i", yaxs = "i", xlim = c(0,max(x)), ylim = c(0, 1.1*max(dgamma(x, a, b))))
+box(col = "grey")
+lines(dgamma(x, a, b) ~ x, lwd = 2)
+abline(v = Median, col = "red")
+abline(v = Q025, col = "orange")
+abline(v = Q975, col = "blue")
+abline(v = a/b, lty = 2)
+# legend("topleft",
+#        lty = 1,
+#        col = c("blue", "red", "orange"),
+#        legend = c("97.5% quantile", "50.0% quantile", "2.5% quantile"),
+#        cex = 0.8
+# )
+```
+
+
+Posterior summaries from the model fitted the simulated data are shown below, overlap between prior and posterior distributions are shown in @tbl-overlap_sim_low, predicted densities are plotted in @fig-dens_sim_low, and predicted densities at mean distance from the field are shown in @tbl-dens_sim_low.
+
+```{r}
+#| echo: false
+
+load("../posterior_samples/sim/sim_gamma_2_500_sites_low_sigma.RData")
+#gelman.diag(out)
+#plot(out$samples)
+summary(out)
+```
+
+```{r}
+#| echo: false
+#| label: fig-dens_sim_low
+#| fig-height: 8
+#| fig-cap: "Simulation results from the scenario where among site variation has been reduced: Plots of posterior summaries of deer density. Compare with @fig-dens for the model fitted to the observed data."
+
+samp <- as.matrix(out)
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]],
+          plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]], ncol = 2)
+```
+
+
+```{r}
+#| echo: FALSE
+#| message: FALSE
+#| label: tbl-overlap_sim_low
+#| tab-cap: "Simulation results from the scenario where among site variation has been reduced:: Overlap between prior and posterior distributions for the parameters. Compare with @tbl-overlap for the model fitted to the observed data."
+
+load(file = "../data/prior_parameters_for_p.rda")
+
+# samp <- as.matrix(gamma2)
+# 
+samp <- samp[, c("beta[1]", "beta[2]", "eta1", "eta2", "mu0[1]", "mu0[2]", "mu0[3]", "mu0[4]", "mu0[5]", "mu0[6]", "mu0[7]", "mu0[8]", "sigma", "sigma_p")]
+#dimnames(samp)[[2]][3:4] <- c("eta1", "eta2")
+df = data.frame(par = dimnames(samp)[[2]],
+                sam = c(rep("", 4), sam_names, rep("", 2)),
+                prior = c(
+                  rep("N(0, sd = 2)", 2),
+                  rep(paste0("N(", round(prior_parameters_for_p$mean_eta, 2), ", sd = ", round(prior_parameters_for_p$sd_eta, 2), ")" ), 2),
+                  rep("N(0, sd = 10)", 8),
+                  "Gamma(shape = 0.01, rate = 0.01)",
+                  "T[Gamma(shape = 1, rate = 0.05), 0, 0.59]"
+                ),
+                overlap = 0)
+
+#1-2 (beta):
+lambdahat <- nimbleData$const$lambdahat
+for(i in 1:2){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 2)
+}
+
+#3-4 (eta1 and eta2)
+for(i in 3:4){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = prior_parameters_for_p$mean_eta, sd = prior_parameters_for_p$sd_eta)
+}
+
+#5-12 (mu0):
+for(i in 5:12){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 10)
+}
+
+#13 (sigma)
+df$overlap[13] <- post_prior_overlap(samp[,13], dgamma, shape = 0.01, rate = 0.01)
+
+#14 (sigma_p)
+# Truncated distribution
+library(LaplacesDemon)
+df$overlap[14] <- post_prior_overlap(samp[,14], dtrunc, spec = "gamma", shape = 1, rate = 0.05, a = 0, b = 0.59)
+
+df$overlap <- round(df$overlap, 3)
+kable(df, 
+       col.names = c("Parameter", "Sampling area and month", "Prior distribution", "Overlap"))
+```
+
+
+```{r}
+#| echo: FALSE
+#| label: tbl-dens_sim_low
+#| tab-cap: "Simulation results: Summary for posterior distribution for estimated deer densities at mean distance from the field (162 meters; stipled lines in @fig-dens_sim_low) when sample size has been increased to 500 sites per area and moth. Compare with @tbl-dens2."
+
+df <- data.frame(SAM = sam_names, x = mpv)
+mpv_st <- (mpv - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(mpv_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+```
+
 
 # References {.unnumbered}
