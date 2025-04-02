@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-02-07">
+<meta name="dcterms.date" content="2025-04-02">
 
 <title>Description of SiteData</title>
 <style>
@@ -3062,7 +3062,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">February 7, 2025</p>
+      <p class="date">April 2, 2025</p>
     </div>
   </div>
   
@@ -3081,15 +3081,16 @@ vertical-align: -.125em;
 <li><p><code>Route</code>: A predetermined flight path followed by the UAV during a survey. In this study, each sampling area contained between three and five routes, and each route was surveyed between one and three times.</p></li>
 <li><p><code>Month</code>: The month during which a survey was conducted (March or April).</p></li>
 <li><p><code>Date</code>: The specific date a survey was conducted (R Date format).</p></li>
+<li><p><code>Flight_Altitude</code>: Programmed flight altitude above ground in meters, based on the digital elevation model.</p></li>
 <li><p><code>Focal_image</code>: Unique identifier for the focal image constituting the <code>Site</code>. All focal images are non-overlapping with other focal images from the same survey.</p></li>
-<li><p><code>Site</code>: Site number within <code>Survey</code> (numbered consecutively from 1 within each <code>Survey</code>).</p></li>
+<li><p><code>Site</code>: Site number within <code>Survey</code>, numbered consecutively from 1 within each <code>Survey</code>.</p></li>
 <li><p><code>File</code>: File name for the <code>Folcal image</code>. Each file name corresponds to a raster image used for extracting information such as mean elevation, distance to the field, etc. from a Digital Elevation Model (DEM) (see variables below).</p></li>
 <li><p><code>Weather</code>: The weather conditions during a survey as noted by Yr.no and confirmed by observations, such as clear, mostly clear, mostly overcast, mostly sunny, overcast, slightly overcast, or sunny.</p></li>
 <li><p><code>Temperature_C</code>: The temperature (in degrees Celsius) at the end of a survey.</p></li>
 <li><p><code>Snow</code>: Whether the survey area was covered with snow during the survey (yes or no). A survey area was considered snow-covered if more than 50% of the aerial images displayed snow-covered surfaces.</p></li>
 <li><p><code>Area</code>: The total area (in square meters) covered by a site within a focal image.</p></li>
-<li><p><code>mean_x</code>: The mean UTM x-coordinate (east) of all pixels within a focal image, representing the average horizontal position across the entire image.</p></li>
-<li><p><code>mean_y</code>: The mean UTM y-coordinate (north) of all pixels within a focal image, representing the average vertical position across the entire image.</p></li>
+<li><p><code>mean_x</code>: The mean UTM zone 33V x-coordinate (east) of all pixels within a focal image.</p></li>
+<li><p><code>mean_y</code>: The mean UTM zone 33V y-coordinate (north) of all pixels within a focal image.</p></li>
 <li><p><code>elevation_at_mean_pos</code>: The elevation at the average east (x) and north (y) UTM coordinate of the site, derived from a DEM.</p></li>
 <li><p><code>mean_elevation</code>: The average elevation (in meters above sea level) of a site, calculated as the mean of all elevation values within the site, derived from a DEM.</p></li>
 <li><p><code>min_elevation</code>: The lowest elevation (in meters above sea level) within the site, derived from a DEM.</p></li>

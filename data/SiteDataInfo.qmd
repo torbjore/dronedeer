@@ -25,6 +25,8 @@ The `SiteData.rda` file contains data.frame `SiteData` with the following variab
 
 * `Date`: The specific date a survey was conducted (R Date format).
 
+* `Flight_Altitude`: Programmed flight altitude above ground in meters, based on the digital elevation model.
+
 * `Focal_image`: Unique identifier for the focal image constituting the `Site`. All focal images are non-overlapping with other focal images from the same survey.
 
 * `Site`: Site number within `Survey`, numbered consecutively from 1 within each `Survey`.
