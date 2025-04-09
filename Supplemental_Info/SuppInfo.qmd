@@ -1,7 +1,6 @@
 ---
 title: "Detailed model formulation, analysis, and results"
 subtitle: "**Supporting Information for:** Developing a protocol for estimation of red deer (*Cervus elaphus*) population density using drones in a steep and rugged terrain"
-# Sjekk hva endelig tittel blir
 date: now
 authors: <to be inserted after peer-review>
 number-sections: true
@@ -256,7 +255,7 @@ prcnt_area <- round(100*apply(nimbleData_Fence$constants$area, 1, sum, na.rm= TR
 round(nimbleData_Fence$constants$area, 3)
 ```
 
-The reason why some sites cover a much smaller area than other sites is that large parts of these sites (focal images) were outside the enclosure. The survey from 40 m above ground contained data from 20 non-overlapping sites, covering a total of `r tot_area[1]` ha (`r prcnt_area[1]`% of the 5 ha enclosure). The survey from 60 m above ground contained data from 10 non-overlapping sites, covering a total of `r tot_area[2]` ha (`r prcnt_area[2]`% of the enclosure). The reason for the lower over all coverage from the 60 m survey is that larger proportions of the focal images from this survey covered ground outside of the enclosure.
+The reason why some sites cover a much smaller area than other sites is that large parts of these sites (focal images) were outside the enclosure. The survey from 40 m above ground contained data from 20 non-overlapping sites, covering a total of `r tot_area[1]` ha (`r prcnt_area[1]`% of the 5 ha enclosure). The survey from 60 m above ground contained data from 10 non-overlapping sites, covering a total of `r tot_area[2]` ha (`r prcnt_area[2]`% of the enclosure). The reason for the lower overall coverage from the 60 m survey is that larger proportions of the focal images from this survey covered ground outside of the enclosure.
 
 **Counts at 40 m,** $\mathbf{y}_i$ for each site (column) $i$ (rows: first number of deer detected by only observer 1, then number of deer detected by only observer 2, and finally number of deer detected by both observers):
 
@@ -381,6 +380,75 @@ Including random effects on detection probability was deemed necessary by poster
 
 ### Overview of data {#sec-wild_overview}
 
+The full data are in the `SiteData.rda` files, with variables described in `SiteDataInfo.html`. @tbl-overview gives an overview of the data from the four sampling areas and two sampling periods (March and April).
+
+```{r}
+#| echo: false
+#| label: tbl-overview
+#| tab-cap: "Overview of data from the four sampling sites and two sampling occasions (March and April). The simple density estimates in the last column is just the number of deer seen per hectare (1/100 km$^2$) divided by an overall estimate of detection probability (see @sec-waic)."
+
+# Based on SiteData
+load(file = "../data/SiteData.rda")
+SiteData$SAM <- paste(SiteData$Study_area, SiteData$Month, sep = ", ")
+SiteData$SAM <- factor(SiteData$SAM, c("Haugen, March", "Haugen, April", "Raa, March", "Raa, April", "Soere_Bjoerkum, March", "Soere_Bjoerkum, April", "Sprakehaug, March", "Sprakehaug, April"))
+levels(SiteData$SAM) <- c("Haugen, March", "Haugen, April", "Raa, March", "Raa, April", "Søre Bjørkum, March", "Søre Bjørkum, April", "Sprakehaug, March", "Sprakehaug, April")
+
+# Making data frame for table
+D <- data.frame(SAM = levels(SiteData$SAM))
+
+# Mean flight altitude
+D$mean_altitude <- with(SiteData, tapply(Flight_Altitude, list(SAM), mean))
+
+# Number of sites
+D$N_sites <- table(SiteData$SAM)
+
+# mean site area
+D$mean_area <- round(with(SiteData, tapply(Area, list(SAM), mean))/10000, digits = 2)
+
+# SD site area
+D$sd_area <- round(with(SiteData, tapply(Area, list(SAM), sd))/10000, 2)
+
+# Total site area
+D$total_area <- round(with(SiteData, tapply(Area, list(SAM), sum))/10000, 2)
+#D$mean_area * D$N_sites
+
+# Number of deer seen only by observer 1
+D$y1 <- with(SiteData, tapply(n_only_ab, list(SAM), sum))
+
+# Number of deer seen only by observer 2
+D$y2 <- with(SiteData, tapply(n_only_jb, list(SAM), sum))
+
+# Number of deer seen by both observers
+D$y_both <- with(SiteData, tapply(n_both, list(SAM), sum))
+
+# Total number of deer counted
+D$Y <- D$y1 + D$y2 + D$y_both
+
+# Simple density estimate
+D$N_hat_simple <- round((D$Y/D$total_area)/0.9763314, 3) # See detection probability below
+
+kable(
+  D,
+  #digits = c(0, 0, 0, 2, 3, 1, 0, 0, 0, 0, 2), # Why no effect?
+  col.names = c(
+    "Sample area, month",
+    "Flight altitude (m)",
+    "Number of sites",
+    "Mean area of sites (ha)",
+    "SD of site area",
+    "Total area (ha)",
+    "Number seen only by obs. 1",
+    "Number seen only by obs. 2",
+    "Number seen by both observers",
+    "Number seen in total",
+    "Simple estimate of density (ha$^{-1}$)"
+    )
+  )
+
+# sum(D$Y)
+
+```
+
 ```{r}
 #| echo: false
 # Loading data
@@ -395,21 +463,13 @@ names(area_per_sam) <- sam_names
 
 Y_per_sam <- apply(nimbleData$data$Y, 1, sum, na.rm=TRUE) |> tapply(INDEX = nimbleData$const$sam, sum)
 names(Y_per_sam) <- sam_names
+
+#mean(nimbleData$const$area, na.rm = TRUE)
+#sd(nimbleData$const$area, na.rm = TRUE)
 ```
 
-Number of sites (focal images) per 'sample-area-and-month' ('sam'):
+Most areas where surveyed by drone flights at 60 meter altitude above ground (pre-programmed based on a digital elevation model), but some areas where surveyed by flights at 40 meters above ground. Considerable variation in size of the sampling sites, among and within sampling areas, also occurred due to the steep and rugged terrain (@fig-area).
 
-```{r}
-N_sites
-```
-
-Total area per sample-area-and-month (unit: hectare = 1/100 km$^2$)
-
-```{r}
-area_per_sam
-```
-
-Due to the steep and rugged terrain, there was a considerable variation in the area covered by the survey sites (@fig-area).
 
 ```{r}
 #| echo: false
@@ -419,14 +479,7 @@ Due to the steep and rugged terrain, there was a considerable variation in the a
 hist(nimbleData$const$area, xlab = "Area (ha)")
 ```
 
-
-Numbers of deer seen per 'sample-area-and-month' ('sam'):
-
-```{r}
-Y_per_sam
-```
-
-Frequency distribution of number of deer seen per site (focal image):
+Deer were seen at `r sum(nimbleData$data$Y>0, na.rm = TRUE)` of the `r sum(!is.na(nimbleData$data$Y))` sites, and the number of deer per site were distributed as follows
 
 ```{r}
 #| echo: false
@@ -436,16 +489,18 @@ tab <- table(nimbleData$data$Y)
 ```{r}
 table(nimbleData$data$Y)
 ```
-(I.e, there were `r tab[1]` sites with zero deer seen, `r tab[2]` sites with 1 deer, and so on)
+(I.e, there were `r tab[1]` sites with zero deer seen, `r tab[2]` sites with 1 deer, and so on).
 
-### Simple estimates for MCMC staring values
+The mean number of deer per site was `r round(mean(nimbleData$data$Y, na.rm = TRUE), 2)` and the variance was `r round(var(as.vector(nimbleData$data$Y), na.rm = TRUE), 2)` (the variance-mean ratio is `r round(var(as.vector(nimbleData$data$Y), na.rm = TRUE)/mean(nimbleData$data$Y, na.rm = TRUE), 2)`). This shows that there is considerable overdispersion in number of deer per site relative to a Poisson distribution.
 
-Simple point estimate of detectability based on how many of those seen by obs1 is seen by obs2 and vice versa can be computed as follows:
+### Simple estimates for MCMC staring values {#sec-simple}
+
+Simple point estimate of detectability based on how many of those seen by observer 1 is seen by observer 2 and vice versa can be computed as follows:
 
 ```{r}
 colsumy <- apply(nimbleData$data$y, 3, sum, na.rm=TRUE)
-p1hat <- colsumy[3]/(colsumy[2]+colsumy[3]) # = 0.70
-p2hat <- colsumy[3]/(colsumy[1]+colsumy[3]) # = 0.90
+p1hat <- colsumy[3]/(colsumy[2]+colsumy[3]) # = 0.692
+p2hat <- colsumy[3]/(colsumy[1]+colsumy[3]) # = 0.923
 (phat_simple <- 1 - (1-p1hat)*(1-p2hat))
 ```
 This is the probability that at least one of the two observers registered a given deer in the picture (obs1 has probability 0.7 and obs2 has probability 0.9).
@@ -620,7 +675,7 @@ Estimated densities as a quadratic function of distance from the field (`gamma2`
 #| warning: FALSE
 #| label: fig-dens
 #| fig-height: 8
-#| fig-cap: "Plots of posterior summaries of deer density at the samlping areas (rows) and months (columns) as a quandratic function of distance from the field (`gamma2` model). Blue lines are the posterior medians, and the 95% credible intervals are shown with the shaded area. Stipled vertical lines are plotted at the over all mean distance from the field (162 meters). Note the widely different ranges on the y-axis (logarithmic scale)"
+#| fig-cap: "Plots of posterior summaries of deer density at the sampling areas (rows) and months (columns) as a quadratic function of distance from the field (`gamma2` model). Blue lines are the posterior medians, and the 95% credible intervals are shown with the shaded area. Stippled vertical lines are plotted at the overall mean distance from the field (162 meters). Note the widely different ranges on the y-axis (logarithmic scale)."
 
 library(ggplot2)
 library(cowplot)
@@ -664,7 +719,7 @@ plot_grid(plots[[2]],
 ```{r}
 #| echo: FALSE
 #| label: tbl-dens2
-#| tab-cap: "Summary for posterior distribution  (`gamma2` model) for estimated deer densities at mean distance from the field (162 meters; stipled lines in @fig-dens) at each of the samling areas and months (when sites are considered to be a random sample of a large number of sites of the same characteristics). Units are number of deer per km$^2$."
+#| tab-cap: "Summary for posterior distribution  (`gamma2` model) for estimated deer densities at mean distance from the field (162 meters; stippled lines in @fig-dens) at each of the sampling areas and months (when sites are considered to be a random sample of a large number of sites of the same characteristics). Units are number of deer per km$^2$."
 
 df <- data.frame(SAM = sam_names, x = mpv)
 mpv_st <- (mpv - X_mean)/X_sd
@@ -689,7 +744,7 @@ mean_densities <- df$median/100 # Using the posterior medians of the mean
 ```{r}
 #| echo: FALSE
 #| label: tbl-dens0
-#| tab-cap: "Summary for posterior distribution  (`gamma0` model) for estimated deer densities  at each of the samling areas and months (when sites are considered to be a random sample of a large number of sites of the same characteristics). Units are number of deer per km$^2$."
+#| tab-cap: "Summary for posterior distribution  (`gamma0` model) for estimated deer densities  at each of the sampling areas and months (when sites are considered to be a random sample of a large number of sites of the same characteristics). Units are number of deer per km$^2$."
 
 samp <- as.matrix(gamma0)
 df <- data.frame(SAM = sam_names, x = mpv)
@@ -708,14 +763,14 @@ kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
       ))
 ```
 
-#### Process variation anomg sites
+#### Process variation among sites
 
 To interpret the parameter $\sigma$ (`sigma`) which describes the variation in deer densities ($\lambda$) among sites, we plot quantiles of the fitted gamma-distribution in @fig-process. Since the variance is high compared to the mean, the median of the distribution is close to zero. 
 
 ```{r}
 #| echo: FALSE
 #| label: fig-process
-#| fig-cap: "Summary of the process variation among sites. **Left:** Quantiles of the distribution of deer densities (ha$^{-1}$) among sites as a function of mean deer density. **Right:** The gamma distribution describing the variation in deer density among sites at the marginal mean deer density across sampling areas and months, indicated by the vertical stippled line in both panels (based on the posterior median of mean deer densities; second column of @tbl-dens2). The rug in the left plot shows the estimated mean densities (posterior medians) at the eitht samling area-months. Shaded areas show 95% credible intervals for the quantiles. Note that the median (in red) is close to zero (posterior median at 0.008)."
+#| fig-cap: "Summary of the process variation among sites. **Left:** Quantiles of the distribution of deer densities (ha$^{-1}$) among sites as a function of mean deer density. **Right:** The gamma distribution describing the variation in deer density among sites at the marginal mean deer density across sampling areas and months, indicated by the vertical stippled line in both panels (based on the posterior median of mean deer densities; second column of @tbl-dens2). The rug in the left plot shows the estimated mean densities (posterior medians) at the eight sampling area-months. Shaded areas show 95% credible intervals for the quantiles. Note that the median (in red) is close to zero (posterior median at 0.008)."
 
 # Quantiles
 qs <- function(mean, sigma, p){
@@ -843,7 +898,7 @@ kable(df,
 
 ### Some sensitivity assessment
 
-#### Choice of radom distribution for $\lambda$
+#### Choice of random distribution for $\lambda$
 
 To assess the sensitivity of the model predictions to the choice of random distribution of the Poisson expectation, $\lambda$, across sites, predictions from each of the nine candidate models at mean distance from field at Haugen in March are shown in @tbl-sens_distr. The exponential models give the most precise estimates, but have a substantially lower support by WAIC (@sec-waic). The log-normal models, which have marginally less support by WAIC than the gamma models, give substantially higher posterior mean and 97.5 percentile (upper 95\% credible limit) than the gamma models (the posterior medians, and to a smaller degree the 2.5 percentile, are also somewhat higher). This is because the log-normal distribution has a heavier tail than the gamma-distribution with the same median and variance. The similarities in the WAIC values reflect that we have little information about the exact shape of the random distribution in the data (other than having evidence that the exponential distribution fits the data less well compared to the other two candidate distributions). In conclusion, we recognize that the upper 95\% credible limits are highly model dependent, but have higher confidence in the lower 95\% credible limits and the posterior medians.
 
@@ -883,6 +938,138 @@ for(mod in models){
 
 kable(df, digits = 2,
       col.names = c("Model", "WAIC", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I."))
+```
+
+
+#### Naive model without overdispersion
+
+```{r}
+#| echo: FALSE
+
+load("../posterior_samples/no_overdispersion_2.RData")
+no_overdispersion_samples <- out$samples
+WAIC_no_overdispersion <- out$WAIC$WAIC
+
+
+```
+
+We did not consider a model without overdispersion as we did not think this would be biologically reasonable and simple preliminary analysis indicated that our data indeed was overdispersed relative to a Poisson distribution. However, since models without overdispersion (particularly for N-mixture models) are often used in the literature, we here also present results from a model without overdispersion and compare it with the WAIC-best model.
+
+The summary from the model without overdispersion and a quadratic covariate effect is printed below. Although this model had significantly higher WAIC-value (`r round(WAIC_no_overdispersion, 2)`) than the models with overdispersion (see @tbl-sens_distr), the goodness-of-fit assessment based on Bayesian p-values did *not* indicate a significant lack of fit, @fig-ppc_no_overdispersion (compare with @fig-ppc). While estimated densities at the sampled sites are virtually unchanged in the naive model (@tbl-mean_ds2_no_overdispersion), credible intervals for predictions for the area represented by the samples are too narrow due to the overdispersion that has not been accounted for (@fig-dens_no_overdispersion and @tbl-dens2_no_overdispersion).
+
+```{r}
+#| echo: false
+
+summary(no_overdispersion_samples[, c(17:24, 5:8, 25)])
+```
+
+```{r}
+#| echo: false
+#| label: fig-ppc_no_overdispersion
+#| fig-cap: "Posterior predictive checks for the naive model without overdisperson. Left plot represents the total counts by the two observers ($Y$). Right plot represents the counts broken down to 'seen by only observer 1', 'seen by only observer 2' and 'seen by both' ($\\mathbf{y}$). Bayesian p-values are printed above the plots. Compare with @fig-ppc."
+
+par(mfrow = c(1,2), pty = "s")
+samp <- as.matrix(no_overdispersion_samples)
+pY <- mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"], pty = "s",
+     main = paste0("p = ", round(pY, 3)), ylim = c(0, 10), xlim = c(0,10))
+abline(0, 1, col="red")
+
+py <- mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
+plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"], pty = "s",
+     main = paste0("p = ", round(py, 3)), ylim = c(15, 170), xlim = c(15,170))
+abline(0, 1, col="red")
+```
+
+```{r}
+#| echo: false
+#| label: tbl-mean_ds2_no_overdispersion
+#| tab-cap: "Summary for posterior distribution for deer densities at the sampled sites at each sample area and month when overdispersion has been ignored. Compare with @tbl-mean_ds2."
+
+samp <- as.matrix(no_overdispersion_samples)
+samp_mean_ds <- samp[, paste0("mean_ds[", 1:8, "]")]
+
+D <- data.frame(
+  SAM = sam_names,
+  mean = apply(samp_mean_ds, 2, mean),
+  median = apply(samp_mean_ds, 2, median),
+  lwr = apply(samp_mean_ds, 2, function(i) quantile(i, probs = 0.025)),
+  upr = apply(samp_mean_ds, 2, function(i) quantile(i, probs = 0.975))
+)
+
+kable(D[c(2,1,4,3,6,5,8,7), ], digits = 4, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/ha)", "Median (deer/ha)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+```
+
+```{r}
+#| echo: false
+#| warning: FALSE
+#| label: fig-dens_no_overdispersion
+#| fig-height: 8
+#| fig-cap: "Plots of posterior summaries of deer density at the sampling areas (rows) and months (columns) as a quadratic function of distance from the field when overdispersion is not accounted for. Compare with @fig-dens."
+
+library(ggplot2)
+library(cowplot)
+
+#############
+# Preparing #
+#############
+
+load(file = "../data/SiteData.rda")
+load(file = "../data/CountData.rda")
+
+predictor_variable <- SiteData$mean_field_dist
+Xlab <- "Distance from field (m)"
+Ylab <- expression(Density~of~deer~(km^-2))
+
+X <- seq(0, max(predictor_variable, na.rm = TRUE), length.out=50)
+X_mean <-  mean(predictor_variable, na.rm=TRUE)
+X_sd <- sd(predictor_variable, na.rm=TRUE)
+X_st <- (X - X_mean)/X_sd
+
+mpv <- mean(predictor_variable, na.rm = TRUE) # mean predictor variable
+pap <- median(-samp[,"beta[1]"]/(2*samp[,"beta[2]"]))*X_sd + X_mean # predictor variable at peak
+
+############
+# Plotting #
+############
+
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]],
+          plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]], ncol = 2)
+```
+
+```{r}
+#| echo: FALSE
+#| label: tbl-dens2_no_overdispersion
+#| tab-cap: "Summary for posterior distribution for estimated deer densities at mean distance from the field when overdispersion has not been accounted for. Compare with @tbl-dens2."
+
+df <- data.frame(SAM = sam_names, x = mpv)
+mpv_st <- (mpv - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(mpv_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+
+# Computing marginal mean density (in ha^(-1)) for later:
+marginal_mean_density <- mean(df$median)/100 #mean(df$mean)/100
+mean_densities <- df$median/100 # Using the posterior medians of the mean
 ```
 
 #### Sensitivity to prior for $\sigma_p$ {#sec-sens_sigma_p}
@@ -936,6 +1123,7 @@ kable(cor(as.matrix(gamma2_orig)), digits = 3)
 
 kable(cor(as.matrix(gamma2_wide)), digits = 3)
 ```
+
 
 
 ### Proof of concept - Identifiability assessment by simulations
@@ -1033,7 +1221,7 @@ kable(df,
 ```{r}
 #| echo: FALSE
 #| label: tbl-dens_sim
-#| tab-cap: "Simulation results: Summary for posterior distribution for estimated deer densities at mean distance from the field (162 meters; stipled lines in @fig-dens_sim) when sample size has been increased to 500 sites per area and moth. Compare with @tbl-dens2."
+#| tab-cap: "Simulation results: Summary for posterior distribution for estimated deer densities at mean distance from the field (162 meters; stippled lines in @fig-dens_sim) when sample size has been increased to 500 sites per area and moth. Compare with @tbl-dens2."
 
 df <- data.frame(SAM = sam_names, x = mpv)
 mpv_st <- (mpv - X_mean)/X_sd
@@ -1218,7 +1406,7 @@ kable(df,
 ```{r}
 #| echo: FALSE
 #| label: tbl-dens_sim_low
-#| tab-cap: "Simulation results: Summary for posterior distribution for estimated deer densities at mean distance from the field (162 meters; stipled lines in @fig-dens_sim_low) when sample size has been increased to 500 sites per area and moth. Compare with @tbl-dens2."
+#| tab-cap: "Simulation results: Summary for posterior distribution for estimated deer densities at mean distance from the field (162 meters; stippled lines in @fig-dens_sim_low) when sample size has been increased to 500 sites per area and moth. Compare with @tbl-dens2."
 
 df <- data.frame(SAM = sam_names, x = mpv)
 mpv_st <- (mpv - X_mean)/X_sd
