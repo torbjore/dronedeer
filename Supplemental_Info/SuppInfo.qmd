@@ -1,0 +1,1674 @@
+---
+title: "Detailed model formulation, analysis, and results"
+subtitle: "**Supporting Information for:** Estimating red deer (*Cervus elaphus*) population density using drones in a steep and rugged terrain (DOI: 10.1002/wlb3.01533)"
+date: now
+author:
+  - name: Torbjørn Ergon
+    email: t.h.ergon@ibv.uio.no
+    corresponding: true
+    # affiliations:
+    #   - ref: equal
+  - name: Julie Bommerlund
+    # affiliations:
+    #   - ref: equal
+  - name: Simon Filhol
+  - name: Atle Mysterud
+# affiliations:
+#   - id: equal
+#     name: These authors contributed equally to the publication
+license: "CC BY"
+number-sections: true
+toc: true
+toc-depth: 4
+toc-expand: 1
+format:
+  html:
+    embed-resources: true
+    output-file: "index.html"
+#    html-math-method: mathjax # default - should not be neccessary
+#    self-contained-math: true # won't need internet connection to vew file, but typesetting not nice
+#    theme: journal
+bibliography: references.bib
+---
+
+```{r}
+#| echo: false
+#| output: false
+Sys.setlocale(locale='no_NB.utf8') # Include for using Norwegian letters in plots
+library(knitr)
+library(coda)
+source("../R/utilities.r")
+```
+
+This document presents a detailed model description, details about the model results, including convergence diagnostics, posterior predictive checks, tables and figures. The document is written in Quarto, and the source file containing all executable R code is available in the GitHub-repository accompanying the paper, [https://github.com/torbjore/dronedeer](https://github.com/torbjore/dronedeer).
+
+# Detailed model formulation {#sec-model_formulation}
+
+Deer densities were estimated using hierarchical state space models fitted by the use of Bayesian Markov Chain Monte Carlo (MCMC) sampling in NIMBLE ver. 1.3.0 [@valpine_programming_2017; @devalpine2024]. We combined a double-observer observation model with an overdispersed Poisson process model describing the variation in deer densities among sampling sites (focal images). We will here first derive the observation model and the process model, using a hierarchical formulation, and then provide details about the analysis. The NIMBLE model code, together with the data, are provided on GitHub ([https://github.com/torbjore/dronedeer](https://github.com/torbjore/dronedeer)).
+
+To estimate abundance and population density, one must account for the fact that not all individuals that are present will be observed (i.e., imperfect detection). Detection failure can be due to either individuals being hidden (e.g, under trees) and hence not available for registration in the images, or because they were missed by the observers while inspecting the images even though they were present (available for detection) in the images [@brack2018]. By comparing registrations from multiple overlapping images, we found that it was very unlikely that an individual would be completely hidden in all overlapping images (see main text), and hence we did not account for imperfect availability. However, it was not uncommon that an individual registered by one observer was missed by the other observer. Hence, we used a double observer protocol to estimate detection probabilities [@nichols2000; @williams2002]:
+
+At each site (focal image) $i$ we have records of how many individuals that were seen by only observer 1 ($y_{10,i}$), how many individuals were seen by only observer 2 ($y_{01,i}$), and how many individuals were seen by both observers ($y_{11,i}$). We denote the observed data from each site by a vector $\mathbf{y}_i = \left[y_{01,i},y_{10,i},y_{11,i} \right]$, and the number of individuals seen by at least one observer is the sum of the elements in this vector, $\mathbf{Y}_i = y_{01,i} + y_{10,i} + y_{11,i}$. The observation model defined in the first section below describes the probability (likelihood) of getting these observed data, conditional on the number of individuals ($N_i$) present at each site; i.e. $L(\mathbf{y}_i |N_i)$. The number of individuals at each site, $N_i$, is unknown, and the stochastic model for this is described in the next section.
+
+## Observation model
+
+Given that the two observers detect individuals independently with probabilities $p_1$ and $p_2$ respectively, the probability that an individual is detected by only observer 1 is $P_{10} = p_1 (1-p_2)$, the probability of only being detected by observer 2 is $P_{01} = (1-p_1)p_2$, and the probability of being detected by both observers is $P_{11} = p_1 p_2$. The probability of being detected by at least one observer is one minus the probability of not being detected by any of the observers, $p^* = 1-(1-p_1)(1-p_2)$. Note that this is equivalent to $p^* = P_{10} + P_{01} + P_{11}$.
+
+The key to derive a model for the observed data ($L(\mathbf{y}_i│N_i)$), is to first write the probability of the observed data conditional on the number of individuals seen by at least one observer ($Y_i$), and then multiply this with the probability of observing $Y_i$. I.e., $L(\mathbf{y}_i│N_i) = L(\mathbf{y}_i|Y_i)L(Y_i|N_i)$. The first of these components is a multinomial likelihood, and the second component is a binomial likelihood. Hierarchically, we write this as
+
+$$
+\begin{align}
+\mathbf{y}_i  &\sim \text{Multinomial} (\pi,Y_i) \\
+Y_i  &\sim \text{Binomial}(p^*,N_i)   
+\end{align}
+$$
+
+where $\pi=[P_{10},P_{01},P_{11} ]/p^*$ (i.e., the multinomial probability vector $\pi$ contains the probabilities of the three detection categories conditional on detection). Note that all observed individuals must belong to one, and only one, of the three detection categories, and hence the elements of $\pi$ sum to one. Note also that when $Y_i=0$, the multinomial probability of observing $\mathbf{y}_i=[0,0,0]$ becomes 1 regardless of the parameter values.
+
+This initial observation model has only two top level parameters: the detection probabilities of the two observers, $p_1$ and $p_2$ (these could have been made site specific, and then been modelled as a function of covariates on e.g. a logit scale). Posterior predictive checks (see below) indicated, however that the two independent observers had sufficiently variable detection probabilities among sites to call for a model with random detection probabilities – see details in @sec-posterior_checks.
+
+## Process model {#sec-process_model}
+
+The number of individuals present at a site was modelled as an overdispersed Poisson process. Hence, we assume that number of individuals present at site $i$, $N_i$, is drawn from a Poisson distribution with expectation $\lambda_i a_i$, where $\lambda_i$ is the expectation per unit area (we used hectares) and $a_i$ is the area of the site,
+
+$$
+N_i  \sim \text{Poisson}(\lambda_i a_i)
+$$
+
+Overdispersion was accommodated by modelling $\lambda_i$ as a random variable. As we anticipated that density estimates may be somewhat sensitive to the choice of the distribution of $\lambda_i$, we examined three alternative random distributions; log-normal, exponential, and gamma.
+
+### Log-normal expectation
+
+For the log-normal model we used a standard log-linear log-normal model,
+
+$$
+\begin{align}
+\log(\lambda_i) &\sim N(\mu_i, \sigma^2) \\
+\mu_i &= x_i \beta
+\end{align}
+$$
+
+where $x_i$ is a vector of site-covariates and $\beta$ is a vector of the linear coefficients (including an intercept). Mean deer density in the log-normal model is then $e^{\mu_i+\sigma^2/2}$ and the variance is $(e^{\sigma^2}-1) e^{2\mu_i+\sigma^2}$.
+
+### Exponential expectation
+
+The exponential distribution is a one-parameter distribution with probability density function $f(\lambda) = \Lambda e^{-\Lambda\lambda}$, expectation $1/\Lambda$, and variance $1/\Lambda^2$. We modeled the expectation as a log-linear function of covariates (i.e., assuming multiplicative effects), and hence formulated the model hierarchically as
+
+$$
+\begin{align}
+\lambda_i  &\sim \text{Exponential}(\Lambda_i) \\
+\Lambda_i &= e^{-\mu_i} \\
+\mu_i &= \mathbf{x}_i \boldsymbol{\beta}
+\end{align}
+$$
+
+Mean deer density in the exponential model thus becomes $e^{\mu_i}$ and the variance is $e^{2\mu_i}$.
+
+### Gamma expectation {#sec-gamma_expectation}
+
+The gamma distribution parameterized with a shape parameter $a$ and a rate parameter $b$ has probability density function $f(\lambda) = \frac{b^a}{\Gamma(a)} \lambda^{a-1} e^{-\beta\lambda}$, expectation $\frac{a}{b}$, and variance $\frac{a}{b^2}$ (the variance is proportional to the mean). We initially tried keeping the rate parameter constant and using a log-linear covariate model for the expectation (i.e., $a_i = be^{\mathbf{x}_i\boldsymbol{\beta}}$), but this model had very poor mixing, even when using blocked mcmc-sampling (perhaps because $b$ is a parent of $a$). Hence, we instead kept the shape parameter constant and let the rate parameter depend on $\mu_i$ and $\sigma$ in such a way that the variance-mean relationship is the same as in the log-normal model (the variance is proportional to the square of the mean),
+
+$$
+\begin{align}
+\lambda_i  &\sim \text{Gamma}(a,b_i) \\
+b_i &= ae^{-(\mu_i+\sigma^2/2)} \\
+a &= \frac{1}{e^{\sigma^2} - 1} \\
+\mu_i &= \mathbf{x}_i \boldsymbol{\beta}
+\end{align}
+$$
+
+Hence, mean and variance of deer density in the gamma model has the same expressions as in the log-normal model, respectively $\frac{a}{b} = e^{\mu_i+\sigma^2/2}$ and $a/b^2 = \left( e^{\sigma^2}-1 \right) e^{2\mu_i+\sigma^2 }$. Compared to the log-normal distribution with the same mean and variance, the gamma distribution has a higher density close to zero and a lower density far out in the tail of the distribution.
+
+## Modelling of covariate effects
+
+In our application, we included the distance from the agricultural field as the only site covariate in $\mathbf{x}_i$. The covariate effect was the same in all study area-month combinations, but the intercept was allowed to vary across area-months. Denoting the index for the area-month that site $i$ belongs to as $j(i)$, we can formulate the covariate model as,
+
+$$
+\mu_i = \mu_{0,j(i)} + x_i \beta
+$$
+
+In principle, $\mathbf{x}_i$ can include both covariates that vary among sites within study areas and covariates that vary only among, and not within, study areas. However, it is important to realize that if $\mathbf{x}_i$ includes study area covariates, random effects of study areas would need to be included in order to avoid pseudoreplication (sites within study areas is not a random sample of sites with the same study area covariate value).
+
+# Modeling focus and strategy {#sec-strategy}
+
+## Specification of priors and starting values
+
+For the observation model parameters $p_1$ and $p_2$ (detection probabilities) we initially used $\text{Uniform}(0,1)$ priors. However, as posterior predictive checks indicated that random effects on detection probabilities were required, we decided to use logit-normal priors for detection probabilities (see @sec-posterior_checks). We also used data from trials at a deer enclosure in a natural habitat to inform the priors for these parameters (see @sec-making_use_of).
+
+The covariate (distance from field) was normalized by subtracting the mean and dividing by the standard deviation prior to model fitting, and we used a $\text{N}(0,\sigma=2)$ prior for the covariate effect, $\beta$.
+
+One approach to the modelling could have been to specify somewhat informative priors for the intercepts $\mu_{0,j(i)}$ based on prior knowledge of reasonable deer densities in the area. However, due to the methodological nature of our study, we decided to use essentially uninformative priors for $\mu_{0,j(i)}$, $\text{N}(0,\sigma=10)$.
+
+To find reasonable starting values for the MCMC-chains, we first computed estimates of $p_1$ and $p_2$ as the proportion of those individuals that were seen by observer 2 that were also seen by observer 1 and vice versa. Simplified estimates of population densities were then computed from the deer counts, the estimated areas of the sites, and the initial estimates of $p_1$ and $p_2$ (see code for details \<link to GitHub repository will be inserted after peer review\>).
+
+For the log-normal and the gamma models, the prior distribution for $\sigma$ was specified as
+
+$$
+\sigma \sim \text{Gamma}(\text{shape} = 0.01, \text{ rate} =  0.01)
+$$
+
+In @sec-overlap, we present computed overlap between prior and posterior distributions for all parameters.
+
+## Posterior predictive checks and model modifications {#sec-posterior_checks}
+
+<!-- Check this - I have to draw N form lambda too? -->
+
+We performed posterior predictive checks [@gelman2004; @conn2018] with respect to both $Y_i$’s and $\mathbf{y}_i$’s by comparing the sum of the squared Pearson residuals (discrepancy measure) for observed and simulated data in every step of the MCMC-chains. The discrepancy measures for $\mathbf{y}_i$ were conditional on the observed values of $Y$, and hence a lack of fit with respect to $Y_i$’s will not lead to a lack of fit with respect to $\mathbf{y}_i$. Bayesian p-values (proportion of the discrepancy measure that are larger for the simulated data than for the observed data) did not indicate any lack of fit with respect to $Y_i$’s ($p > 0.4$), but there appeared to be a lack of fit with respect to $\mathbf{y}_i$’s ($p < 0.03$), indicating that there were more variation in the counts from the two independent observers than expected if detection probability was constant across sites for each observer. To accommodate this variation in the model, we introduced random detection probabilities, assuming the logit-transformed detection probabilities to be normal. Hence, in our final observation model, we used
+
+$$
+\begin{align}
+p_{1,i} &= \frac{1}{1+e^{-(\eta_1 + \epsilon_{1,i})}} \\
+p_{2,i} &= \frac{1}{1+e^{-(\eta_2 + \epsilon_{2,i})}} \\
+\epsilon_{1,i} &\sim \text{N}(0,\sigma_p)\\
+\epsilon_{2,i} &\sim \text{N}(0,\sigma_p)\\
+\end{align}
+$$
+
+A model with a wide prior for $\sigma_p$ resulted in unreasonable high upper values; the high prevalence of $Y_i = 0$ in the data could be explained by either a high number of sites having very low expected densities (which is reasonable) or a high number of sites having very low detection probabilities (which is *not* reasonable). Hence, to facilitate model fitting, we used a somewhat informative prior for $\sigma_p$; a Gamma-prior truncated at an upper bound of 0.59,
+
+$$
+\sigma_p  \sim\text{T} \left[  \text{Gamma}(1,0.05), 0, 0.59 \right]
+$$
+
+The upper bound of $0.59$ was set based on a prior assessment that detection at the 97.5 percentile site should have a maximum of 10 times higher odds than in the 2.5 percentile site ($\log(10)/(1.96 \times 2) \approx 0.59$). In @sec-sens_sigma_p we investigate the sensitivity of our results with respect to the choice pf prior for $\sigma_p$.
+
+Bayesian p-values did not indicate any lack of fit of this final model with respect to $Y_i$’s ($p = 0.50$) or $\mathbf{y}_i$’s ($p = 0.19$) (see @sec-ppc).
+
+## Using data from the deer enclosure to inform priors on detectability {#sec-making_use_of}
+
+<!-- The deer density in the enclosure at the deer farm was known, and this may be used to inform the priors for detection probability. -->
+
+The enclosure surrounded a natural habitat with a similar forest type as at the study areas. It is therefore reasonable to assume that detection probabilities inside and outside the enclosure are similar. It is, however, not reasonable to assume that the variation in deer densities among sites (focal images) are similar because the enclosure had much higher density, much more females than males, many young individuals, and there were feeding stations where the deer tended to aggregate.
+
+Initial analysis showed that there was no significant difference in detection probability in the enclosures for the two observers, and we hence simplified the observation model to have the same mean logit-scale detection probability for the two observers, $\eta_1 = \eta_2 = \eta$. The model was then fitted with the following uninformative prior:
+
+$$
+\eta \sim \text{N}(0,2) \\
+$$
+
+When fitting the full model to the data from the study areas, we used as priors
+
+$$
+\begin{align}
+\eta_1 &\sim \text{N}\left(\text{mean}(\boldsymbol{\eta}), 1.5\text{sd}(\boldsymbol{\eta})\right) \\
+\eta_2 &\sim \text{N}\left(\text{mean}(\boldsymbol{\eta}), 1.5\text{sd}(\boldsymbol{\eta})\right) \\
+\end{align}
+$$
+where $\text{mean}(\boldsymbol{\eta})$ and $\text{sd}(\boldsymbol{\eta})$ refer to the mean and standard deviation of the posterior samples for $\eta$ in the enclosure model. The posterior standard deviations were conservatively increased by 50% to account for the fact that detection probabilities inside and outside of the enclosure could be different. See @sec-encl_detection for details.
+
+## Implementation and model selection
+
+The models were fitted by the use of Bayesian MCMC sampling in NIMBLE (v1.3.0; [@devalpine2024a; @valpine_programming_2017]). Convergence was assessed on three independent MCMC chains (with different start values) with the @gelman1992 diagnostics using the ‘gelman.diag-function’ in the ‘coda’ package ver. 0.19-4.1 [@plummer2006] in R ver. 4.3.3 [@rcoreteam2024].
+
+For each of the three models for the random Poisson expectation (log-normal, exponential and gamma), we fitted both linear and quadratic models for $\mu_i$ as a function of distance from the field, as well as a model with no covariate effects; hence obtaining 9 models. We selected the best model according to the Watanabe-Akaike (Widely Applicable) Information Criterion, WAIC [@watanabe2010] for presentation of estimates and prediction (the criterion seeks to minimize the prediction error variance as an optimal trade-off between accuracy and precision of the fitted model predictions).
+
+We ran MCMC-sampling on each of the nine models with 3 chains with random and independent starting values for 180,000 iterations after a burn-in of 20,000 iterations and stored every 6^th^ posterior sample (obtaining a total of 90,000 samples for inference). Satisfactory convergence was confirmed by the [@gelman1992] ‘potential scale reduction factor’ (psrf) being \<1.05 for all parameters (see @sec-conv).
+
+## Estimating densities at the specific sites included in each survey {#sec-estimating_d}
+
+The estimators for mean density presented in @sec-process_model assume that the sites are random samples of a large number of sites of the same characteristics, and the estimates apply to this statistical population of sites. We also computed estimates of density (at the time of flight) at the specific sites included in each survey as the estimated number of individuals present divided by the total area covered, $\bar{d}_s =\sum_{i=1}^n \hat{N}_i/\sum_{i=1}^n a_i$ (the sums are over all $n$ sites in the survey and the subscript $s$ in $\bar{d}_s$ indicates that the mean only applies to the specific sites sampled).
+
+## Estimating number of deer in a specific area {#sec-estimating_N}
+
+When estimating number of deer in a specific area, such as in the deer enclosures, simply computing the posterior of $N_{\text{Tot}} = \bar{d}_s/q$ were $\bar{d}_s$ is the mean density at the surveyed sites (@sec-estimating_d) and $q$ is the proportion of the area included in survey, will underestimate the sampling variance (uncertainty) of the total number of deer in the area since density in the sampled and unsampled part of the area would not be exactly the same.
+
+To compute the sampling variance of mean number of deer at sample units, we must account for the fact that we sample from a finite area without replacement. It is not straightforward to do this in a Bayesian setting [@banerjee2024], and our case is further complicated by the fact that sample sites vary in size (particularly in the deer enclosures, where parts of the focal images were outside the enclosures). Hence, since we only have a finite study area in the deer enclosure, and we only estimate number of deer in the enclosure as a proof of concept, we took a more frequentist approach to the problem, ignoring the fact that sites are of different sizes:
+
+If $n$ sites are sampled from an area covering $K$ sites, the standard expression for the sampling variance of the mean number of deer in the $K$ sites is $$
+\text{Var}(\bar{N}) = \frac{K-n}{K} \frac{s^2}{n} 
+$$ where $s^2$ is is the empirical variance in number of individuals per site. The first factor is the proportion of the $K$ sites that are *not* included in the sample, and the variance becomes zero when we have counts of the entire area (when $n = K$).
+
+The total number of deer in the area is $N_{\text{Tot}} = K\bar{N}$ with sampling variance $\text{Var} \left( N_{\text{Tot}} \right) = K^2 \text{Var} \left( \bar{N} \right)$. Replacing with the proportion of the area covered in the sample, $q = n/K$, and inserting the expression for $\text{Var}(\bar{N})$ above, we get
+
+$$
+\text{Var} \left( N_{\text{Tot}} \right) = \left( \frac{n}{q} - n \right) \frac{s^2}{q}
+$$ (see also @williams2002 chap. 12.4.1).
+
+In our situation, we do not have exact counts of number of deer per site (due to imperfect detection), but instead we have posterior samples of $N_i$ at each site $i$. To assess the uncertainty in $N_{\text{Tot}}$, we computed posterior samples for lower and upper 95% confidence limits assuming a normal distribution (by the central limit theorem) at the log-scale, using the delta-method approximation,
+
+$$
+\text{CI} = \exp(\log(N_{\text{Tot}}) \pm 2 N_{\text{Tot}}^{-1}s)
+$$
+
+In the analysis of the deer enclosure data, we were not interested in describing the variation among sites, and therefor instead specified uninformative priors for the true number of deer at each site hierarchically as
+
+$$
+\begin{align}
+N_i &\sim \text{Poisson}(\lambda_i) \\
+\lambda_i &\sim \text{Uniform}(0, 50) \\
+\end{align}
+$$
+
+# Settings of UVA and apps
+
+Before take-off, the UAV was calibrated and set to positioning flight mode (“P-mode”). The DJI 4.0-app was used. Settings of the DJI 4.0-app were kept on default mode except for some options that were changed to the following: 
+
+* Focus: infinity
+
+* Shutter priority: S 
+
+* ISO: auto ON 
+
+* Shutter: 1/1000 
+
+* Image size: 3:2 
+
+* Image format: JPEG 
+
+* White balance: auto ON
+
+Apart from selection of UAV model, the settings of the Map Pilot-app were identical for the 'DJI Mavic 2 Pro' drone and the 'DJI Mavic 2 Enterprise Dual' drone. The changes made to the default settings were:
+
+* Model: 'DJI Mavic 2 Pro' or 'DJI Mavic 2 Zoom/Enterprise' 
+
+* Image format: RAW image OFF 
+
+* Speed class rating: Class 3 
+
+* Enable radius guide: OFF 
+
+# Detailed analysis and results {#sec-results}
+
+## Organization of the data
+
+All data are in the `data` folder of the repository. The data-files included here are:
+
+-   `SiteData.rda`: The full data from the study sites (excluding enclosure). See [`SiteDataInfo.html`](https://torbjore.github.io/dronedeer/SiteDataInfo.html) for description of the variables.
+-   `CountData.rda`: Based on `SiteData.rda`, but includes only counts in a long format.
+-   `CountData_Fence.rda`: Counts in a long format from the enclosure.
+-   `nimbleData.rda`: Data from the study sites organized for NIMBLE models. File is produced by the script in `data\Make_nimbleData.R`.
+-   `nimbleData_Fence.rda`: Data from the enclosure organized for NIMBLE models. File is produced by the script in `data\Make_nimbleData_Fence.R`.
+
+## Enclosures
+
+The enclosure contained a total of 117 red deer in a 5 hectare area of natural forest. Two survey flights were conducted over the enclosures; one at 40 m above ground, and one at 60 meter above ground. We used these data to first test the method, and then to obtain information about detection probabilities, which we used to inform priors for detection probabilities in the models fitted to the wild deer data.
+
+### Overview of data
+
+```{r}
+#| echo: false
+
+# Loading the data
+load("../data/nimbleData_Fence.rda")
+
+tot_area <- round(apply(nimbleData_Fence$constants$area, 1, sum, na.rm= TRUE), 2)
+prcnt_area <- round(100*apply(nimbleData_Fence$constants$area, 1, sum, na.rm= TRUE)/5, 0)
+```
+
+**Area of the sampling sites in hectare (ha); rows represent survey at 40 m and 60 m above ground respectively:**
+
+```{r}
+#| echo: false
+round(nimbleData_Fence$constants$area, 3)
+```
+
+The reason why some sites cover a much smaller area than other sites is that large parts of these sites (focal images) were outside the enclosure. The survey from 40 m above ground contained data from 20 non-overlapping sites, covering a total of `r tot_area[1]` ha (`r prcnt_area[1]`% of the 5 ha enclosure). The survey from 60 m above ground contained data from 10 non-overlapping sites, covering a total of `r tot_area[2]` ha (`r prcnt_area[2]`% of the enclosure). The reason for the lower overall coverage from the 60 m survey is that larger proportions of the focal images from this survey covered ground outside of the enclosure.
+
+**Counts at 40 m,** $\mathbf{y}_i$ for each site (column) $i$ (rows: first number of deer detected by only observer 1, then number of deer detected by only observer 2, and finally number of deer detected by both observers):
+
+```{r}
+#| echo: false
+t(nimbleData_Fence$data$y[1,,])
+```
+
+**Counts at 60 m:**
+
+```{r}
+#| echo: false
+t(nimbleData_Fence$data$y[2,1:10,])
+```
+
+### Deer numbers
+
+```{r}
+#| echo: false
+
+# loading posterior samples
+load("../posterior_samples/posterior_samples_enclosure_N.RData")
+```
+
+The NIMBLE-model to estimate total number of deer in the enclosure (see @sec-estimating_N) is defined in `R/nimble_models/enclosure_model_N.q` and the model is fitted with the script in `R/run_enclosure_model_N.R` (see the script for mcmc trace plots, convergence diagnostics and posterior predictive checks).
+
+**Summary of posterior distributions:**
+
+```{r}
+#| echo: false
+
+include <- c(
+  "N_sum[1]",    
+  "N_sum[2]",    
+  "N_tot[1]",    
+  "N_tot[2]",    
+  "N_lower[1]",  
+  "N_lower[2]",  
+  "N_upper[1]", 
+  "N_upper[2]",  
+  "eta[1]",     
+  "eta[2]",     
+  "sigma_p"
+)
+(sum <- summary(posterior_samples[,include]))
+```
+
+Here, the indices 1 or 2 in brackets represent survey at 40 m and 60 m respectively. `N_sum` is the sum of individuals in the surveyed sites (see section @sec-estimating_d). `N_tot` is the estimated total number of deer in the enclosure, $N_\text{Tot}$, as defined in section @sec-estimating_N. The posterior distribution for this random variable is too narrow as it assumes that density in the parts of the enclosure that has not been surveyed is exactly the same as in the surveyed part of the enclosure. `N_lower` and `N_upper` are the confidence limits derived in @sec-estimating_N. Finally, the three last parameters are the mean and standard deviation of the logit scale detection probabilities.
+
+Judging by the posterior median, the approximate frequentist confidence intervals derived in @sec-estimating_N marginally fail to cover the true known number of deer in the enclosure (117 deer) in the 40 m above ground survey (confidence interval range from about `r round(sum$quantiles["N_lower[1]","50%"],0)` to `r round(sum$quantiles["N_upper[1]","50%"],0)` individuals). The true value is however included in the much wider confidence interval for the 60 m above ground survey (confidence interval range from about `r round(sum$quantiles["N_lower[2]","50%"],0)` to `r round(sum$quantiles["N_upper[2]","50%"])` individuals). Even though the credible intervals for the number of deer at the surveyed sites (posterior distributions for `N_sum`) were not discouragingly wide, the confidence intervals for the total number of deer in the enclosure (based on `N_lower` and `N_upper`) were rather wide, particularly for the 60 m above ground survey. This is due to the clustered distribution of deer within the enclosure, combined with somewhat limited sampling effort. Estimates from multiple surveys could have been combined to gain precision (not included here).
+
+### Detection probabilities {#sec-encl_detection}
+
+```{r}
+#| echo: false
+postmat <- as.matrix(posterior_samples)
+eta2 <- postmat[,"eta[2]"]
+cri <- quantile(plogis(eta2), c(0.5, 0.025, 0.975))
+```
+
+The surveys of the sampling sites in the wild population were conducted with flights at 60 m above ground. Hence, we used the posterior distribution of `eta[2]` to inform priors for detection probabilities in the models fitted to these data. Transforming `eta[2]` to the probability scale gives a posterior median detection probability of `r sprintf("%.2f", cri[1])` and a 95% credible interval ranging from `r sprintf("%.2f", cri[2])` to `r sprintf("%.2f", cri[3])` (see also @fig-p).
+
+The posterior distribution of `eta[2]` is plotted in @fig-eta (black and red) and the corresponding posterior distribution for detection probability at the median site is plotted in @fig-p. As a prior for `eta[2]` in the analysis of the wild deer data from the sampling sites (blue lines), we used a normal distribution with the same mean and 1.5 times the standard deviation of the posterior samples from the model fitted to the enclosure data.
+
+```{r}
+#| echo: false
+#| label: fig-eta
+#| fig-cap: "The distribution of the posterior samples of `eta[2]` (black), the normal distribution with the same mean and standard deviation as the posterior samples (red), and the normal distribution with the same mean and 1.5 times the standard deviation of the posterior samples (blue). The latter distribution (in blue) was used as a prior for `eta[2]` in the models fitted to the survey data from the wild populations."
+
+fudge <- 1.5
+xlow <- -1.5
+xhigh <- 4.5
+eta2x <- seq(xlow, xhigh, length.out = 120)
+postdens <- density(eta2)
+plot(postdens, main = "Posterior density", xlab = "Eta[2]", xlim = c(xlow, xhigh))
+lines(dnorm(eta2x, mean(eta2), sd(eta2)) ~ eta2x, col = "red")
+lines(dnorm(eta2x, mean(eta2), fudge*sd(eta2)) ~ eta2x, col = "blue")
+```
+
+```{r}
+#| echo: false
+#| label: fig-p
+#| fig-cap: "The distributions of `eta[2]` transformed to the probability scale (i.e., detection probabiity at the median site). Colour codes are the same as in @fig-eta. "
+
+library(logitnorm) # for dlogitnorm
+
+postdensP <- density(plogis(eta2))
+plot(postdensP, main = "Posterior density", xlab = "Detection probability at median site", xlim = c(0, 1))
+Px <- seq(0, 1, length.out = 120)
+lines(dlogitnorm(Px, mean(eta2), sd(eta2)) ~ Px, col = "red")
+lines(dlogitnorm(Px, mean(eta2), fudge*sd(eta2)) ~ Px, col = "blue")
+
+cri <- quantile(plogis(eta2), c(0.5, 0.025, 0.975))
+```
+
+The posterior distribution of `sigma_p` is shown in @fig-sigma_p (note that there is a prior upper bound at 0.59; see @sec-posterior_checks for prior specification). In @fig-sigma_odds, this posterior distribution is transformed to the posterior distribution for the odds-ratio for detection at the 97.5 percentile site versus the 2.5 percentile site.
+
+```{r}
+#| echo: false
+#| label: fig-sigma_p
+#| fig-cap: "Trace plot (left) and density plot (right) of posterior samples of `sigma_p`. The range of the posterior samples is shown as a thick line in the density plot."
+
+plot(posterior_samples[,"sigma_p"])
+```
+
+```{r}
+#| echo: false
+#| label: fig-sigma_odds
+#| fig-cap: "Posterior distribution for the odds-ratio for detection at the 97.5 percentile site versus the 2.5 percentile site"
+
+sigma_p <- postmat[,"sigma_p"]
+xlow <- exp(2*1.96*0)
+xhigh <- exp(2*1.96*0.59)
+x <- seq(xlow, xhigh, length.out = 120)
+postdens <- density(exp(2*1.96*sigma_p), from = xlow, to = xhigh)
+plot(postdens, main = "Posterior density", xlab = "Odds-ratio", xlim = c(xlow, xhigh))
+```
+
+Including random effects on detection probability was deemed necessary by posterior predictive checks (@sec-posterior_checks), but there is obviously little information in the data to estimate heterogeneity in detection probability among sites. We also expect that the `sigma_p` parameter may be confounded with heterogeneity in actual density among sites (@sec-posterior_checks).  
+
+## Wild deer
+
+### Overview of data {#sec-wild_overview}
+
+The full data are in the `SiteData.rda` files, with variables described in `SiteDataInfo.html`. @tbl-overview gives an overview of the data from the four study areas and two sampling periods (March and April).
+
+```{r}
+#| echo: false
+#| label: tbl-overview
+#| tab-cap: "Overview of data from the four sampling sites and two sampling occasions (March and April). The simple density estimates in the last column is just the number of deer seen per hectare (1/100 km$^2$) divided by an overall estimate of detection probability (see @sec-simple)."
+
+# Based on SiteData
+load(file = "../data/SiteData.rda")
+SiteData$SAM <- paste(SiteData$Study_area, SiteData$Month, sep = ", ")
+SiteData$SAM <- factor(SiteData$SAM, c("Haugen, March", "Haugen, April", "Raa, March", "Raa, April", "Soere_Bjoerkum, March", "Soere_Bjoerkum, April", "Sprakehaug, March", "Sprakehaug, April"))
+levels(SiteData$SAM) <- c("Haugen, March", "Haugen, April", "Raa, March", "Raa, April", "Søre Bjørkum, March", "Søre Bjørkum, April", "Sprakehaug, March", "Sprakehaug, April")
+
+# Making data frame for table
+D <- data.frame(SAM = levels(SiteData$SAM))
+
+# Mean flight altitude
+D$mean_altitude <- with(SiteData, tapply(Flight_Altitude, list(SAM), mean))
+
+# Number of sites
+D$N_sites <- table(SiteData$SAM)
+
+# Mean elevation
+D$elevation <- round(with(SiteData, tapply(mean_elevation, list(SAM), mean)), 0)
+
+# mean site area
+D$mean_area <- round(with(SiteData, tapply(Area, list(SAM), mean))/10000, digits = 2)
+
+# SD site area
+D$sd_area <- round(with(SiteData, tapply(Area, list(SAM), sd))/10000, 2)
+
+# Total site area
+D$total_area <- round(with(SiteData, tapply(Area, list(SAM), sum))/10000, 2)
+#D$mean_area * D$N_sites
+
+# Number of deer seen only by observer 1
+D$y1 <- with(SiteData, tapply(n_only_ab, list(SAM), sum))
+
+# Number of deer seen only by observer 2
+D$y2 <- with(SiteData, tapply(n_only_jb, list(SAM), sum))
+
+# Number of deer seen by both observers
+D$y_both <- with(SiteData, tapply(n_both, list(SAM), sum))
+
+# Total number of deer counted
+D$Y <- D$y1 + D$y2 + D$y_both
+
+# Simple density estimate
+D$N_hat_simple <- round((D$Y/D$total_area)/0.9763314, 3) # See detection probability below
+
+kable(
+  D,
+  #digits = c(0, 0, 0, 2, 3, 1, 0, 0, 0, 0, 2), # Why no effect?
+  col.names = c(
+    "Sample area, month",
+    "Flight altitude (m)",
+    "Number of sites",
+    "Mean elevation (masl)",
+    "Mean area of sites (ha)",
+    "SD of site area",
+    "Total area (ha)",
+    "Number seen only by obs. 1",
+    "Number seen only by obs. 2",
+    "Number seen by both observers",
+    "Number seen in total",
+    "Simple estimate of density (ha$^{-1}$)"
+    )
+  )
+
+# sum(D$Y)
+
+```
+
+```{r}
+#| echo: false
+# Loading data
+load(file = "../data/nimbleData.rda")
+
+N_sites <- apply(nimbleData$data$Y, 1, function(i) sum(!is.na(i))) |> tapply(INDEX = nimbleData$const$sam, sum)
+sam_names <- c("Haugen (April)", "Haugen (March)", "Raa (April)", "Raa (March)", "Søre Bjørkum (April)", "Søre Bjørkum (March)", "Sprakehaug (April)", "Sprakehaug (March)")
+names(N_sites) <- sam_names
+
+area_per_sam <- apply(nimbleData$const$area, 1, sum, na.rm=TRUE) |> tapply(INDEX = nimbleData$const$sam, sum)
+names(area_per_sam) <- sam_names
+
+Y_per_sam <- apply(nimbleData$data$Y, 1, sum, na.rm=TRUE) |> tapply(INDEX = nimbleData$const$sam, sum)
+names(Y_per_sam) <- sam_names
+
+#mean(nimbleData$const$area, na.rm = TRUE)
+#sd(nimbleData$const$area, na.rm = TRUE)
+```
+
+Most areas where surveyed by drone flights at 60 meter altitude above ground (pre-programmed based on a digital elevation model), but some areas where surveyed by flights at 40 meters above ground. Considerable variation in size of the sampling sites, among and within study areas, also occurred due to the steep and rugged terrain (@fig-area).
+
+
+```{r}
+#| echo: false
+#| warning: false
+#| label: fig-area
+#| fig-cap: "Histogram of area of of the sampling sites."
+
+# hist(nimbleData$const$area, xlab = "Area (ha)")
+
+library(dplyr)
+library(ggplot2)
+#library(hrbrthemes) # no longer available on CRAN
+
+#df = CountData %>% select(Study_area, Area) # Choosing only survey and area
+df = SiteData %>% select(Study_area, Area) # Choosing only survey and area
+df <- slice(df, 1:(n() - 2)) # Remove fencing data
+df <- df %>% 
+  mutate(Area2 = Area / 10000)
+
+#df<- df %>% group_by(Study_area)
+#df <- aggregate(df$Area, by=list(Study_area=df$Study_area), FUN=sum)
+
+ggplot(df, aes(x=Area2,  fill= Study_area)) + 
+  geom_histogram() +
+  #theme_ipsum(axis_title_size = 11.5, axis_title_just = "cc") +
+  theme(plot.title.position = 'plot', plot.title = element_text(hjust = 0.2)) +
+  
+  # Title and axis:
+  ggtitle("Area of sites") +
+  xlab("Area (hectare)") +
+  ylab("Number of sites") +
+#  theme(legend.title = "Study area") +
+  
+  #geom_vline(aes(xintercept=mean(Area2)), color="#F2EEE8", linetype="dashed", size=1) +
+  
+  scale_fill_manual(name = "",
+                    labels = c("Haugen",
+                               "Raa", 
+                               "Soere Bjoerkum",
+                               "Sprakehaug"),
+                     values= c("Haugen" = "#CCB893",
+                               "Raa" = "#A43820", 
+                               "Soere_Bjoerkum" = "#3A5261", 
+                               "Sprakehaug" = "#68754d")) 
+
+
+
+```
+
+Deer were seen at `r sum(nimbleData$data$Y>0, na.rm = TRUE)` of the `r sum(!is.na(nimbleData$data$Y))` sites, and the number of deer per site were distributed as follows
+
+```{r}
+#| echo: false
+tab <- table(nimbleData$data$Y)
+```
+
+```{r}
+table(nimbleData$data$Y)
+```
+(I.e, there were `r tab[1]` sites with zero deer seen, `r tab[2]` sites with 1 deer, and so on).
+
+The mean number of deer per site was `r round(mean(nimbleData$data$Y, na.rm = TRUE), 2)` and the variance was `r round(var(as.vector(nimbleData$data$Y), na.rm = TRUE), 2)` (the variance-mean ratio is `r round(var(as.vector(nimbleData$data$Y), na.rm = TRUE)/mean(nimbleData$data$Y, na.rm = TRUE), 2)`). This shows that there is considerable overdispersion in number of deer per site relative to a Poisson distribution.
+
+### Simple estimates for MCMC staring values {#sec-simple}
+
+Simple point estimate of detectability based on how many of those seen by observer 1 is seen by observer 2 and vice versa can be computed as follows:
+
+```{r}
+colsumy <- apply(nimbleData$data$y, 3, sum, na.rm=TRUE)
+p1hat <- colsumy[3]/(colsumy[2]+colsumy[3]) # = 0.692
+p2hat <- colsumy[3]/(colsumy[1]+colsumy[3]) # = 0.923
+(phat_simple <- 1 - (1-p1hat)*(1-p2hat))
+```
+This is the probability that at least one of the two observers registered a given deer in the picture (obs1 has probability 0.7 and obs2 has probability 0.9).
+
+Simple density estimates based on number of deer seen divided by total area, corrected for detection probability <1 (number of deer per hectare (1/100 km$^2$)):
+
+```{r}
+(lambdahat <- (Y_per_sam/phat_simple)/area_per_sam)
+```
+
+### WAIC model selection {#sec-waic}
+
+@tbl-waic shows the WAIC values for the nine candidate models (see @sec-process_model). The log-normal and gamma models give a significantly better fit to the data than the exponential models. The gamma models are slightly better (lower WAIC) than the log-normal models, but there is very little difference between the three gamma models. We will focus our inference on the `gamma_0` (no covariate effect) and `gamma_2` (a quadratic covariate effect) models.
+
+```{r}
+#| echo: false
+#| label: tbl-waic
+#| tab-cap: "WAIC values for the nine candidate models. Indices 0-2 refer to models without covariate effect (0),  models with a linear effect of distance from the field (1), and models with a quadratic effect of distance from the field (1)."
+
+# WAIC can be used even when we have different observation models: https://discourse.mc-stan.org/t/can-waic-looic-be-used-to-compare-models-with-different-likelihoods/7380
+
+# See Results.qmd for a code version that allows several sets of posterior samples (multiple runs) from the same model
+
+Path <- "../posterior_samples"
+models <- c(
+  "exponential_0",
+  "exponential_1",
+  "exponential_2",
+  "lognormal_0",
+  "lognormal_1",
+  "lognormal_2",
+  "gamma_0",
+  "gamma_1",
+  "gamma_2"
+  )
+
+df <- data.frame(model = models, WAIC = rep(NA, length(models)))
+for(mod in models){
+  fl <- paste0(mod, ".RData")
+  load(paste0("../posterior_samples/", fl))
+  df$WAIC[df$model == mod] <- out$WAIC$WAIC
+}
+
+kable(df, digits = 2)
+```
+
+### Summary of the WAIC-best models
+
+```{r}
+#| echo: false
+
+load("../posterior_samples/gamma_0.RData")
+gamma0 <- out$samples
+load("../posterior_samples/gamma_2.RData")
+gamma2 <- out$samples
+```
+
+**Summary of the posterior samples from the `gamma_0` model:**
+
+```{r}
+#| echo: false
+
+summary(gamma0[, c(15:23, 5:6, 24)])
+```
+
+**Summary of the posterior samples from the `gamma_2` model:**
+
+```{r}
+#| echo: false
+
+summary(gamma2[, c(17:24, 5:6, 25, 7:8, 26)])
+```
+
+### Trace plots, posterior distribution plots, and convergence ststistics {#sec-conv}
+
+Here, showing trace-plots and posterior density plots for the `gamma_2` model only:
+
+```{r}
+#| echo: false
+#| fig-height: 8
+
+plot(gamma2[, c(17:24, 5:6, 25, 7:8, 26)])
+```
+
+**@gelman1992 convergence diagnostics of `gamma_2` model:**
+
+```{r}
+#| echo: false
+
+gelman.diag(gamma2[, c(17:24, 5:6, 25, 7:8, 26)])
+```
+
+### Posterior predictive checks {#sec-ppc}
+
+```{r}
+#| echo: false
+samp <- as.matrix(gamma2)
+pY <- mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+py <- mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
+```
+
+
+Posterior predictive checks with Bayesian p-values comparing simulated and observed values of $Y$ and $\mathbf{y}$ (see @sec-model_formulation and @sec-posterior_checks) are presented in @fig-ppc. Although the posterior median sum of squared Pearson residuals (ssPr) for $Y$ simulated from the model are close that of the observed data (Bayesian p-value = `r round(pY, 2)`), the distribution of the ssPr have a higher tail towards higher values for the simulated data compared to the observed data (@fig-ppc, top-right panel). This indicates that the upper credible limits from the gamma model may be somewhat conservative (note however that the exponential model (which has narrower credible intervals) has considerably less support by WAIC; see @tbl-sens_distr). There is no indication of serious lack  of fit with respect to  $\mathbf{y}$ (Bayesian p-value = `r sprintf("%.2f", py)`).
+
+```{r}
+#| echo: false
+#| label: fig-ppc
+#| fig-height: 8
+#| fig-cap: "Posterior predictive checks for the `gamma2` model. Left column: Sum of the squared Pearson residuals for simulated data (y-axis) are plotted against the sum of the squared pearson residuals for the original data (x-axis) for every posterior sample (n = 90,000). The proportions of the points that are above the 1-to-1 lines in red are the Bayesian p-values, printed above the plots. Top panels represent the total counts by the two observers ($Y$), and bottom panels represent the counts broken down to 'seen by only observer 1', 'seen by only observer 2' and 'seen by both' ($\\mathbf{y}$ conditional on the observations of $Y$). The distributions of the descrepancy statistics are shown in the right column."
+
+par(mfrow = c(2,2), pty = "s")
+plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"], pty = "s", pch = ".", xlim = c(0, 5000), ylim = c(0, 5000), 
+     main = paste0("p = ", round(pY, 3)), xlab = "Observed data (Y)", ylab = "Simulated data (Y)")
+abline(0, 1, col="red")
+
+lim <- 6000
+New_Y_trunc <- samp[, "Disc_New_Y"][samp[, "Disc_New_Y"] < lim]
+Y_trunc <- samp[, "Disc_Y"][samp[, "Disc_Y"] < lim]
+
+plot(density(Y_trunc), main = "", col = "red", xlab = "Sum of squared\n Pearson residuals")
+lines(density(New_Y_trunc))
+legend("topright",
+       lty = 1,
+       col = c("black", "red"),
+       legend = c("Simulated data", "Observed data"),
+       cex = 0.8
+)
+
+plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"], pty = "s", pch = ".",
+     main = paste0("p = ", round(py, 3)), ylim = c(15, 170), xlim = c(15,170), xlab = "Observed data (y)", ylab = "Simulated data (y)")
+abline(0, 1, col="red")
+
+plot(density(samp[, "Disc_y"]), col = "red", main = "", xlab = "Sum of squared\n Pearson residuals")
+lines(density(samp[, "Disc_New_y"]))
+legend("topright",
+       lty = 1,
+       col = c("black", "red"),
+       legend = c("Simulated data", "Observed data"),
+       cex = 0.8
+       )
+```
+
+
+### Predictions from best model
+
+#### Deer density at the sample sites
+
+While the main focus of the modelling was to estimate density where the sampled sites are assumed to be a random sample of a large number of sites of the same characteristics, we may also estimate deer density at the specific sites sampled (see @sec-estimating_d). These estimates (posterior summaries) are presented in @tbl-mean_ds0 from the `gamma0` model, and in @tbl-mean_ds2 from the `gamma2` model. Uncertainty in these estimates are only due to imperfect detection.
+
+```{r}
+#| echo: false
+#| label: tbl-mean_ds0
+#| tab-cap: "Summary for posterior distribution (`gamma0` model) for deer densities at the sampled sites at each sample area and month. Units are number of deer per hectare (1/100 km$^2$). The three rightmost columns show the 50%, the 2.5% and the 97.5% quantiles (in the three cases where no deer were observed (at Raa and at Sprakehaug in April) the mean is higher than the 97.5% quantile due to the low median and high variance of the posterior distribution)."
+
+samp <- as.matrix(gamma0)
+samp_mean_ds <- samp[, paste0("mean_ds[", 1:8, "]")]
+
+D <- data.frame(
+  SAM = sam_names,
+  mean = apply(samp_mean_ds, 2, mean),
+  median = apply(samp_mean_ds, 2, median),
+  lwr = apply(samp_mean_ds, 2, function(i) quantile(i, probs = 0.025)),
+  upr = apply(samp_mean_ds, 2, function(i) quantile(i, probs = 0.975))
+)
+
+kable(D[c(2,1,4,3,6,5,8,7), ], digits = 4, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/ha)", "Median (deer/ha)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+```
+
+
+```{r}
+#| echo: false
+#| label: tbl-mean_ds2
+#| tab-cap: "Summary for posterior distribution  (`gamma2` model) for deer densities at the sampled sites at each sample area and month. Units are number of deer per hectare (1/100 km$^2$). The three rightmost columns show the 50%, the 2.5% and the 97.5% quantiles (in the three cases where no deer were observed (at Raa and at Sprakehaug in April) the mean is higher than the 97.5% quantile due to the low median and high variance of the posterior distribution)."
+
+samp <- as.matrix(gamma2)
+samp_mean_ds <- samp[, paste0("mean_ds[", 1:8, "]")]
+
+D <- data.frame(
+  SAM = sam_names,
+  mean = apply(samp_mean_ds, 2, mean),
+  median = apply(samp_mean_ds, 2, median),
+  lwr = apply(samp_mean_ds, 2, function(i) quantile(i, probs = 0.025)),
+  upr = apply(samp_mean_ds, 2, function(i) quantile(i, probs = 0.975))
+)
+
+kable(D[c(2,1,4,3,6,5,8,7), ], digits = 4, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/ha)", "Median (deer/ha)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+```
+
+#### Density estimates
+
+Estimated densities as a quadratic function of distance from the field (`gamma2` model) are shown in @fig-dens, and estimates at the mean distance from the field are shown in @tbl-dens2. @tbl-dens0 shows the estimates from the `gamma0` model.
+
+```{r}
+#| echo: false
+#| warning: FALSE
+#| label: fig-dens
+#| fig-height: 8
+#| fig-cap: "Plots of posterior summaries of deer density at the study areas (rows) and months (columns) as a quadratic function of distance from the field (`gamma2` model). Blue lines are the posterior medians, and the 95% credible intervals are shown with the shaded area. Stippled vertical lines are plotted at the overall mean distance from the field (162 meters). Note the widely different ranges on the y-axis (logarithmic scale)."
+
+library(ggplot2)
+library(cowplot)
+
+#############
+# Preparing #
+#############
+
+load(file = "../data/SiteData.rda")
+load(file = "../data/CountData.rda")
+
+predictor_variable <- SiteData$mean_field_dist
+Xlab <- "Distance from field (m)"
+Ylab <- expression(Density~of~deer~(km^-2))
+
+X <- seq(0, max(predictor_variable, na.rm = TRUE), length.out=50)
+X_mean <-  mean(predictor_variable, na.rm=TRUE)
+X_sd <- sd(predictor_variable, na.rm=TRUE)
+X_st <- (X - X_mean)/X_sd
+
+mpv <- mean(predictor_variable, na.rm = TRUE) # mean predictor variable
+pap <- median(-samp[,"beta[1]"]/(2*samp[,"beta[2]"]))*X_sd + X_mean # predictor variable at peak
+
+############
+# Plotting #
+############
+
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]],
+          plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]], ncol = 2)
+```
+
+
+```{r}
+#| echo: FALSE
+#| label: tbl-dens2
+#| tab-cap: "Summary for posterior distribution  (`gamma2` model) for estimated deer densities at mean distance from the field (162 meters; stippled lines in @fig-dens) at each of the study areas and months (when sites are considered to be a random sample of a large number of sites of the same characteristics). Units are number of deer per km$^2$."
+
+df <- data.frame(SAM = sam_names, x = mpv)
+mpv_st <- (mpv - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(mpv_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+
+# Computing marginal mean density (in ha^(-1)) for later:
+marginal_mean_density <- mean(df$median)/100 #mean(df$mean)/100
+mean_densities <- df$median/100 # Using the posterior medians of the mean
+```
+
+```{r}
+#| echo: FALSE
+#| label: tbl-dens0
+#| tab-cap: "Summary for posterior distribution  (`gamma0` model) for estimated deer densities  at each of the study areas and months (when sites are considered to be a random sample of a large number of sites of the same characteristics). Units are number of deer per km$^2$."
+
+samp <- as.matrix(gamma0)
+df <- data.frame(SAM = sam_names, x = mpv)
+mpv_st <- (mpv - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(mpv_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+```
+
+#### Process variation among sites
+
+To interpret the parameter $\sigma$ (`sigma`) which describes the variation in deer densities ($\lambda$) among sites, we plot quantiles of the fitted gamma-distribution in @fig-process. Since the variance is high compared to the mean, the median of the distribution is close to zero. 
+
+```{r}
+#| echo: FALSE
+#| label: fig-process
+#| fig-cap: "Summary of the process variation among sites. **Left:** Quantiles of the distribution of deer densities (ha$^{-1}$) among sites as a function of mean deer density. **Right:** The gamma distribution describing the variation in deer density among sites at the marginal mean deer density across study areas and months, indicated by the vertical stippled line in both panels (based on the posterior median of mean deer densities; second column of @tbl-dens2). The rug in the left plot shows the estimated mean densities (posterior medians) at the eight study area-months. Shaded areas show 95% credible intervals for the quantiles. Note that the median (in red) is close to zero (posterior median at 0.008)."
+
+# Quantiles
+qs <- function(mean, sigma, p){
+  a <- 1/(exp(sigma^2) - 1)
+  b <- a/mean
+  qgamma(p, shape = a, rate = b)
+}
+
+samp <- as.matrix(gamma2)
+
+mean <- seq(0.00001, 2, 0.1)
+Q.50 <- outer(mean, samp[, "sigma"], qs, p = 0.5)
+Q.90 <- outer(mean, samp[, "sigma"], qs, p = 0.9)
+Q.975 <- outer(mean, samp[, "sigma"], qs, p = 0.975)
+
+qQ.50 <- apply(Q.50, 1, quantile, probs = c(0.025, 0.5, 0.975))
+qQ.90 <- apply(Q.90, 1, quantile, probs = c(0.025, 0.5, 0.975))
+qQ.975 <- apply(Q.975, 1, quantile, probs = c(0.025, 0.5, 0.975))
+
+par(mfrow = c(1,2))
+plot(mean, qQ.975["50%",], type = "n", col = "blue", ylim = c(0, max(qQ.975)),
+     xlab = "Mean deer density (E[X])",
+     ylab = "Deer density (x)")
+
+polygon(c(mean, rev(mean)), c(qQ.975[1,], rev(qQ.975[3,])), col ='lightblue', border = NA)
+polygon(c(mean, rev(mean)), c(qQ.90[1,], rev(qQ.90[3,])), col ='lightgreen', border = NA)
+polygon(c(mean, rev(mean)), c(qQ.50[1,], rev(qQ.50[3,])), col ='pink', border = NA)
+lines(mean, qQ.975["50%",], type = "l", col = "blue")
+lines(mean, qQ.90["50%",], type = "l", col = "darkgreen")
+lines(mean, qQ.50["50%",], type = "l", col = "red")
+abline(v = marginal_mean_density, lty = 2)
+rug(mean_densities)
+legend("topleft",
+       lty = 1,
+       col = c("blue", "darkgreen", "red"),
+       legend = c("97.5% quantile", "90.0% quantile", "50.0% quantile"),
+       cex = 0.8
+       )
+
+sigma <- median(samp[, "sigma"])
+a <- 1/(exp(sigma^2) - 1)
+b <- a/marginal_mean_density
+
+Median <- qs(marginal_mean_density, sigma, p = 0.5)
+Q90 <- qs(marginal_mean_density, sigma, p = 0.9)
+Q975 <- qs(marginal_mean_density, sigma, p = 0.975)
+Median.CI <- qs(marginal_mean_density, samp[, "sigma"], p = 0.5) |> quantile(probs = c(0.025, 0.975))
+Q90.CI <- qs(marginal_mean_density, samp[, "sigma"], p = 0.9) |> quantile(probs = c(0.025, 0.975))
+Q975.CI <- qs(marginal_mean_density, samp[, "sigma"], p = 0.975) |> quantile(probs = c(0.025, 0.975))
+
+x <- seq(Median, 3.3, length.out = 100)
+plot(dgamma(x, a, b) ~ x, type = "n", xlab = "Deer density (x)", ylab = "f(x)", xaxs = "i", yaxs = "i", xlim = c(0,3.3), ylim = c(0,10))
+polygon(c(Q975.CI, rev(Q975.CI)), c(0, 0, 10, 10), col = "lightblue", border = NA)
+polygon(c(Q90.CI, rev(Q90.CI)), c(0, 0, 10, 10), col = "lightgreen", border = NA)
+polygon(c(Median.CI, rev(Median.CI)), c(0, 0, 10, 10), col = "pink", border = NA)
+box(col = "grey")
+lines(dgamma(x, a, b) ~ x, lwd = 2)
+abline(v = Median, col = "red")
+abline(v = Q90, col = "darkgreen")
+abline(v = Q975, col = "blue")
+abline(v = a/b, lty = 2)
+legend("topright",
+       lty = 1,
+       col = c("blue", "darkgreen", "red"),
+       legend = c("97.5% quantile", "90.0% quantile", "50.0% quantile"),
+       cex = 0.8
+       )
+
+```
+
+
+### Overlap with prior {#sec-overlap}
+
+Degrees of overlap between posterior and prior distributions for the parameters in the `gamma2` model are shown in @tbl-overlap. See @sec-strategy for prior justification. Note particularly that detection probability parameters `eta1`, `eta2` and `sigma_p` had priors informed by posterior detection probabilities from the enclosure data (see @sec-encl_detection), and hence there are relatively high overlap between posterior and prior distributions for these parameters. Posterior distributions for the 'mu' parameters (see @sec-gamma_expectation) where no deer has been observed, "Raa" and "Sprakehaug (April)" (see section @sec-wild_overview), also have an overlap >0.4.
+
+```{r}
+#| echo: FALSE
+#| message: FALSE
+#| label: tbl-overlap
+#| tab-cap: "Overlap between prior and posterior distributions for the parameters in the `gamma2` model (multiply by 100 to get %)."
+
+load(file = "../data/prior_parameters_for_p.rda")
+
+samp <- as.matrix(gamma2)
+samp <- samp[,-c(1:4, 9:16)]
+df = data.frame(par = dimnames(samp)[[2]],
+                sam = c(rep("", 4), sam_names, rep("", 2)),
+                prior = c(
+                  rep("N(0, sd = 2)", 2),
+                  rep(paste0("N(", round(prior_parameters_for_p$mean_eta, 2), ", sd = ", round(prior_parameters_for_p$sd_eta, 2), ")" ), 2),
+                  rep("N(0, sd = 10)", 8),
+                  "Gamma(shape = 0.01, rate = 0.01)",
+                  "T[Gamma(shape = 1, rate = 0.05), 0, 0.59]"
+                ),
+                overlap = 0)
+
+#1-2 (beta):
+lambdahat <- nimbleData$const$lambdahat
+for(i in 1:2){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 2)
+}
+
+#3-4 (eta1 and eta2)
+for(i in 3:4){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = prior_parameters_for_p$mean_eta, sd = prior_parameters_for_p$sd_eta)
+}
+
+#5-12 (mu0):
+for(i in 5:12){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 10)
+}
+
+#13 (sigma)
+df$overlap[13] <- post_prior_overlap(samp[,13], dgamma, shape = 0.01, rate = 0.01)
+
+#14 (sigma_p)
+# Truncated distribution
+library(LaplacesDemon)
+df$overlap[14] <- post_prior_overlap(samp[,14], dtrunc, spec = "gamma", shape = 1, rate = 0.05, a = 0, b = 0.59)
+
+df$overlap <- round(df$overlap, 3)
+kable(df, 
+       col.names = c("Parameter", "Study area and month", "Prior distribution", "Overlap"))
+```
+
+### Some sensitivity assessment
+
+#### Choice of random distribution for $\lambda$
+
+To assess the sensitivity of the model predictions to the choice of random distribution of the Poisson expectation, $\lambda$, across sites, predictions from each of the nine candidate models at mean distance from field at Haugen in March are shown in @tbl-sens_distr. The exponential models give the most precise estimates, but have a substantially lower support by WAIC (@sec-waic). The log-normal models, which have marginally less support by WAIC than the gamma models, give substantially higher posterior mean and 97.5 percentile (upper 95\% credible limit) than the gamma models (the posterior medians, and to a smaller degree the 2.5 percentile, are also somewhat higher). This is because the log-normal distribution has a heavier tail than the gamma-distribution with the same median and variance. The similarities in the WAIC values reflect that we have little information about the exact shape of the random distribution in the data (other than having evidence that the exponential distribution fits the data less well compared to the other two candidate distributions). In conclusion, we recognize that the upper 95\% credible limits are highly model dependent, but have higher confidence in the lower 95\% credible limits and the posterior medians.
+
+```{r}
+#| echo: false
+#| label: tbl-sens_distr
+#| tab-cap: "Posterior summaries for deer density (individuals per km$^2$) from each of the nine candidate models at mean distance from field at Haugen in March (WAIC values (@sec-waic) are given in the 2$^{\\text{nd}}$ column)"
+
+Path <- "../posterior_samples"
+models <- c(
+  "exponential_0",
+  "exponential_1",
+  "exponential_2",
+  "lognormal_0",
+  "lognormal_1",
+  "lognormal_2",
+  "gamma_0",
+  "gamma_1",
+  "gamma_2"
+  )
+
+i <- 0
+df <- data.frame(model = models, WAIC = NA, mean = NA, median = NA, lwr = NA, upr = NA)
+for(mod in models){
+  i <- i+1
+  fl <- paste0(mod, ".RData")
+  load(paste0("../posterior_samples/", fl))
+  postsamp <- out$samples |> as.matrix()
+  y <- pred(x=0, PS = postsamp, sam = 2)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$WAIC[i] <- out$WAIC$WAIC
+  df$mean[i] <- mean(y)
+  df$median[i] <- Q[2]
+  df$lwr[i] <- Q[1]
+  df$upr[i] <- Q[3]
+}
+
+kable(df, digits = 2,
+      col.names = c("Model", "WAIC", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I."))
+```
+
+
+#### Naive model without overdispersion
+
+```{r}
+#| echo: FALSE
+
+load("../posterior_samples/no_overdispersion_2.RData")
+no_overdispersion_samples <- out$samples
+WAIC_no_overdispersion <- out$WAIC$WAIC
+
+samp <- as.matrix(no_overdispersion_samples)
+pY <- mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+py <- mean(samp[, "Disc_New_y"] > samp[, "Disc_y"])
+```
+
+We did not consider a model without overdispersion as we did not think this would be biologically reasonable and simple preliminary analysis indicated that our data indeed was overdispersed relative to a Poisson distribution. However, since models without overdispersion (particularly for N-mixture models) are often used in the literature, we here also present results from a model without overdispersion and compare it with the WAIC-best model.
+
+The summary from the model without overdispersion and a quadratic covariate effect is printed below. This model had significantly higher WAIC-value (`r round(WAIC_no_overdispersion, 2)`) than the models with overdispersion (see @tbl-sens_distr) and the posterior predictive goodness-of-fit assessment based on Bayesian p-values indicates a significant lack of fit with respect to the total counts $Y$ (Bayesian p-value = `r sprintf("%.3f", pY)`; @fig-ppc_no_overdispersion). As a result, when ignoring overdispersion, credible intervals for predictions for the area represented by the samples are too narrow due to the overdispersion that has not been accounted for (@fig-dens_no_overdispersion and @tbl-dens2_no_overdispersion).
+
+```{r}
+#| echo: false
+summary(no_overdispersion_samples[, c(17:24, 5:8, 25)])
+```
+
+```{r}
+#| echo: false
+#| fig-height: 8
+#| label: fig-ppc_no_overdispersion
+#| fig-cap: "Posterior predictive checks for the naive model without overdisperson. Compare with @fig-ppc."
+
+lim <- 6000
+New_Y_trunc <- samp[, "Disc_New_Y"][samp[, "Disc_New_Y"] < lim]
+Y_trunc <- samp[, "Disc_Y"][samp[, "Disc_Y"] < lim]
+
+par(mfrow = c(2,2), pty = "s")
+plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"], pty = "s", pch = ".", xlim = c(0, lim), ylim = c(0, lim), 
+     main = paste0("p = ", sprintf("%.3f", pY)), xlab = "Observed data (Y)", ylab = "Simulated data (Y)")
+abline(0, 1, col="red")
+
+plot(density(New_Y_trunc), main = "", xlab = "Sum of squared\n Pearson residuals")
+lines(density(Y_trunc), col = "red")
+legend("topright",
+       lty = 1,
+       col = c("black", "red"),
+       legend = c("Simulated data", "Observed data"),
+       cex = 0.8
+)
+
+plot(samp[,"Disc_New_y"] ~ samp[,"Disc_y"], pty = "s", pch = ".",
+     main = paste0("p = ", round(py, 3)), ylim = c(15, 170), xlim = c(15,170), xlab = "Observed data (y)", ylab = "Simulated data (y)")
+abline(0, 1, col="red")
+
+plot(density(samp[, "Disc_y"]), col = "red", main = "", xlab = "Sum of squared\n Pearson residuals")
+lines(density(samp[, "Disc_New_y"]))
+legend("topright",
+       lty = 1,
+       col = c("black", "red"),
+       legend = c("Simulated data", "Observed data"),
+       cex = 0.8
+       )
+
+```
+
+```{r}
+#| echo: false
+#| warning: FALSE
+#| label: fig-dens_no_overdispersion
+#| fig-height: 8
+#| fig-cap: "Plots of posterior summaries of deer density at the study areas (rows) and months (columns) as a quadratic function of distance from the field when overdispersion is not accounted for. Compare with @fig-dens."
+
+library(ggplot2)
+library(cowplot)
+
+#############
+# Preparing #
+#############
+
+load(file = "../data/SiteData.rda")
+load(file = "../data/CountData.rda")
+
+predictor_variable <- SiteData$mean_field_dist
+Xlab <- "Distance from field (m)"
+Ylab <- expression(Density~of~deer~(km^-2))
+
+X <- seq(0, max(predictor_variable, na.rm = TRUE), length.out=50)
+X_mean <-  mean(predictor_variable, na.rm=TRUE)
+X_sd <- sd(predictor_variable, na.rm=TRUE)
+X_st <- (X - X_mean)/X_sd
+
+mpv <- mean(predictor_variable, na.rm = TRUE) # mean predictor variable
+pap <- median(-samp[,"beta[1]"]/(2*samp[,"beta[2]"]))*X_sd + X_mean # predictor variable at peak
+
+############
+# Plotting #
+############
+
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]],
+          plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]], ncol = 2)
+```
+
+```{r}
+#| echo: FALSE
+#| label: tbl-dens2_no_overdispersion
+#| tab-cap: "Summary for posterior distribution for estimated deer densities at mean distance from the field when overdispersion has not been accounted for. Compare with @tbl-dens2."
+
+df <- data.frame(SAM = sam_names, x = mpv)
+mpv_st <- (mpv - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(mpv_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+
+# Computing marginal mean density (in ha^(-1)) for later:
+marginal_mean_density <- mean(df$median)/100 #mean(df$mean)/100
+mean_densities <- df$median/100 # Using the posterior medians of the mean
+```
+
+#### Naive model without overdispersion and assuming perfect detection
+
+```{r}
+#| echo: FALSE
+
+load("../posterior_samples/no_overdispersion_no_p_2.RData")
+no_overdispersion_samples <- out$samples
+WAIC_no_overdispersion <- out$WAIC$WAIC
+samp <- as.matrix(no_overdispersion_samples)
+sam_names <- c("Haugen (April)", "Haugen (March)", "Raa (April)", "Raa (March)", "Søre Bjørkum (April)", "Søre Bjørkum (March)", "Sprakehaug (April)", "Sprakehaug (March)")
+```
+
+We also fitted a model without extra-Poisson variation, and also assuming perfect detection (ignoring $y$ and fitting the model to only the total count data $Y$ while fixing $p^*$ to 1). Density estimates from this model are presented in @fig-dens_no_overdispersion_no_p and @tbl-dens2_no_overdispersion_no_p. As expected, posterior predictive checks clearly show overdispersion of the data relative to this model (@fig-ppc_no_overdispersion_no_p), which leads to too narrow (overconfident) credible intervals.
+
+
+```{r}
+#| echo: false
+
+summary(no_overdispersion_samples[, c(
+  "mu0[1]",
+  "mu0[2]",
+  "mu0[3]",
+  "mu0[4]",
+  "mu0[5]",
+  "mu0[6]",
+  "mu0[7]",
+  "mu0[8]",
+  "beta[1]",
+  "beta[2]")])
+  
+```
+
+```{r}
+#| echo: false
+#| warning: FALSE
+#| label: fig-dens_no_overdispersion_no_p
+#| fig-height: 8
+#| fig-cap: "Plots of posterior summaries of deer density at the study areas (rows) and months (columns) as a quadratic function of distance from the field when overdispersion is not accounted for and perfect detection is assumed. Compare with @fig-dens and @fig-dens_no_overdispersion."
+
+library(ggplot2)
+library(cowplot)
+
+#############
+# Preparing #
+#############
+
+load(file = "../data/SiteData.rda")
+load(file = "../data/CountData.rda")
+
+predictor_variable <- SiteData$mean_field_dist
+Xlab <- "Distance from field (m)"
+Ylab <- expression(Density~of~deer~(km^-2))
+
+X <- seq(0, max(predictor_variable, na.rm = TRUE), length.out=50)
+X_mean <-  mean(predictor_variable, na.rm=TRUE)
+X_sd <- sd(predictor_variable, na.rm=TRUE)
+X_st <- (X - X_mean)/X_sd
+
+mpv <- mean(predictor_variable, na.rm = TRUE) # mean predictor variable
+pap <- median(-samp[,"beta[1]"]/(2*samp[,"beta[2]"]))*X_sd + X_mean # predictor variable at peak
+
+############
+# Plotting #
+############
+
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]],
+          plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]], ncol = 2)
+```
+
+```{r}
+#| echo: FALSE
+#| label: tbl-dens2_no_overdispersion_no_p
+#| tab-cap: "Summary for posterior distribution for estimated deer densities at mean distance from the field when overdispersion has not been accounted for and perfect detection is assumed. Compare with @tbl-dens2 and @tbl-dens2_no_overdispersion."
+
+df <- data.frame(SAM = sam_names, x = mpv)
+mpv_st <- (mpv - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(mpv_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+
+# Computing marginal mean density (in ha^(-1)) for later:
+marginal_mean_density <- mean(df$median)/100 #mean(df$mean)/100
+mean_densities <- df$median/100 # Using the posterior medians of the mean
+```
+
+```{r}
+#| echo: false
+#| label: fig-ppc_no_overdispersion_no_p
+#| fig-cap: "Posterior predictive checks for the naive model without overdisperson and assuming perfect detection. Left plot: Sum of the squared Pearson residuals (ssPr) for simulated data plotted against the ssPr for the observed data. Right plot: Density of the discrepancy measure (ssPr) for the simulated and observed data."
+
+par(mfrow = c(1,2), pty = "s")
+pY <- mean(samp[, "Disc_New_Y"] > samp[, "Disc_Y"])
+plot(samp[,"Disc_New_Y"] ~ samp[,"Disc_Y"], pty = "s", pch = ".",
+     main = paste0("p = ", round(pY, 3)), ylim = c(0, 10000), xlim = c(0,10000),
+     xlab = "Observed data", ylab = "Simulated data")
+abline(0, 1, col="red")
+
+plot(density(samp[, "Disc_New_Y"]), main = "", xlim = c(0,3000), xlab = "Sum of squared\n Pearson residuals")
+lines(density(samp[, "Disc_Y"]), col = "red")
+legend("topright",
+       lty = 1,
+       col = c("black", "red"),
+       legend = c("Simulated data", "Observed data"),
+       cex = 0.8
+       )
+
+
+```
+
+
+#### Sensitivity to prior for $\sigma_p$ {#sec-sens_sigma_p}
+
+We used a somewhat informative prior for $\sigma_p$ (`sigma_p`) (@sec-posterior_checks and @sec-overlap). To assess the sensitivity of the model results to this prior, we also fitted a model with a $\text{Uniform}(0, 10)$ prior for $\sigma_p$. The summary of this model is shown below and posterior summaries from this model are compared to the summaries from the original model in @fig-compare.
+
+Despite the substantially higher posterior values for $\sigma_p$ with the wider prior, the posterior distributions for other parameters are little affected (@fig-compare). There are no strong correlations between posterior samples of the the parameters for neither the original model (@tbl-cor_orig) nor the model with the wider prior for $\sigma_p$ (@tbl-cor_wide). We conclude that our results are not sensitive to the choice of prior for $\sigma_p$.
+
+```{r}
+#| echo: FALSE
+
+load("../posterior_samples/gamma_2_no_Trunc_uniform_sigma_p.RData")
+gamma2_wide <- out$samples[, c(17:24, 5:6, 25, 7:8, 26)]
+gamma2_orig <- gamma2[, c(17:24, 5:6, 25, 7:8, 26)]
+summary(gamma2_wide)
+summary(gamma2_orig)
+```
+
+```{r}
+#| echo: FALSE
+#| label: fig-compare
+#| fig-height: 8
+#| fig-cap: "Posterior medians and 95% credible intervals for the parameters in `gamma2` model; orignal model in blue and model with wider $\\text{Uniform}(0, 10)$ prior for $\\sigma_p$ (`sigma_p`) in red. The lower credible bounds for $\\mu_0$ where no deer has been seen (`mu0[3]`, `mu0[4]`, and `mu0[7]`) are naturally sensitive to priors as it impossible to tell how close to zero the densities may be - on the arithmetic scale, the density estimates for these area-months are essentially zero."
+
+library(plotrix)
+
+Q_wide <- apply(as.matrix(gamma2_wide), 2, quantile, probs = c(0.025, 0.5, 0.975))
+Q_orig <- apply(as.matrix(gamma2_orig), 2, quantile, probs = c(0.025, 0.5, 0.975))
+
+offset <- 0.15
+npar <- ncol(Q_wide)
+plotCI(Q_wide[2,], npar:1 + offset, li = Q_wide[1,], ui = Q_wide[3,], err = "x", col = "red", axes = FALSE, ylab = "", xlab = "Parameter value")
+plotCI(Q_orig[2,], npar:1 - offset, li = Q_orig[1,], ui = Q_orig[3,], err = "x", add = TRUE, col = "blue")
+box()
+axis(1)
+axis(2, at = npar:1, labels = dimnames(gamma2_wide[[1]])[[2]], las = 1)
+```
+
+```{r}
+#| echo: FALSE
+#| label: tbl-cor_orig
+#| tab-cap: "Correlation matrix for posterior samples in the original 'gamma2' model."
+
+kable(cor(as.matrix(gamma2_orig)), digits = 3)
+```
+
+```{r}
+#| echo: FALSE
+#| label: tbl-cor_wide
+#| tab-cap: "Correlation matrix for posterior samples in the 'gamma2' mode with wider $\\text{Uniform}(0, 10)$ prior for $\\sigma_p$ (`sigma_p`)"
+
+kable(cor(as.matrix(gamma2_wide)), digits = 3)
+```
+
+
+
+### Proof of concept - Identifiability assessment by simulations
+
+To check that there are no inherent identifiability problems with the model, we fitted the model to two different sets of simulated data. In the first simulation, we set parameters to the posterior mean of the original fit and just boosted sample size to 500 sites within each of the area-month combinations. Then, in the second simulation, we also reduced the parameter $\sigma$ (`sigma`) describing the among site variation in density to 5% of the estimated value (posterior median), in addition to boosting sample size. The same prior distributions as in the original fit was used in both simulations.
+
+#### Boosting sample size
+
+Posterior summaries from the model fitted to the boosted data are shown below, overlap between prior and posterior distributions are shown in @tbl-overlap_sim, predicted densities are plotted in @fig-dens_sim, and predicted densities at mean distance from the field are shown in @tbl-dens_sim.
+
+With this much data (8 areas with 500 sites each), we obtain substantially higher precision of the estimates, as well as lower overlap between posterior and prior distributions. This shows that that there are no inherent identifiability problems in the model. One would perhaps expect higher precision (narrower credible intervals) when having 8 $\times$ 500 sites, but the high variation in number of deer per sites contributes to much uncertainty, and since the average area of sites is just under 0.6 ha (0.6% of a km$^2$), the expected counts per site is quite small. In the next simulation, we also reduced the random variation among sites within areas.
+
+```{r}
+#| echo: false
+
+load("../posterior_samples/sim/sim_gamma_2_500_sites.RData")
+#gelman.diag(out)
+#plot(out$samples)
+summary(out)
+```
+
+```{r}
+#| echo: false
+#| label: fig-dens_sim
+#| fig-height: 8
+#| fig-cap: "Simulation results: Plots of posterior summaries of deer density when sample size has increased to 500 sites per area and month, with model parameters set to posterior median of original fit. Compare with @fig-dens."
+
+samp <- as.matrix(out)
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]],
+          plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]], ncol = 2)
+```
+
+
+```{r}
+#| echo: FALSE
+#| message: FALSE
+#| label: tbl-overlap_sim
+#| tab-cap: "Simulation results: Overlap between prior and posterior distributions for the parameters when sample size has been increased to 500 sites per study area and month. Compare with @tbl-overlap."
+
+load(file = "../data/prior_parameters_for_p.rda")
+
+# samp <- as.matrix(gamma2)
+# 
+samp <- samp[, c("beta[1]", "beta[2]", "eta1", "eta2", "mu0[1]", "mu0[2]", "mu0[3]", "mu0[4]", "mu0[5]", "mu0[6]", "mu0[7]", "mu0[8]", "sigma", "sigma_p")]
+#dimnames(samp)[[2]][3:4] <- c("eta1", "eta2")
+df = data.frame(par = dimnames(samp)[[2]],
+                sam = c(rep("", 4), sam_names, rep("", 2)),
+                prior = c(
+                  rep("N(0, sd = 2)", 2),
+                  rep(paste0("N(", round(prior_parameters_for_p$mean_eta, 2), ", sd = ", round(prior_parameters_for_p$sd_eta, 2), ")" ), 2),
+                  rep("N(0, sd = 10)", 8),
+                  "Gamma(shape = 0.01, rate = 0.01)",
+                  "T[Gamma(shape = 1, rate = 0.05), 0, 0.59]"
+                ),
+                overlap = 0)
+
+#1-2 (beta):
+lambdahat <- nimbleData$const$lambdahat
+for(i in 1:2){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 2)
+}
+
+#3-4 (eta1 and eta2)
+for(i in 3:4){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = prior_parameters_for_p$mean_eta, sd = prior_parameters_for_p$sd_eta)
+}
+
+#5-12 (mu0):
+for(i in 5:12){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 10)
+}
+
+#13 (sigma)
+df$overlap[13] <- post_prior_overlap(samp[,13], dgamma, shape = 0.01, rate = 0.01)
+
+#14 (sigma_p)
+# Truncated distribution
+library(LaplacesDemon)
+df$overlap[14] <- post_prior_overlap(samp[,14], dtrunc, spec = "gamma", shape = 1, rate = 0.05, a = 0, b = 0.59)
+
+df$overlap <- round(df$overlap, 3)
+kable(df, 
+       col.names = c("Parameter", "Study area and month", "Prior distribution", "Overlap"))
+```
+
+
+```{r}
+#| echo: FALSE
+#| label: tbl-dens_sim
+#| tab-cap: "Simulation results: Summary for posterior distribution for estimated deer densities at mean distance from the field (162 meters; stippled lines in @fig-dens_sim) when sample size has been increased to 500 sites per area and moth. Compare with @tbl-dens2."
+
+df <- data.frame(SAM = sam_names, x = mpv)
+mpv_st <- (mpv - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(mpv_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+```
+
+#### Boosting sample size and reducing $\sigma$
+
+To investigate the impact of variation in density within study areas, we reduced $\sigma$ to 5% of the estimated value while keeping the mean densities the same. This entails changing $\sigma$ to $\sigma'=\alpha\sigma$ and $\mu_{0,j}$ to $\mu_{0,j}'= \mu_{0,j} + \sigma^2(1-\alpha^2)/2$ where $\alpha = 0.05$. The resulting variation in density among sites is shown in @fig-process_low.
+
+```{r}
+#| echo: FALSE
+#| label: fig-process_low
+#| fig-cap: "Summary of the process variation among sites in the simulation where $\\sigma$ has been reduced to 5% of the estimated value while keeping the mean densities the same. **Left:** Quantiles of the distribution of deer densities (ha$^{-1}$) among sites as a function of mean deer density. **Right:** The gamma distribution describing the variation in deer density among sites at the marginal mean deer density across study areas and months, indicated by the vertical stippled line in both panels (based on the posterior median of mean deer densities; second column of @tbl-dens2). Compare with the estimated distribution shown in @fig-process"
+
+load("../posterior_samples/gamma_2.RData")
+postsamp <- out$samples
+#best_postsamp <- as.mcmc.list(best_postsamp)
+samp <- as.matrix(postsamp)[,-c(1:4, 9:16)]
+p <- apply(samp, 2, median)
+truepar <- list(
+  mu0 = p[5:12],
+    sigma = p[13]
+)
+
+# REDUCING sigma
+alpha <- 1/20
+truepar$mu0 <- truepar$mu0 + truepar$sigma^2*(1 - alpha^2)/2 # NB! using old sigma, so must come first
+truepar$sigma <- truepar$sigma*alpha #NB! Run only once
+
+
+### remaking plot from Supp Inf with modified sigma #####
+qs <- function(mean, sigma, p){
+  a <- 1/(exp(sigma^2) - 1)
+  b <- a/mean
+  qgamma(p, shape = a, rate = b)
+}
+
+mean <- seq(0.00001, 2, 0.1)
+sigma <- truepar$sigma
+a <- 1/(exp(sigma^2) - 1)
+b <- a/mean
+marginal_mean_density <- 0.2621269
+
+qQ.025 <- qs(mean, sigma, 0.025)
+qQ.50 <- qs(mean, sigma, 0.5)
+qQ.975 <- qs(mean, sigma, 0.975)
+
+par(mfrow = c(1,2))
+plot(mean, qQ.975, type = "n", col = "blue", ylim = c(0, max(qQ.975)),
+     xlab = "Mean deer density (E[X])",
+     ylab = "Deer density (x)")
+
+lines(mean, qQ.975, type = "l", col = "blue")
+lines(mean, qQ.025, type = "l", col = "orange")
+lines(mean, qQ.50, type = "l", col = "red")
+abline(v = marginal_mean_density, lty = 2)
+legend("topleft",
+       lty = 1,
+       col = c("blue", "red", "orange"),
+       legend = c("97.5% quantile", "50.0% quantile", "2.5% quantile"),
+       cex = 0.8
+)
+
+b <- a/marginal_mean_density
+Median <- qs(marginal_mean_density, sigma, p = 0.5)
+Q025 <- qs(marginal_mean_density, sigma, p = 0.025)
+Q975 <- qs(marginal_mean_density, sigma, p = 0.975)
+
+x <- seq(0.0001, 0.45, length.out = 100)
+plot(dgamma(x, a, b) ~ x, type = "n", xlab = "Deer density (x)", ylab = "f(x)", xaxs = "i", yaxs = "i", xlim = c(0,max(x)), ylim = c(0, 1.1*max(dgamma(x, a, b))))
+box(col = "grey")
+lines(dgamma(x, a, b) ~ x, lwd = 2)
+abline(v = Median, col = "red")
+abline(v = Q025, col = "orange")
+abline(v = Q975, col = "blue")
+abline(v = a/b, lty = 2)
+# legend("topleft",
+#        lty = 1,
+#        col = c("blue", "red", "orange"),
+#        legend = c("97.5% quantile", "50.0% quantile", "2.5% quantile"),
+#        cex = 0.8
+# )
+```
+
+
+Posterior summaries from the model fitted the simulated data are shown below, overlap between prior and posterior distributions are shown in @tbl-overlap_sim_low, predicted densities are plotted in @fig-dens_sim_low, and predicted densities at mean distance from the field are shown in @tbl-dens_sim_low.
+
+```{r}
+#| echo: false
+
+load("../posterior_samples/sim/sim_gamma_2_500_sites_low_sigma.RData")
+#gelman.diag(out)
+#plot(out$samples)
+summary(out)
+```
+
+```{r}
+#| echo: false
+#| label: fig-dens_sim_low
+#| fig-height: 8
+#| fig-cap: "Simulation results from the scenario where among site variation has been reduced: Plots of posterior summaries of deer density. Compare with @fig-dens for the model fitted to the observed data."
+
+samp <- as.matrix(out)
+plots <- pred_plots(PS = samp)
+
+plot_grid(plots[[2]],
+          plots[[1]],
+          plots[[4]],
+          plots[[3]],
+          plots[[6]],
+          plots[[5]],
+          plots[[8]],
+          plots[[7]], ncol = 2)
+```
+
+
+```{r}
+#| echo: FALSE
+#| message: FALSE
+#| label: tbl-overlap_sim_low
+#| tab-cap: "Simulation results from the scenario where among site variation has been reduced:: Overlap between prior and posterior distributions for the parameters. Compare with @tbl-overlap for the model fitted to the observed data."
+
+load(file = "../data/prior_parameters_for_p.rda")
+
+# samp <- as.matrix(gamma2)
+# 
+samp <- samp[, c("beta[1]", "beta[2]", "eta1", "eta2", "mu0[1]", "mu0[2]", "mu0[3]", "mu0[4]", "mu0[5]", "mu0[6]", "mu0[7]", "mu0[8]", "sigma", "sigma_p")]
+#dimnames(samp)[[2]][3:4] <- c("eta1", "eta2")
+df = data.frame(par = dimnames(samp)[[2]],
+                sam = c(rep("", 4), sam_names, rep("", 2)),
+                prior = c(
+                  rep("N(0, sd = 2)", 2),
+                  rep(paste0("N(", round(prior_parameters_for_p$mean_eta, 2), ", sd = ", round(prior_parameters_for_p$sd_eta, 2), ")" ), 2),
+                  rep("N(0, sd = 10)", 8),
+                  "Gamma(shape = 0.01, rate = 0.01)",
+                  "T[Gamma(shape = 1, rate = 0.05), 0, 0.59]"
+                ),
+                overlap = 0)
+
+#1-2 (beta):
+lambdahat <- nimbleData$const$lambdahat
+for(i in 1:2){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 2)
+}
+
+#3-4 (eta1 and eta2)
+for(i in 3:4){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = prior_parameters_for_p$mean_eta, sd = prior_parameters_for_p$sd_eta)
+}
+
+#5-12 (mu0):
+for(i in 5:12){
+  df$overlap[i] <- post_prior_overlap(samp[,i], dnorm, mean = 0, sd = 10)
+}
+
+#13 (sigma)
+df$overlap[13] <- post_prior_overlap(samp[,13], dgamma, shape = 0.01, rate = 0.01)
+
+#14 (sigma_p)
+# Truncated distribution
+library(LaplacesDemon)
+df$overlap[14] <- post_prior_overlap(samp[,14], dtrunc, spec = "gamma", shape = 1, rate = 0.05, a = 0, b = 0.59)
+
+df$overlap <- round(df$overlap, 3)
+kable(df, 
+       col.names = c("Parameter", "Study area and month", "Prior distribution", "Overlap"))
+```
+
+
+```{r}
+#| echo: FALSE
+#| label: tbl-dens_sim_low
+#| tab-cap: "Simulation results: Summary for posterior distribution for estimated deer densities at mean distance from the field (162 meters; stippled lines in @fig-dens_sim_low) when sample size has been increased to 500 sites per area and moth. Compare with @tbl-dens2."
+
+df <- data.frame(SAM = sam_names, x = mpv)
+mpv_st <- (mpv - X_mean)/X_sd
+for(SAM in 1:length(sam_names)){
+  y <- pred(mpv_st, PS = samp, sam = SAM)
+  Q <- quantile(y, probs = c(0.025, 0.5, 0.975))
+  df$mean[SAM] <- mean(y)
+  df$median[SAM] <- Q[2]
+  df$lwr[SAM] <- Q[1]
+  df$upr[SAM] <- Q[3]
+}
+
+kable(df[c(2,1,4,3,6,5,8,7), -2], digits = 2, row.names = FALSE,
+      col.names = c("Sample area and month", "Mean (deer/km$^2$)", "Median (deer/km$^2$)", "Lower 95% C.I.", "Upper 95% C.I." 
+      ))
+```
+
+
+# References {.unnumbered}

@@ -1,0 +1,84 @@
+---
+title: "Description of SiteData"
+date: now
+format:
+  html:
+    embed-resources: true
+    theme: journal
+---
+
+```{r}
+#| echo: false
+#| output: false
+Sys.setlocale(locale='no_NB.utf8') # Include for using Norwegian letters in plots
+```
+
+The `SiteData.rda` file contains data.frame `SiteData` with the following variables:
+
+* `Survey`: A single flight conducted using a UAV to collect data over a designated area. A total of 31 survey flights were conducted in this study.
+
+* `Study_area`: A specific geographic location selected for conducting surveys. For this study, four sampling areas were selected: Haugen, Rå, Sprakehaug, and Søre Bjørkum.
+
+* `Route`: A predetermined flight path followed by the UAV during a survey. In this study, each sampling area contained between three and five routes, and each route was surveyed between one and three times.
+
+* `Month`: The month during which a survey was conducted (March or April).
+
+* `Date`: The specific date a survey was conducted (R Date format).
+
+* `Flight_Altitude`: Programmed flight altitude above ground in meters, based on the digital elevation model.
+
+* `Focal_image`: Unique identifier for the focal image constituting the `Site`. All focal images are non-overlapping with other focal images from the same survey.
+
+* `Site`: Site number within `Survey`, numbered consecutively from 1 within each `Survey`.
+
+* `File`: File name for the `Folcal image`. Each file name corresponds to a raster image used for extracting information such as mean elevation, distance to the field, etc. from a Digital Elevation Model (DEM) (see variables below).
+
+* `Weather`: The weather conditions during a survey as noted by Yr.no and confirmed by observations, such as clear, mostly clear, mostly overcast, mostly sunny, overcast, slightly overcast, or sunny.
+
+* `Temperature_C`: The temperature (in degrees Celsius) at the end of a survey.
+
+* `Snow`: Whether the survey area was covered with snow during the survey (yes or no). A survey area was considered snow-covered if more than 50% of the aerial images displayed snow-covered surfaces.
+
+* `Area`: The total area (in square meters) covered by a site within a focal image.
+
+* `mean_x`: The mean UTM zone 33V x-coordinate (east) of all pixels within a focal image.
+
+* `mean_y`: The mean UTM zone 33V y-coordinate (north) of all pixels within a focal image.
+
+* `elevation_at_mean_pos`: The elevation at the average east (x) and north (y) UTM coordinate of the site, derived from a DEM.
+
+* `mean_elevation`: The average elevation (in meters above sea level) of a site, calculated as the mean of all elevation values within the site, derived from a DEM.
+
+* `min_elevation`: The lowest elevation (in meters above sea level) within the site, derived from a DEM.
+
+* `max_elevation`: The highest elevation (in meters above sea level) within the site, derived from a DEM.
+
+* `proportion_no_field`: The proportion of the site that does not consist of fields. Calculated as the area of non-field land cover (e.g., forest, water, bare ground) divided by the total area of the site, derived from a polygon file.
+
+* `field_dist_at_mean_pos`: The distance (in meters) from the average east (x) and north (y) UTM coordinate of the site to the nearest field, derived from a DEM and a habitat polygon file.
+
+* `mean_field_dist`: The average distance (in meters) from all points within a site to the nearest field, calculated as the mean of all distance values within the site, derived from a DEM and a habitat polygon file.
+
+* `min_field_dist`: The shortest distance (in meters) from any point within a site to the nearest field, derived from a DEM and a habitat polygon file.
+
+* `max_field_dist`: The longest distance (in meters) from any point within a site to the nearest field, derived from a DEM and a habitat polygon file.
+
+* `proportion_forest`: The proportion of a site that consists of forested land, calculated as the area of forest cover divided by the total area of the site, derived from a habitat polygon file.
+
+* `forest_dist_at_mean_pos`: The distance (in meters) from the average east (x) and north (y) UTM coordinate of a site to the nearest forested area, derived from a DEM and a habitat polygon file.
+
+* `mean_forest_dist`: The average distance (in meters) from all points within a site to the nearest forested area, calculated as the mean of all distance values within the site, derived from a DEM and a habitat polygon file.
+
+* `min_forest_dist`: The shortest distance (in meters) from any point within a site to the nearest forested area, derived from a DEM and a habitat polygon file.
+
+* `max_forest_dist`: The longest distance (in meters) from any point within a site to the nearest forested area, derived from a DEM and a habitat polygon file.
+
+* `aspect_deg`: The average compass direction (in degrees) of the slope within a site, calculated as the mean of all aspect values within the site, derived from a DEM. Aspect is measured as degree north from 0° to 360°, where 0° represents north, 90° represents east, 180° represents south, and 270° represents west.
+
+* `slope_deg`: The average steepness (in degrees) of the terrain within a site, calculated as the mean of all slope values within the site, derived from a DEM. Slope represents the angle between the ground surface and a horizontal plane, with 0° indicating flat terrain and higher values indicating steeper slopes.
+
+* `n_both`: The number of red deer detected by both observer 1 and observer 2 within the site.
+
+* `n_only_ab`: The number of red deer detected only by observer 1 within the site.
+
+* `n_only_jb`: The number of red deer detected only by observer 2 within the site.
